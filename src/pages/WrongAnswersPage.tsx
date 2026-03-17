@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { getAnswerLabel } from "../lib/answer";
+import { getAnswerLabel, getAnswerToken } from "../lib/answer";
 import { getWrongQuestions } from "../lib/session";
 import { useTestStore } from "../store/useTestStore";
 
@@ -160,20 +160,27 @@ export function WrongAnswersPage() {
         </main>
 
         <aside className="hidden rounded-2xl border border-stone-200 bg-white p-4 md:block">
-          <h3 className="mb-3 text-sm font-semibold">오답 번호</h3>
-          <div className="grid grid-cols-5 gap-2">
+          <h3 className="mb-3 text-sm font-semibold">오답 OMR</h3>
+          <div className="overflow-hidden rounded-lg border border-stone-200">
+            <div className="grid grid-cols-[1fr_1fr_1fr] border-b border-stone-200 bg-stone-50 px-2 py-1.5 text-[11px] font-semibold text-stone-600">
+              <span>번호</span>
+              <span>내 답</span>
+              <span>정답</span>
+            </div>
             {wrongQuestions.map((question, qIdx) => (
               <button
                 key={question.id}
                 onClick={() => setIndex(qIdx)}
                 className={[
-                  "rounded-md border px-1 py-1.5 text-xs font-semibold",
+                  "grid w-full grid-cols-[1fr_1fr_1fr] border-b border-stone-200 px-2 py-1.5 text-left text-xs font-semibold last:border-b-0",
                   qIdx === index
-                    ? "border-red-600 bg-red-600 text-white"
-                    : "border-stone-300 bg-white text-stone-700",
+                    ? "bg-red-600 text-white"
+                    : "bg-red-50 text-red-700",
                 ].join(" ")}
               >
-                {solveOrderMap.get(question.id) ?? qIdx + 1}
+                <span>{solveOrderMap.get(question.id) ?? qIdx + 1}</span>
+                <span>{getAnswerToken(question.my_answer)}</span>
+                <span>{getAnswerToken(question.answer)}</span>
               </button>
             ))}
           </div>
@@ -192,12 +199,17 @@ export function WrongAnswersPage() {
           <button onClick={() => setIsSheetOpen(false)} className="absolute inset-0 bg-black/35" />
           <div className="absolute bottom-0 left-0 right-0 rounded-t-2xl bg-white p-4 shadow-2xl">
             <div className="mb-3 flex items-center justify-between">
-              <h3 className="text-sm font-semibold">오답 번호 이동</h3>
+              <h3 className="text-sm font-semibold">오답 OMR 이동</h3>
               <button onClick={() => setIsSheetOpen(false)} className="text-sm text-stone-500">
                 닫기
               </button>
             </div>
-            <div className="grid max-h-[48vh] grid-cols-6 gap-2 overflow-y-auto pb-3">
+            <div className="max-h-[48vh] overflow-y-auto rounded-lg border border-stone-200">
+              <div className="grid grid-cols-[1fr_1fr_1fr] border-b border-stone-200 bg-stone-50 px-2 py-1.5 text-[11px] font-semibold text-stone-600">
+                <span>번호</span>
+                <span>내 답</span>
+                <span>정답</span>
+              </div>
               {wrongQuestions.map((question, qIdx) => (
                 <button
                   key={question.id}
@@ -206,13 +218,15 @@ export function WrongAnswersPage() {
                     setIsSheetOpen(false);
                   }}
                   className={[
-                    "rounded-md border px-2 py-2 text-xs font-semibold",
+                    "grid w-full grid-cols-[1fr_1fr_1fr] border-b border-stone-200 px-2 py-2 text-left text-xs font-semibold last:border-b-0",
                     qIdx === index
-                      ? "border-red-600 bg-red-600 text-white"
-                      : "border-stone-300 bg-white text-stone-700",
+                      ? "bg-red-600 text-white"
+                      : "bg-red-50 text-red-700",
                   ].join(" ")}
                 >
-                  {solveOrderMap.get(question.id) ?? qIdx + 1}
+                  <span>{solveOrderMap.get(question.id) ?? qIdx + 1}</span>
+                  <span>{getAnswerToken(question.my_answer)}</span>
+                  <span>{getAnswerToken(question.answer)}</span>
                 </button>
               ))}
             </div>
