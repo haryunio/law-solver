@@ -15,7 +15,10 @@ export function ResultPage() {
       <div className="mx-auto max-w-2xl p-6">
         <div className="rounded-2xl border border-stone-200 bg-white p-8 text-center">
           <p className="text-stone-700">세션을 찾을 수 없습니다.</p>
-          <Link to="/" className="mt-4 inline-block rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white">
+          <Link
+            to="/dashboard"
+            className="mt-4 inline-block rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white"
+          >
             메인으로
           </Link>
         </div>
@@ -83,7 +86,7 @@ export function ResultPage() {
               CSV로 다운로드
             </button>
             <Link
-              to="/"
+              to="/dashboard"
               className="rounded-lg border border-stone-300 bg-white px-4 py-2 text-sm font-semibold text-stone-700"
             >
               메인으로

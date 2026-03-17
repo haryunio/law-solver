@@ -114,18 +114,19 @@ export function DashboardPage() {
         <div className="fixed inset-0 z-50">
           <button onClick={() => setOpenUpload(false)} className="absolute inset-0 bg-black/35" />
           <div className="absolute left-1/2 top-1/2 w-[92vw] max-w-lg -translate-x-1/2 -translate-y-1/2">
+            <button
+              onClick={() => setOpenUpload(false)}
+              className="absolute right-3 top-3 z-10 inline-flex h-8 w-8 items-center justify-center rounded-full border border-stone-300 bg-white text-sm font-semibold text-stone-600 shadow-sm transition hover:bg-stone-100"
+              aria-label="모달 닫기"
+            >
+              X
+            </button>
             <CsvUploadPanel
               onCreated={(sessionId) => {
                 setOpenUpload(false);
                 navigate(`/solve/${sessionId}`);
               }}
             />
-            <button
-              onClick={() => setOpenUpload(false)}
-              className="mt-2 w-full rounded-lg border border-stone-300 bg-white px-3 py-2 text-sm font-medium text-stone-600"
-            >
-              닫기
-            </button>
           </div>
         </div>
       ) : null}

@@ -1,5 +1,6 @@
 import { Navigate, Route, Routes } from "react-router-dom";
 import { DashboardPage } from "./pages/DashboardPage";
+import { LandingPage } from "./pages/LandingPage";
 import { ResultPage } from "./pages/ResultPage";
 import { SolvePage } from "./pages/SolvePage";
 import { WrongAnswersPage } from "./pages/WrongAnswersPage";
@@ -7,7 +8,8 @@ import { WrongAnswersPage } from "./pages/WrongAnswersPage";
 export default function App() {
   return (
     <Routes>
-      <Route path="/" element={<DashboardPage />} />
+      <Route path="/" element={<LandingPage />} />
+      <Route path="/dashboard" element={<DashboardPage />} />
       <Route path="/solve/:sessionId" element={<SolvePage />} />
       <Route path="/result/:sessionId" element={<ResultPage />} />
       <Route path="/wrong/:sessionId" element={<WrongAnswersPage />} />
@@ -15,4 +17,3 @@ export default function App() {
     </Routes>
   );
 }
-
