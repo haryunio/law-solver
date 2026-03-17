@@ -29,7 +29,13 @@ export function DashboardPage() {
       <div className="mx-auto max-w-6xl">
         <header className="mb-6 flex flex-wrap items-end justify-between gap-3">
           <div>
-            <p className="text-sm font-medium text-red-600">Law Solver</p>
+            <Link
+              to="/"
+              className="inline-flex text-m font-bold text-red-600 hover:underline"
+              aria-label="메인으로 이동"
+            >
+              Law Solver
+            </Link>
             <h1 className="text-2xl font-semibold text-stone-900 md:text-3xl">문제 풀이 대시보드</h1>
           </div>
           <button

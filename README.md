@@ -2,6 +2,10 @@
 브라우저(localStorage)만으로 동작하는 법학 문제 풀이 웹앱입니다.  
 CSV 업로드 → CBT 풀이 → 채점 결과/오답 복기 → 답안 포함 CSV 다운로드까지 지원합니다.
 
+License: CC BY-NC-ND
+
+(c) 2026 Haryun all rights reserved
+
 ## Tech Stack
 - React (Functional Components, Hooks)
 - TypeScript

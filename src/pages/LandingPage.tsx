@@ -51,6 +51,9 @@ export function LandingPage() {
                 haryun@knu.ac.kr
               </a>
             </p>
+            <p className="mt-1">
+              CC BY-NC-ND ⓒ 2026 Haryun all rights reserved
+            </p>
           </div>
         </div>
       </div>
