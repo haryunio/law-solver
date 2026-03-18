@@ -5,7 +5,7 @@ import { downloadSessionCsv } from "../lib/csv";
 import { getCorrectCount, getWrongQuestions, isCorrectQuestion } from "../lib/session";
 import { formatElapsedTime } from "../lib/time";
 import { useTestStore } from "../store/useTestStore";
-import { SolveOrder } from "../types/test";
+import { ParsedQuestion, SolveOrder } from "../types/test";
 
 export function ResultPage() {
   const { sessionId = "" } = useParams();
@@ -44,7 +44,7 @@ export function ResultPage() {
     if (!retryTitle.trim()) return;
 
     // 기존 문제들에서 유저 답안만 초기화
-    const resetQuestions = session.questions.map((q) => ({
+    const resetQuestions: ParsedQuestion[] = session.questions.map((q) => ({
       ...q,
       my_answer: "",
     }));
