@@ -1,4 +1,5 @@
 import Papa from "papaparse";
+import { createId } from "./id";
 import { ParsedQuestion, TestSession, TestType } from "../types/test";
 
 type RawRow = Record<string, string>;
@@ -62,7 +63,7 @@ const parseOxRows = (rows: RawRow[]): ParsedQuestion[] => {
     }
 
     return {
-      id: crypto.randomUUID(),
+      id: createId(),
       no,
       chapter,
       question,
@@ -94,7 +95,7 @@ const parseChoiceRows = (rows: RawRow[]): ParsedQuestion[] => {
     }
 
     return {
-      id: crypto.randomUUID(),
+      id: createId(),
       no,
       chapter,
       question,

@@ -1,3 +1,4 @@
+import { createId } from "../lib/id";
 import { orderQuestions } from "../lib/order";
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
@@ -34,7 +35,7 @@ export const useTestStore = create<TestStore>()(
     (set, get) => ({
       sessions: [],
       createSession: ({ title, type, orderMode, questions }) => {
-        const id = crypto.randomUUID();
+        const id = createId();
         const orderedQuestions = orderQuestions(questions, orderMode);
         const session: TestSession = {
           id,
