@@ -20,6 +20,20 @@
     <meta property="twitter:title" content="Law Solver" />
     <meta property="twitter:description" content="보기좋게 풀고, 바로 복기하는 로스쿨 문제 풀이 앱" />
     <meta property="twitter:image" content="/favicon.png" />
+    <script type="text/javascript">
+      // GitHub Pages SPA redirect hack
+      // https://github.com/rafgraph/spa-github-pages
+      (function(l) {
+        if (l.search[1] === '/' ) {
+          var decoded = l.search.slice(1).split('&').map(function(s) { 
+            return s.replace(/~and~/g, '&')
+          }).join('?');
+          window.history.replaceState(null, null,
+              l.pathname.slice(0, -1) + decoded + l.hash
+          );
+        }
+      }(window.location))
+    </script>
   </head>
   <body class="bg-cream">
     <div id="root"></div>
