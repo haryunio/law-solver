@@ -19,6 +19,14 @@ export function WrongAnswersPage() {
 
   const [index, setIndex] = useState(0);
   const [isSheetOpen, setIsSheetOpen] = useState(false);
+  const omrRefs = useMemo(() => new Map<number, HTMLButtonElement | null>(), []);
+
+  useEffect(() => {
+    const activeBtn = omrRefs.get(index);
+    if (activeBtn) {
+      activeBtn.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    }
+  }, [index, omrRefs]);
 
   useEffect(() => {
     if (index > wrongQuestions.length - 1) {
@@ -107,7 +115,7 @@ export function WrongAnswersPage() {
       </header>
 
       <div className="mx-auto grid max-w-7xl grid-cols-1 gap-4 px-4 py-4 md:grid-cols-[1fr_220px] md:px-6">
-        <main className="rounded-2xl border border-stone-200 bg-white p-5 md:p-8">
+        <main className="max-h-[calc(100vh-100px)] overflow-y-auto rounded-2xl border border-stone-200 bg-white p-5 md:p-8">
           <p className="mb-3 text-xs font-medium text-stone-500">
             오답 {index + 1} / {wrongQuestions.length} · 풀이순번 {solveNo}번
           </p>
@@ -116,7 +124,7 @@ export function WrongAnswersPage() {
               챕터 · {current.chapter}
             </p>
           ) : null}
-          <h2 className="text-lg font-semibold leading-8 md:text-2xl md:leading-10">{current.question}</h2>
+          <h2 className="text-base font-semibold leading-7 md:text-lg md:leading-8">{current.question}</h2>
 
           <div className="mt-6 space-y-3">
             <article className="rounded-xl border border-red-200 bg-red-50 p-4">
@@ -159,10 +167,10 @@ export function WrongAnswersPage() {
           </div>
         </main>
 
-        <aside className="hidden rounded-2xl border border-stone-200 bg-white p-4 md:block">
+        <aside className="hidden max-h-[calc(100vh-100px)] flex-col rounded-2xl border border-stone-200 bg-white p-4 md:flex">
           <h3 className="mb-3 text-sm font-semibold">오답 OMR</h3>
-          <div className="overflow-hidden rounded-lg border border-stone-200">
-            <div className="grid grid-cols-[1fr_1fr_1fr] border-b border-stone-200 bg-stone-50 px-2 py-1.5 text-[11px] font-semibold text-stone-600">
+          <div className="flex-1 overflow-y-auto rounded-lg border border-stone-200">
+            <div className="sticky top-0 z-10 grid grid-cols-[1fr_1fr_1fr] border-b border-stone-200 bg-stone-50 px-2 py-1.5 text-[11px] font-semibold text-stone-600">
               <span>번호</span>
               <span>내 답</span>
               <span>정답</span>
@@ -170,6 +178,7 @@ export function WrongAnswersPage() {
             {wrongQuestions.map((question, qIdx) => (
               <button
                 key={question.id}
+                ref={(el) => omrRefs.set(qIdx, el)}
                 onClick={() => setIndex(qIdx)}
                 className={[
                   "grid w-full grid-cols-[1fr_1fr_1fr] border-b border-stone-200 px-2 py-1.5 text-left text-xs font-semibold last:border-b-0",

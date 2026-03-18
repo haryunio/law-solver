@@ -20,6 +20,14 @@ export function CbtSolveScreen({ sessionId, onSubmitted }: CbtSolveScreenProps) 
 
   const [index, setIndex] = useState(0);
   const [isOmrOpen, setIsOmrOpen] = useState(false);
+  const omrRefs = useMemo(() => new Map<number, HTMLButtonElement | null>(), []);
+
+  useEffect(() => {
+    const activeBtn = omrRefs.get(index);
+    if (activeBtn) {
+      activeBtn.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    }
+  }, [index, omrRefs]);
 
   useEffect(() => {
     if (!session || session.status === "completed") return;
@@ -43,6 +51,8 @@ export function CbtSolveScreen({ sessionId, onSubmitted }: CbtSolveScreenProps) 
     return <div className="rounded-xl border border-stone-200 bg-white p-6 text-stone-700">문항 데이터가 없습니다.</div>;
   }
 
+  const CIRCLED_NUMBERS = ["①", "②", "③", "④", "⑤"];
+
   const options =
     session.type === "OX"
       ? [
@@ -51,7 +61,7 @@ export function CbtSolveScreen({ sessionId, onSubmitted }: CbtSolveScreenProps) 
         ]
       : (current.choices ?? []).map((choice, idx) => ({
           key: String(idx + 1),
-          label: `${idx + 1}. ${choice}`,
+          label: `${CIRCLED_NUMBERS[idx] ?? idx + 1} ${choice}`,
         }));
 
   const answeredCount = session.questions.filter((q) => q.my_answer !== "").length;
@@ -74,17 +84,29 @@ export function CbtSolveScreen({ sessionId, onSubmitted }: CbtSolveScreenProps) 
             <p className="text-lg font-semibold tabular-nums text-red-600">{formatElapsedTime(session.elapsed_time)}</p>
           </div>
           <h1 className="truncate text-center text-sm font-semibold md:text-base">{session.title}</h1>
-          <button
-            onClick={handleSubmit}
-            className="rounded-lg bg-red-600 px-3 py-2 text-sm font-semibold text-white transition hover:bg-red-700"
-          >
-            제출 및 종료
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => {
+                if (window.confirm("풀이를 일시 중단하고 메인으로 나갈까요?")) {
+                  window.location.hash = "/dashboard";
+                }
+              }}
+              className="rounded-lg border border-stone-300 bg-white px-3 py-2 text-sm font-semibold text-stone-700 transition hover:bg-stone-50"
+            >
+              일시 중단
+            </button>
+            <button
+              onClick={handleSubmit}
+              className="rounded-lg bg-red-600 px-3 py-2 text-sm font-semibold text-white transition hover:bg-red-700"
+            >
+              제출 및 종료
+            </button>
+          </div>
         </div>
       </header>
 
       <div className="mx-auto grid max-w-7xl grid-cols-1 gap-4 px-4 py-4 md:grid-cols-[1fr_220px] md:px-6">
-        <main className="rounded-2xl border border-stone-200 bg-white p-5 md:p-8">
+        <main className="max-h-[calc(100vh-140px)] overflow-y-auto rounded-2xl border border-stone-200 bg-white p-5 md:p-8">
           <p className="mb-3 text-xs font-medium text-stone-500">
             {index + 1}번 / 총 {session.total_questions}문항
           </p>
@@ -93,7 +115,7 @@ export function CbtSolveScreen({ sessionId, onSubmitted }: CbtSolveScreenProps) 
               챕터 · {current.chapter}
             </p>
           ) : null}
-          <h2 className="text-lg font-semibold leading-8 md:text-2xl md:leading-10">{current.question}</h2>
+          <h2 className="text-base font-semibold leading-7 md:text-lg md:leading-8">{current.question}</h2>
 
           <div className="mt-6 space-y-3">
             {options.map((option) => {
@@ -137,15 +159,15 @@ export function CbtSolveScreen({ sessionId, onSubmitted }: CbtSolveScreenProps) 
           </div>
         </main>
 
-        <aside className="hidden rounded-2xl border border-stone-200 bg-white p-4 md:block">
+        <aside className="hidden max-h-[calc(100vh-140px)] flex-col rounded-2xl border border-stone-200 bg-white p-4 md:flex">
           <div className="mb-3 flex items-center justify-between">
             <h3 className="text-sm font-semibold">OMR</h3>
             <p className="text-xs text-stone-500">
               {answeredCount}/{session.total_questions}
             </p>
           </div>
-          <div className="overflow-hidden rounded-lg border border-stone-200">
-            <div className="grid grid-cols-[1fr_1fr] border-b border-stone-200 bg-stone-50 px-2 py-1.5 text-[11px] font-semibold text-stone-600">
+          <div className="flex-1 overflow-y-auto rounded-lg border border-stone-200">
+            <div className="sticky top-0 z-10 grid grid-cols-[1fr_1fr] border-b border-stone-200 bg-stone-50 px-2 py-1.5 text-[11px] font-semibold text-stone-600">
               <span>번호</span>
               <span>내 답</span>
             </div>
@@ -155,6 +177,7 @@ export function CbtSolveScreen({ sessionId, onSubmitted }: CbtSolveScreenProps) 
               return (
                 <button
                   key={question.id}
+                  ref={(el) => omrRefs.set(qIndex, el)}
                   onClick={() => setIndex(qIndex)}
                   className={[
                     "grid w-full grid-cols-[1fr_1fr] border-b border-stone-200 px-2 py-1.5 text-left text-xs font-semibold last:border-b-0",

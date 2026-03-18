@@ -19,6 +19,8 @@ interface TestStore {
   tickElapsedTime: (sessionId: string) => void;
   submitSession: (sessionId: string) => void;
   getSessionById: (sessionId: string) => TestSession | undefined;
+  resetSessions: () => void;
+  importSessions: (sessions: TestSession[]) => void;
 }
 
 const calcSolved = (questions: ParsedQuestion[]) =>
@@ -93,6 +95,8 @@ export const useTestStore = create<TestStore>()(
           }),
         })),
       getSessionById: (sessionId) => get().sessions.find((session) => session.id === sessionId),
+      resetSessions: () => set({ sessions: [] }),
+      importSessions: (sessions) => set({ sessions }),
     }),
     {
       name: "law-solver-storage",

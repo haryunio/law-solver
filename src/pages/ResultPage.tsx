@@ -1,14 +1,21 @@
+import { useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { getAnswerToken } from "../lib/answer";
 import { downloadSessionCsv } from "../lib/csv";
 import { getCorrectCount, getWrongQuestions, isCorrectQuestion } from "../lib/session";
 import { formatElapsedTime } from "../lib/time";
 import { useTestStore } from "../store/useTestStore";
+import { SolveOrder } from "../types/test";
 
 export function ResultPage() {
   const { sessionId = "" } = useParams();
   const navigate = useNavigate();
   const session = useTestStore((state) => state.sessions.find((item) => item.id === sessionId));
+  const createSession = useTestStore((state) => state.createSession);
+
+  const [isRetryModalOpen, setIsRetryModalOpen] = useState(false);
+  const [retryTitle, setRetryTitle] = useState("");
+  const [retryOrderMode, setRetryOrderMode] = useState<SolveOrder>("number");
 
   if (!session) {
     return (
@@ -25,6 +32,32 @@ export function ResultPage() {
       </div>
     );
   }
+
+  const handleOpenRetry = () => {
+    setRetryTitle(`${session.title} (새로 풀기)`);
+    setRetryOrderMode(session.order_mode ?? "number");
+    setIsRetryModalOpen(true);
+  };
+
+  const handleRetrySubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!retryTitle.trim()) return;
+
+    // 기존 문제들에서 유저 답안만 초기화
+    const resetQuestions = session.questions.map((q) => ({
+      ...q,
+      my_answer: "",
+    }));
+
+    const newSessionId = createSession({
+      title: retryTitle.trim(),
+      type: session.type,
+      orderMode: retryOrderMode,
+      questions: resetQuestions,
+    });
+
+    navigate(`/solve/${newSessionId}`);
+  };
 
   if (session.status !== "completed") {
     return (
@@ -80,6 +113,12 @@ export function ResultPage() {
               오답 확인하기
             </Link>
             <button
+              onClick={handleOpenRetry}
+              className="rounded-lg border border-red-600 bg-white px-4 py-2 text-sm font-semibold text-red-600 transition hover:bg-red-50"
+            >
+              새로 풀기
+            </button>
+            <button
               onClick={() => downloadSessionCsv(session)}
               className="rounded-lg border border-stone-300 bg-white px-4 py-2 text-sm font-semibold text-stone-700"
             >
@@ -123,6 +162,61 @@ export function ResultPage() {
           </div>
         </div>
       </div>
+
+      {isRetryModalOpen ? (
+        <div className="fixed inset-0 z-50">
+          <button onClick={() => setIsRetryModalOpen(false)} className="absolute inset-0 bg-black/35" />
+          <div className="absolute left-1/2 top-1/2 w-[92vw] max-w-md -translate-x-1/2 -translate-y-1/2">
+            <form
+              onSubmit={handleRetrySubmit}
+              className="space-y-4 rounded-2xl border border-stone-200 bg-white p-6 shadow-2xl"
+            >
+              <div className="flex items-center justify-between">
+                <h2 className="text-lg font-semibold text-stone-900">새로 풀기 설정</h2>
+                <button
+                  type="button"
+                  onClick={() => setIsRetryModalOpen(false)}
+                  className="text-stone-400 hover:text-stone-600"
+                >
+                  X
+                </button>
+              </div>
+
+              <label className="block space-y-2">
+                <span className="text-sm font-medium text-stone-700">새 세션 제목</span>
+                <input
+                  autoFocus
+                  value={retryTitle}
+                  onChange={(e) => setRetryTitle(e.target.value)}
+                  className="w-full rounded-lg border border-stone-300 bg-white px-3 py-2 text-sm text-stone-900 outline-none ring-red-200 transition focus:ring-2"
+                />
+              </label>
+
+              <label className="block space-y-2">
+                <span className="text-sm font-medium text-stone-700">풀이 순서</span>
+                <select
+                  value={retryOrderMode}
+                  onChange={(e) => setRetryOrderMode(e.target.value as SolveOrder)}
+                  className="w-full rounded-lg border border-stone-300 bg-white px-3 py-2 text-sm text-stone-900 outline-none ring-red-200 transition focus:ring-2"
+                >
+                  <option value="number">번호 순서대로 풀기</option>
+                  <option value="chapter-random">챕터별로 무작위 풀기</option>
+                  <option value="random">전체 무작위 풀기</option>
+                </select>
+              </label>
+
+              <div className="pt-2">
+                <button
+                  type="submit"
+                  className="w-full rounded-lg bg-red-600 py-2.5 text-sm font-semibold text-white transition hover:bg-red-700"
+                >
+                  풀이 시작하기
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }

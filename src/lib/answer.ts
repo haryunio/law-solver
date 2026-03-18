@@ -9,6 +9,8 @@ export const getAnswerLabel = (question: ParsedQuestion, answer: string) => {
   const idx = Number(answer) - 1;
   const choice = question.choices[idx];
   if (!choice) return answer;
-  return `${answer}. ${choice}`;
+
+  const CIRCLED_NUMBERS = ["①", "②", "③", "④", "⑤"];
+  return `${CIRCLED_NUMBERS[idx] ?? answer} ${choice}`;
 };
 
