@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { getAnswerToken } from "../../lib/answer";
 import { downloadSessionCsv } from "../../lib/csv";
 import { formatElapsedTime } from "../../lib/time";
@@ -11,6 +12,7 @@ interface CbtSolveScreenProps {
 }
 
 export function CbtSolveScreen({ sessionId, onSubmitted }: CbtSolveScreenProps) {
+  const navigate = useNavigate();
   const sessions = useTestStore((state) => state.sessions);
   const updateAnswer = useTestStore((state) => state.updateAnswer);
   const tickElapsedTime = useTestStore((state) => state.tickElapsedTime);
@@ -88,7 +90,7 @@ export function CbtSolveScreen({ sessionId, onSubmitted }: CbtSolveScreenProps) 
             <button
               onClick={() => {
                 if (window.confirm("풀이를 일시 중단하고 메인으로 나갈까요?")) {
-                  window.location.hash = "/dashboard";
+                  navigate("/dashboard");
                 }
               }}
               className="rounded-lg border border-stone-300 bg-white px-3 py-2 text-sm font-semibold text-stone-700 transition hover:bg-stone-50"
