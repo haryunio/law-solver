@@ -72,6 +72,16 @@ export function CbtSolveScreen({ sessionId, onSubmitted }: CbtSolveScreenProps) 
     updateAnswer(session.id, current.id, answer as AnswerValue);
   };
 
+  const goToNext = () => {
+    setIndex((prev) => Math.min(session.total_questions - 1, prev + 1));
+  };
+
+  const handleShortSubmit = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter") {
+      goToNext();
+    }
+  };
+
   const handleSubmit = () => {
     submitSession(session.id);
     onSubmitted?.(session.id);
@@ -120,23 +130,39 @@ export function CbtSolveScreen({ sessionId, onSubmitted }: CbtSolveScreenProps) 
           <h2 className="text-base font-semibold leading-7 md:text-lg md:leading-8">{current.question}</h2>
 
           <div className="mt-6 space-y-3">
-            {options.map((option) => {
-              const selected = current.my_answer === option.key;
-              return (
-                <button
-                  key={option.key}
-                  onClick={() => handleAnswer(option.key)}
-                  className={[
-                    "flex w-full items-start rounded-xl border px-4 py-3 text-left transition",
-                    selected
-                      ? "border-red-600 bg-red-50 text-red-700"
-                      : "border-stone-300 bg-white text-stone-800 hover:border-red-300",
-                  ].join(" ")}
-                >
-                  <span className="font-medium">{option.label}</span>
-                </button>
-              );
-            })}
+            {session.type === "short" ? (
+              <div className="space-y-2">
+                <p className="text-xs font-medium text-stone-500">답안 입력</p>
+                <input
+                  key={`short-input-${index}`}
+                  type="text"
+                  value={current.my_answer}
+                  onChange={(e) => handleAnswer(e.target.value)}
+                  onKeyDown={handleShortSubmit}
+                  placeholder="정답을 입력하세요. (Enter를 누르면 다음 문항으로)"
+                  className="w-full rounded-xl border border-stone-300 bg-white px-4 py-3 text-base outline-none ring-red-200 transition focus:border-red-600 focus:ring-2"
+                  autoFocus
+                />
+              </div>
+            ) : (
+              options.map((option) => {
+                const selected = current.my_answer === option.key;
+                return (
+                  <button
+                    key={option.key}
+                    onClick={() => handleAnswer(option.key)}
+                    className={[
+                      "flex w-full items-start rounded-xl border px-4 py-3 text-left transition",
+                      selected
+                        ? "border-red-600 bg-red-50 text-red-700"
+                        : "border-stone-300 bg-white text-stone-800 hover:border-red-300",
+                    ].join(" ")}
+                  >
+                    <span className="font-medium">{option.label}</span>
+                  </button>
+                );
+              })
+            )}
           </div>
 
           <div className="mt-8 flex flex-wrap items-center gap-2 border-t border-stone-200 pt-4">
@@ -148,7 +174,7 @@ export function CbtSolveScreen({ sessionId, onSubmitted }: CbtSolveScreenProps) 
               이전 문제
             </button>
             <button
-              onClick={() => setIndex((prev) => Math.min(session.total_questions - 1, prev + 1))}
+              onClick={goToNext}
               disabled={index >= session.total_questions - 1}
               className="rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-40"
             >
@@ -191,7 +217,7 @@ export function CbtSolveScreen({ sessionId, onSubmitted }: CbtSolveScreenProps) 
                   ].join(" ")}
                 >
                   <span>{qIndex + 1}</span>
-                  <span>{getAnswerToken(question.my_answer)}</span>
+                  <span className="truncate">{getAnswerToken(question.my_answer)}</span>
                 </button>
               );
             })}
@@ -247,7 +273,7 @@ export function CbtSolveScreen({ sessionId, onSubmitted }: CbtSolveScreenProps) 
                     ].join(" ")}
                   >
                     <span>{qIndex + 1}</span>
-                    <span>{getAnswerToken(question.my_answer)}</span>
+                    <span className="truncate">{getAnswerToken(question.my_answer)}</span>
                   </button>
                 );
               })}

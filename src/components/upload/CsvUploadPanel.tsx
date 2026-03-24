@@ -73,6 +73,7 @@ export function CsvUploadPanel({ onCreated }: CsvUploadPanelProps) {
         >
           <option value="OX">OX</option>
           <option value="5-choice">5지선다</option>
+          <option value="short">단답형</option>
         </select>
       </label>
 

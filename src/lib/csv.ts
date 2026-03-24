@@ -109,10 +109,37 @@ const parseChoiceRows = (rows: RawRow[]): ParsedQuestion[] => {
   });
 };
 
+const parseShortRows = (rows: RawRow[]): ParsedQuestion[] => {
+  return rows.map((row, idx) => {
+    const no = Number(getValue(row, ["번호", "no", "num", "number"], 0)) || idx + 1;
+    const chapter = getValue(row, ["챕터", "chapter", "단원", "파트"]);
+    const question = getValue(row, ["문제", "question", "문항"], 1);
+    const answerRaw = getValue(row, ["정답", "answer"], 2);
+    if (!question || !answerRaw) {
+      throw new Error(`${idx + 2}번째 행에 문제/정답이 비어 있습니다.`);
+    }
+
+    return {
+      id: createId(),
+      no,
+      chapter,
+      question,
+      answer: answerRaw.trim(), // 단답형은 그대로 사용
+      explanation: getValue(row, ["해설", "해설optional", "explanation"], 3),
+      source: getValue(row, ["출처", "출처optional", "source"], 4),
+      my_answer: "",
+      originalRow: row,
+    };
+  });
+};
+
 export const parseCsvByType = (csvText: string, type: TestType): ParsedQuestion[] => {
   const rows = parseRawRows(csvText);
   if (!rows.length) throw new Error("CSV 데이터가 비어 있습니다.");
-  return type === "OX" ? parseOxRows(rows) : parseChoiceRows(rows);
+  
+  if (type === "OX") return parseOxRows(rows);
+  if (type === "5-choice") return parseChoiceRows(rows);
+  return parseShortRows(rows);
 };
 
 export const buildSessionExportCsv = (session: TestSession): string => {

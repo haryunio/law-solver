@@ -1,10 +1,10 @@
-export type TestType = "OX" | "5-choice";
+export type TestType = "OX" | "5-choice" | "short";
 export type SessionStatus = "in-progress" | "completed";
 export type SolveOrder = "number" | "chapter-random" | "random";
 
 export type OXAnswer = "O" | "X";
 export type ChoiceAnswer = "1" | "2" | "3" | "4" | "5";
-export type AnswerValue = OXAnswer | ChoiceAnswer;
+export type AnswerValue = OXAnswer | ChoiceAnswer | string;
 
 export interface ParsedQuestion {
   id: string;
