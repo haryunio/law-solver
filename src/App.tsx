@@ -2,6 +2,7 @@ import { Navigate, Route, Routes } from "react-router-dom";
 import { DashboardPage } from "./pages/DashboardPage";
 import { LandingPage } from "./pages/LandingPage";
 import { ResultPage } from "./pages/ResultPage";
+import { ReviewAllPage } from "./pages/ReviewAllPage";
 import { SolvePage } from "./pages/SolvePage";
 import { WrongAnswersPage } from "./pages/WrongAnswersPage";
 
@@ -13,6 +14,7 @@ export default function App() {
       <Route path="/solve/:sessionId" element={<SolvePage />} />
       <Route path="/result/:sessionId" element={<ResultPage />} />
       <Route path="/wrong/:sessionId" element={<WrongAnswersPage />} />
+      <Route path="/review/:sessionId" element={<ReviewAllPage />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );

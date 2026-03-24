@@ -16,8 +16,10 @@ export interface ParsedQuestion {
   explanation?: string;
   source?: string;
   my_answer: AnswerValue | "";
+  wrong_note?: string;
   originalRow: Record<string, string>;
 }
+
 
 export interface TestSession {
   id: string;

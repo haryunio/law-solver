@@ -119,8 +119,50 @@ export const buildSessionExportCsv = (session: TestSession): string => {
   const rows = session.questions.map((question) => ({
     ...question.originalRow,
     my_answer: question.my_answer,
+    wrong_note: question.wrong_note || "",
   }));
   return Papa.unparse(rows);
+};
+
+export const buildWrongQuestionsOnlyCsv = (session: TestSession): string => {
+  const wrongQuestions = session.questions.filter(
+    (q) => q.my_answer !== "" && q.my_answer !== q.answer,
+  );
+  const rows = wrongQuestions.map((question) => ({
+    ...question.originalRow,
+    my_answer: question.my_answer,
+    // 원본 양식 유지를 위해 wrong_note는 포함하지 않음
+  }));
+  return Papa.unparse(rows);
+};
+
+export const buildWrongNoteCsv = (session: TestSession): string => {
+  const wrongQuestions = session.questions.filter(
+    (q) => q.my_answer !== "" && q.my_answer !== q.answer,
+  );
+  const rows = wrongQuestions.map((q, idx) => ({
+    번호: q.no || idx + 1,
+    챕터: q.chapter || "",
+    문제: q.question,
+    정답: q.answer,
+    해설: q.explanation || "",
+    출처: q.source || "",
+    "내 답": q.my_answer,
+    "오답 노트": q.wrong_note || "",
+  }));
+  return Papa.unparse(rows);
+};
+
+export const downloadCsvFile = (csvContent: string, fileName: string) => {
+  const csv = csvContent.replace(/\r?\n/g, "\r\n");
+  const withBom = `\uFEFF${csv}`;
+  const blob = new Blob([withBom], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = fileName.endsWith(".csv") ? fileName : `${fileName}.csv`;
+  link.click();
+  URL.revokeObjectURL(url);
 };
 
 const stripBom = (text: string) => text.replace(/^\uFEFF/, "");
@@ -150,13 +192,6 @@ export const readCsvFileText = async (file: File): Promise<string> => {
 };
 
 export const downloadSessionCsv = (session: TestSession) => {
-  const csv = buildSessionExportCsv(session).replace(/\r?\n/g, "\r\n");
-  const withBom = `\uFEFF${csv}`;
-  const blob = new Blob([withBom], { type: "text/csv;charset=utf-8;" });
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement("a");
-  link.href = url;
-  link.download = `${session.title.replace(/\s+/g, "_")}_with_answers.csv`;
-  link.click();
-  URL.revokeObjectURL(url);
+  const csv = buildSessionExportCsv(session);
+  downloadCsvFile(csv, `${session.title.replace(/\s+/g, "_")}_전체_결과.csv`);
 };

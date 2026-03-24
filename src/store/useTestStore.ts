@@ -16,6 +16,7 @@ interface TestStore {
   createSession: (input: CreateSessionInput) => string;
   deleteSession: (sessionId: string) => void;
   updateAnswer: (sessionId: string, questionId: string, answer: AnswerValue) => void;
+  updateWrongNote: (sessionId: string, questionId: string, note: string) => void; // 추가
   tickElapsedTime: (sessionId: string) => void;
   submitSession: (sessionId: string) => void;
   getSessionById: (sessionId: string) => TestSession | undefined;
@@ -71,6 +72,18 @@ export const useTestStore = create<TestStore>()(
               ...session,
               questions: nextQuestions,
               solved_questions: calcSolved(nextQuestions),
+            };
+          }),
+        })),
+      updateWrongNote: (sessionId, questionId, note) =>
+        set((state) => ({
+          sessions: state.sessions.map((session) => {
+            if (session.id !== sessionId) return session;
+            return {
+              ...session,
+              questions: session.questions.map((q) =>
+                q.id === questionId ? { ...q, wrong_note: note } : q,
+              ),
             };
           }),
         })),
