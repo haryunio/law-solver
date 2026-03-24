@@ -77,6 +77,7 @@ export function CbtSolveScreen({ sessionId, onSubmitted }: CbtSolveScreenProps) 
   };
 
   const handleShortSubmit = (e: React.KeyboardEvent) => {
+    if (e.nativeEvent.isComposing) return; // 한글 조합 중일 때는 동작 방지
     if (e.key === "Enter") {
       goToNext();
     }
