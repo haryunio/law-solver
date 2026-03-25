@@ -10,6 +10,18 @@ const orderModeLabel = {
   random: "전체 랜덤",
 } as const;
 
+const typeLabel = {
+  OX: "OX",
+  "5-choice": "5지선다",
+  short: "단답형",
+} as const;
+
+const typeStyle = {
+  OX: "bg-blue-50 text-blue-700 border-blue-100",
+  "5-choice": "bg-emerald-50 text-emerald-700 border-emerald-100",
+  short: "bg-purple-50 text-purple-700 border-purple-100",
+} as const;
+
 export function DashboardPage() {
   const sessions = useTestStore((state) => state.sessions);
   const deleteSession = useTestStore((state) => state.deleteSession);
@@ -109,7 +121,7 @@ export function DashboardPage() {
         {sortedSessions.length === 0 ? (
           <div className="rounded-2xl border border-dashed border-stone-300 bg-white p-10 text-center">
             <p className="text-base font-medium text-stone-700">등록된 문제 세션이 없습니다.</p>
-            <p className="mt-1 text-sm text-stone-500">CSV 업로드로 OX 또는 5지선다 문제를 시작하세요.</p>
+            <p className="mt-1 text-sm text-stone-500">CSV 업로드로 OX, 5지선다 또는 단답형 문제를 시작하세요.</p>
           </div>
         ) : (
           <div className="grid gap-3 md:grid-cols-2">
@@ -130,7 +142,17 @@ export function DashboardPage() {
                 </div>
 
                 <div className="grid grid-cols-2 gap-x-3 gap-y-1 text-sm text-stone-600">
-                  <p>유형: {session.type}</p>
+                  <div className="flex items-center gap-1.5">
+                    <span>유형:</span>
+                    <span
+                      className={[
+                        "rounded-full px-2 py-0.5 text-[11px] font-semibold",
+                        typeStyle[session.type],
+                      ].join(" ")}
+                    >
+                      {typeLabel[session.type]}
+                    </span>
+                  </div>
                   <p>
                     진도: {session.solved_questions}/{session.total_questions}
                   </p>
