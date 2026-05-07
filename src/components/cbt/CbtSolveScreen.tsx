@@ -15,14 +15,20 @@ export function CbtSolveScreen({ sessionId, onSubmitted }: CbtSolveScreenProps) 
   const navigate = useNavigate();
   const sessions = useTestStore((state) => state.sessions);
   const updateAnswer = useTestStore((state) => state.updateAnswer);
+  const toggleBookmark = useTestStore((state) => state.toggleBookmark);
   const tickElapsedTime = useTestStore((state) => state.tickElapsedTime);
   const submitSession = useTestStore((state) => state.submitSession);
 
   const session = useMemo(() => sessions.find((item) => item.id === sessionId), [sessions, sessionId]);
 
   const [index, setIndex] = useState(0);
+  const [showAnswer, setShowAnswer] = useState(false);
   const [isOmrOpen, setIsOmrOpen] = useState(false);
   const omrRefs = useMemo(() => new Map<number, HTMLButtonElement | null>(), []);
+
+  useEffect(() => {
+    setShowAnswer(false);
+  }, [index]);
 
   useEffect(() => {
     const activeBtn = omrRefs.get(index);
@@ -120,14 +126,44 @@ export function CbtSolveScreen({ sessionId, onSubmitted }: CbtSolveScreenProps) 
 
       <div className="mx-auto grid max-w-7xl grid-cols-1 gap-4 px-4 py-4 md:grid-cols-[1fr_220px] md:px-6">
         <main className="max-h-[calc(100vh-140px)] overflow-y-auto rounded-2xl border border-stone-200 bg-white p-5 md:p-8">
-          <p className="mb-3 text-xs font-medium text-stone-500">
-            {index + 1}번 / 총 {session.total_questions}문항
-          </p>
-          {current.chapter ? (
-            <p className="mb-3 inline-flex rounded-full border border-red-200 bg-red-50 px-3 py-1 text-xs font-semibold text-red-700">
-              챕터 · {current.chapter}
-            </p>
-          ) : null}
+          <div className="mb-4 flex items-start justify-between">
+            <div>
+              <p className="mb-2 text-xs font-medium text-stone-500">
+                {index + 1}번 / 총 {session.total_questions}문항
+              </p>
+              {current.chapter ? (
+                <p className="inline-flex rounded-full border border-red-200 bg-red-50 px-3 py-1 text-xs font-semibold text-red-700">
+                  챕터 · {current.chapter}
+                </p>
+              ) : null}
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setShowAnswer((prev) => !prev)}
+                title={showAnswer ? "정답 숨기기" : "정답/해설 보기"}
+                className={[
+                  "flex h-8 w-8 items-center justify-center rounded-full border text-sm transition",
+                  showAnswer
+                    ? "border-blue-600 bg-blue-600 text-white"
+                    : "border-stone-300 bg-white text-stone-500 hover:border-blue-500 hover:text-blue-500",
+                ].join(" ")}
+              >
+                ?
+              </button>
+              <button
+                onClick={() => toggleBookmark(session.id, current.id)}
+                title={current.bookmark ? "책갈피 해제" : "책갈피 추가"}
+                className={[
+                  "flex h-8 w-8 items-center justify-center rounded-full border text-sm transition",
+                  current.bookmark
+                    ? "border-amber-400 bg-amber-400 text-white"
+                    : "border-stone-300 bg-white text-stone-500 hover:border-amber-500 hover:text-amber-500",
+                ].join(" ")}
+              >
+                ★
+              </button>
+            </div>
+          </div>
           <h2 className="text-base font-semibold leading-7 md:text-lg md:leading-8">{current.question}</h2>
 
           <div className="mt-6 space-y-3">
@@ -148,6 +184,8 @@ export function CbtSolveScreen({ sessionId, onSubmitted }: CbtSolveScreenProps) 
             ) : (
               options.map((option) => {
                 const selected = current.my_answer === option.key;
+                const isCorrect = showAnswer && String(current.answer) === option.key;
+
                 return (
                   <button
                     key={option.key}
@@ -156,17 +194,40 @@ export function CbtSolveScreen({ sessionId, onSubmitted }: CbtSolveScreenProps) 
                       "flex w-full items-start rounded-xl border px-4 py-3 text-left transition",
                       selected
                         ? "border-red-600 bg-red-50 text-red-700"
-                        : "border-stone-300 bg-white text-stone-800 hover:border-red-300",
+                        : isCorrect
+                          ? "border-blue-600 bg-blue-50 text-blue-700"
+                          : "border-stone-300 bg-white text-stone-800 hover:border-red-300",
                     ].join(" ")}
                   >
                     <span className="font-medium">{option.label}</span>
+                    {isCorrect && <span className="ml-auto text-xs font-bold text-blue-600">정답</span>}
                   </button>
                 );
               })
             )}
           </div>
 
-          <div className="mt-8 flex flex-wrap items-center gap-2 border-t border-stone-200 pt-4">
+          {showAnswer && (
+            <div className="mt-6 rounded-xl border border-blue-200 bg-blue-50/50 p-4">
+              <div className="mb-2 flex items-center gap-2">
+                <span className="rounded bg-blue-600 px-1.5 py-0.5 text-[10px] font-bold text-white uppercase">
+                  정답
+                </span>
+                <span className="text-sm font-bold text-blue-700">{getAnswerToken(String(current.answer))}</span>
+              </div>
+              {current.explanation && (
+                <div className="text-sm leading-relaxed text-stone-700">
+                  <p className="mb-1 font-semibold text-stone-900">해설</p>
+                  <p>{current.explanation}</p>
+                </div>
+              )}
+              {current.source && (
+                <p className="mt-3 text-xs text-stone-500 italic">출처: {current.source}</p>
+              )}
+            </div>
+          )}
+
+          <div className="mt-8 flex items-center gap-2 border-t border-stone-200 pt-4">
             <button
               onClick={() => setIndex((prev) => Math.max(0, prev - 1))}
               disabled={index === 0}
@@ -196,9 +257,10 @@ export function CbtSolveScreen({ sessionId, onSubmitted }: CbtSolveScreenProps) 
             </p>
           </div>
           <div className="flex-1 overflow-y-auto rounded-lg border border-stone-200">
-            <div className="sticky top-0 z-10 grid grid-cols-[1fr_1fr] border-b border-stone-200 bg-stone-50 px-2 py-1.5 text-[11px] font-semibold text-stone-600">
+            <div className="sticky top-0 z-10 grid grid-cols-[32px_1fr_1fr_16px] border-b border-stone-200 bg-stone-50 px-2 py-1.5 text-[11px] font-semibold text-stone-600">
               <span>번호</span>
               <span>내 답</span>
+              <span></span>
             </div>
             {session.questions.map((question, qIndex) => {
               const isCurrent = qIndex === index;
@@ -209,7 +271,7 @@ export function CbtSolveScreen({ sessionId, onSubmitted }: CbtSolveScreenProps) 
                   ref={(el) => omrRefs.set(qIndex, el)}
                   onClick={() => setIndex(qIndex)}
                   className={[
-                    "grid w-full grid-cols-[1fr_1fr] border-b border-stone-200 px-2 py-1.5 text-left text-xs font-semibold last:border-b-0",
+                    "grid w-full grid-cols-[32px_1fr_1fr_16px] border-b border-stone-200 px-2 py-1.5 text-left text-xs font-semibold last:border-b-0",
                     isCurrent
                       ? "bg-red-600 text-white"
                       : isAnswered
@@ -219,6 +281,9 @@ export function CbtSolveScreen({ sessionId, onSubmitted }: CbtSolveScreenProps) 
                 >
                   <span>{qIndex + 1}</span>
                   <span className="truncate">{getAnswerToken(question.my_answer)}</span>
+                  <span className="flex items-center justify-center text-[10px] text-amber-500">
+                    {question.bookmark ? "★" : ""}
+                  </span>
                 </button>
               );
             })}
@@ -250,9 +315,10 @@ export function CbtSolveScreen({ sessionId, onSubmitted }: CbtSolveScreenProps) 
               </button>
             </div>
             <div className="max-h-[48vh] overflow-y-auto rounded-lg border border-stone-200">
-              <div className="grid grid-cols-[1fr_1fr] border-b border-stone-200 bg-stone-50 px-2 py-1.5 text-[11px] font-semibold text-stone-600">
+              <div className="grid grid-cols-[32px_1fr_1fr_16px] border-b border-stone-200 bg-stone-50 px-2 py-1.5 text-[11px] font-semibold text-stone-600">
                 <span>번호</span>
                 <span>내 답</span>
+                <span></span>
               </div>
               {session.questions.map((question, qIndex) => {
                 const isCurrent = qIndex === index;
@@ -265,7 +331,7 @@ export function CbtSolveScreen({ sessionId, onSubmitted }: CbtSolveScreenProps) 
                       setIsOmrOpen(false);
                     }}
                     className={[
-                      "grid w-full grid-cols-[1fr_1fr] border-b border-stone-200 px-2 py-2 text-left text-xs font-semibold last:border-b-0",
+                      "grid w-full grid-cols-[32px_1fr_1fr_16px] border-b border-stone-200 px-2 py-2 text-left text-xs font-semibold last:border-b-0",
                       isCurrent
                         ? "bg-red-600 text-white"
                         : isAnswered
@@ -275,6 +341,9 @@ export function CbtSolveScreen({ sessionId, onSubmitted }: CbtSolveScreenProps) 
                   >
                     <span>{qIndex + 1}</span>
                     <span className="truncate">{getAnswerToken(question.my_answer)}</span>
+                    <span className="flex items-center justify-center text-[10px] text-amber-500">
+                      {question.bookmark ? "★" : ""}
+                    </span>
                   </button>
                 );
               })}

@@ -62,6 +62,7 @@ export function ResultPage() {
       ...q,
       my_answer: "",
       wrong_note: "", // 새 풀이에서는 오답 노트를 비움
+      bookmark: false, // 새 풀이에서는 책갈피를 비움
     }));
 
     const newSessionId = createSession({
@@ -110,6 +111,7 @@ export function ResultPage() {
 
   const correctCount = getCorrectCount(session.questions);
   const wrongCount = getWrongQuestions(session).length;
+  const bookmarkCount = session.questions.filter((q) => q.bookmark).length;
 
   return (
     <div className="min-h-screen px-4 py-8 md:px-6">
@@ -160,6 +162,17 @@ export function ResultPage() {
               className="rounded-lg border border-red-600 bg-white px-4 py-2 text-sm font-semibold text-red-600 transition hover:bg-red-50"
             >
               모든 문제 확인하기
+            </Link>
+            <Link
+              to={`/review/${session.id}?onlyBookmarks=true`}
+              className={[
+                "rounded-lg border px-4 py-2 text-sm font-semibold transition",
+                bookmarkCount > 0
+                  ? "border-amber-500 bg-white text-amber-600 hover:bg-amber-50"
+                  : "border-stone-200 bg-stone-50 text-stone-400 pointer-events-none",
+              ].join(" ")}
+            >
+              책갈피 문제 확인하기 ({bookmarkCount})
             </Link>
             <button
               onClick={handleOpenRetry}

@@ -17,6 +17,7 @@ export interface ParsedQuestion {
   source?: string;
   my_answer: AnswerValue | "";
   wrong_note?: string;
+  bookmark?: boolean;
   originalRow: Record<string, string>;
 }
 
