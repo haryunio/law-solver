@@ -86,6 +86,20 @@ export function LandingPage() {
                   번호,챕터,문제,선택지1,선택지2,선택지3,선택지4,선택지5,정답,해설,출처
                 </p>
               </div>
+
+              <div>
+                <p className="font-semibold text-red-600">단답형 CSV 양식</p>
+                <p className="mt-1 rounded-md bg-stone-100 px-3 py-2 font-mono">
+                  번호,챕터,문제,정답,해설,출처
+                </p>
+              </div>
+              
+              <div>
+                <p className="font-semibold text-red-600">CSV 파일 샘플</p>
+                <a className="text-blue-600 underline" href="/samples/OX_sample.csv" download>OX_sample.csv</a> <br />
+                <a className="text-blue-600 underline" href="/samples/5지선다_sample.csv" download>5지선다_sample.csv</a> <br />
+                <a className="text-blue-600 underline" href="/samples/단답형_sample.csv" download>단답형_sample.csv</a>
+              </div>
             </div>
           </div>
         </div>

@@ -196,6 +196,17 @@ export function DashboardPage() {
             ))}
           </div>
         )}
+
+        <footer className="mt-12 border-t border-stone-200 pt-6 text-center text-sm text-stone-500">
+          <p>제작자: 경북대 로스쿨 17기 신하륜</p>
+          <p className="mt-1">
+            연락처:{" "}
+            <a className="font-medium text-red-600 underline" href="mailto:haryun@knu.ac.kr">
+              haryun@knu.ac.kr
+            </a>
+          </p>
+          <p className="mt-1">CC BY-NC-ND ⓒ 2026 Haryun all rights reserved</p>
+        </footer>
       </div>
 
       {openUpload ? (
