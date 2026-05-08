@@ -1,6 +1,16 @@
 # law-solver
-브라우저(localStorage)만으로 동작하는 법학 문제 풀이 웹앱입니다.  
-CSV 업로드 → CBT 풀이 → 채점 결과/오답 복기 → 답안 포함 CSV 다운로드까지 지원합니다.
+
+별도 서버 없이 브라우저만으로 동작하는 로스쿨 문제 풀이 웹앱입니다.  
+CSV 업로드 → CBT 풀이 → 채점 결과/오답 복기/오답노트 작성 → 답안 포함 CSV 다운로드까지 지원합니다.
+
+## Screenshots
+| 문제풀이 페이지 | 힌트 보기 |
+| --- | --- |
+| ![Dashboard](docs/page_1.png) | ![Solve](docs/page_2.png) |
+
+| 풀이 결과 | 오답 정리 |
+| --- | --- |
+| ![Result](docs/page_3.png) | ![Wrong Answers](docs/page_4.png) |
 
 License: CC BY-NC-ND
 
