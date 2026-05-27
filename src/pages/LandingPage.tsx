@@ -6,22 +6,22 @@ export function LandingPage() {
 
   return (
     <>
-      <div className="relative flex min-h-screen items-center justify-center overflow-hidden px-4">
-        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(230,57,70,0.14),transparent_35%),radial-gradient(circle_at_80%_70%,rgba(230,57,70,0.08),transparent_35%)]" />
+      <div className="relative flex min-h-screen items-center justify-center overflow-hidden px-4 dark:bg-stone-900 transition-colors duration-300">
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(230,57,70,0.14),transparent_35%),radial-gradient(circle_at_80%_70%,rgba(230,57,70,0.08),transparent_35%)] dark:bg-[radial-gradient(circle_at_20%_20%,rgba(230,57,70,0.2),transparent_40%),radial-gradient(circle_at_80%_70%,rgba(230,57,70,0.12),transparent_40%)]" />
 
-        <div className="relative w-full max-w-3xl rounded-3xl border border-stone-200 bg-white/85 p-8 text-center shadow-xl backdrop-blur md:p-12">
-          <p className="text-4xl font-bold tracking-tight text-red-600 md:text-6xl">Law Solver</p>
-          <h1 className="mt-4 text-lg font-medium leading-relaxed text-stone-600 md:text-xl">
+        <div className="relative w-full max-w-3xl rounded-3xl border border-stone-200 bg-white/85 p-8 text-center shadow-xl backdrop-blur md:p-12 dark:border-stone-800 dark:bg-stone-900/90 dark:shadow-stone-950/50">
+          <p className="text-4xl font-bold tracking-tight text-red-600 md:text-6xl dark:text-red-500">Law Solver</p>
+          <h1 className="mt-4 text-lg font-medium leading-relaxed text-stone-600 md:text-xl dark:text-stone-400">
             보기좋게 풀고, 바로 복기하는 로스쿨 문제 풀이 앱
           </h1>
 
-          <div className="mx-auto mt-6 max-w-2xl space-y-2 text-sm leading-6 text-stone-700 md:text-base">
+          <div className="mx-auto mt-6 max-w-2xl space-y-2 text-sm leading-6 text-stone-700 md:text-base dark:text-stone-300">
             <p>
               OX, 5지선다 문제를{" "}
               <button
                 type="button"
                 onClick={() => setIsCsvGuideOpen(true)}
-                className="font-semibold text-red-600 underline underline-offset-2"
+                className="font-semibold text-red-600 underline underline-offset-2 dark:text-red-500"
               >
                 CSV 파일
               </button>
@@ -29,7 +29,7 @@ export function LandingPage() {
             </p>
             <p>창작 문제, 스터디 문제 풀이 등에 사용해 보세요.</p>
             <p>다 푼 문제는 다시 CSV로 저장해 보관할 수 있고, 오답풀이도 바로 할 수 있습니다.</p>
-            <p className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-amber-800">
+            <p className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-amber-800 dark:border-amber-900/50 dark:bg-amber-950/30 dark:text-amber-300">
               서버 없이 브라우저에만 저장되니, 중요한 데이터는 CSV로 꼭 백업해 주세요.
             </p>
           </div>
@@ -37,17 +37,17 @@ export function LandingPage() {
           <div className="mt-10 flex justify-center">
             <Link
               to="/dashboard"
-              className="inline-flex items-center rounded-2xl bg-red-600 px-8 py-4 text-lg font-semibold text-white shadow-lg transition hover:scale-[1.02] hover:bg-red-700"
+              className="inline-flex items-center rounded-2xl bg-red-600 px-8 py-4 text-lg font-semibold text-white shadow-lg transition hover:scale-[1.02] hover:bg-red-700 dark:bg-red-600 dark:hover:bg-red-700"
             >
               문제 풀러 가요!
             </Link>
           </div>
 
-          <div className="mt-10 border-t border-stone-200 pt-5 text-sm text-stone-600">
+          <div className="mt-10 border-t border-stone-200 pt-5 text-sm text-stone-600 dark:border-stone-800 dark:text-stone-500">
             <p>제작자: 경북대 로스쿨 17기 신하륜</p>
             <p className="mt-1">
               연락처:{" "}
-              <a className="font-medium text-red-600 underline" href="mailto:haryun@knu.ac.kr">
+              <a className="font-medium text-red-600 underline dark:text-red-500" href="mailto:haryun@knu.ac.kr">
                 haryun@knu.ac.kr
               </a>
             </p>

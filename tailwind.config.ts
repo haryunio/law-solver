@@ -1,6 +1,7 @@
 import type { Config } from "tailwindcss";
 
 export default {
+  darkMode: "class",
   content: ["./index.html", "./src/**/*.{ts,tsx}"],
   theme: {
     extend: {
@@ -9,7 +10,9 @@ export default {
         pointRed: "#E63946",
       },
       fontFamily: {
-        sans: ["Pretendard", "ui-sans-serif", "system-ui", "sans-serif"],
+        pretendard: ["Pretendard", "ui-sans-serif", "system-ui", "sans-serif"],
+        "nanum-gothic": ["Nanum Gothic", "sans-serif"],
+        "nanum-myeongjo": ["Nanum Myeongjo", "serif"],
       },
     },
   },

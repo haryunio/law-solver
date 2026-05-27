@@ -50,26 +50,26 @@ export function CsvUploadPanel({ onCreated }: CsvUploadPanelProps) {
   return (
     <form
       onSubmit={handleSubmit}
-      className="space-y-4 rounded-2xl border border-stone-200 bg-stone-50 p-5 shadow-sm"
+      className="space-y-4 rounded-2xl border border-stone-200 bg-stone-50 p-5 shadow-sm dark:border-stone-800 dark:bg-stone-900"
     >
-      <h2 className="text-lg font-semibold text-stone-900">새 문제 등록</h2>
+      <h2 className="text-lg font-semibold text-stone-900 dark:text-stone-100">새 문제 등록</h2>
 
       <label className="block space-y-2">
-        <span className="text-sm font-medium text-stone-700">세션 제목</span>
+        <span className="text-sm font-medium text-stone-700 dark:text-stone-300">세션 제목</span>
         <input
           value={title}
           onChange={(e) => setTitle(e.target.value)}
-          className="w-full rounded-lg border border-stone-300 bg-white px-3 py-2 text-sm text-stone-900 outline-none ring-red-200 transition focus:ring-2"
+          className="w-full rounded-lg border border-stone-300 bg-white px-3 py-2 text-sm text-stone-900 outline-none ring-red-200 transition focus:ring-2 dark:border-stone-700 dark:bg-stone-800 dark:text-stone-100 dark:ring-red-900/50"
           placeholder="예: 민법 기출 2025"
         />
       </label>
 
       <label className="block space-y-2">
-        <span className="text-sm font-medium text-stone-700">문제 타입</span>
+        <span className="text-sm font-medium text-stone-700 dark:text-stone-300">문제 타입</span>
         <select
           value={type}
           onChange={(e) => setType(e.target.value as TestType)}
-          className="w-full rounded-lg border border-stone-300 bg-white px-3 py-2 text-sm text-stone-900 outline-none ring-red-200 transition focus:ring-2"
+          className="w-full rounded-lg border border-stone-300 bg-white px-3 py-2 text-sm text-stone-900 outline-none ring-red-200 transition focus:ring-2 dark:border-stone-700 dark:bg-stone-800 dark:text-stone-100 dark:ring-red-900/50"
         >
           <option value="OX">OX</option>
           <option value="5-choice">5지선다</option>
@@ -78,11 +78,11 @@ export function CsvUploadPanel({ onCreated }: CsvUploadPanelProps) {
       </label>
 
       <label className="block space-y-2">
-        <span className="text-sm font-medium text-stone-700">풀이 순서</span>
+        <span className="text-sm font-medium text-stone-700 dark:text-stone-300">풀이 순서</span>
         <select
           value={orderMode}
           onChange={(e) => setOrderMode(e.target.value as SolveOrder)}
-          className="w-full rounded-lg border border-stone-300 bg-white px-3 py-2 text-sm text-stone-900 outline-none ring-red-200 transition focus:ring-2"
+          className="w-full rounded-lg border border-stone-300 bg-white px-3 py-2 text-sm text-stone-900 outline-none ring-red-200 transition focus:ring-2 dark:border-stone-700 dark:bg-stone-800 dark:text-stone-100 dark:ring-red-900/50"
         >
           <option value="number">번호 순서대로 풀기</option>
           <option value="chapter-random">챕터별로 무작위 풀기</option>
@@ -91,17 +91,17 @@ export function CsvUploadPanel({ onCreated }: CsvUploadPanelProps) {
       </label>
 
       <label className="block space-y-2">
-        <span className="text-sm font-medium text-stone-700">CSV 파일</span>
+        <span className="text-sm font-medium text-stone-700 dark:text-stone-300">CSV 파일</span>
         <input
           type="file"
           accept=".csv,text/csv"
           onChange={(e) => setFile(e.target.files?.[0] ?? null)}
-          className="block w-full rounded-lg border border-stone-300 bg-white px-3 py-2 text-sm text-stone-900 file:mr-4 file:rounded file:border-0 file:bg-red-600 file:px-3 file:py-1.5 file:text-sm file:font-semibold file:text-white"
+          className="block w-full rounded-lg border border-stone-300 bg-white px-3 py-2 text-sm text-stone-900 file:mr-4 file:rounded file:border-0 file:bg-red-600 file:px-3 file:py-1.5 file:text-sm file:font-semibold file:text-white dark:border-stone-700 dark:bg-stone-800 dark:text-stone-400 dark:file:bg-red-600"
         />
       </label>
 
       {error ? (
-        <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p>
+        <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700 dark:border-red-900/50 dark:bg-red-950/30 dark:text-red-400">{error}</p>
       ) : null}
 
       <button

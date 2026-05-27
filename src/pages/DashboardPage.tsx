@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { CsvUploadPanel } from "../components/upload/CsvUploadPanel";
 import { formatElapsedTime } from "../lib/time";
 import { useTestStore } from "../store/useTestStore";
+import { useSettingsStore, FontFamily } from "../store/useSettingsStore";
 
 const orderModeLabel = {
   number: "번호 순서",
@@ -17,9 +18,9 @@ const typeLabel = {
 } as const;
 
 const typeStyle = {
-  OX: "bg-blue-50 text-blue-700 border-blue-100",
-  "5-choice": "bg-emerald-50 text-emerald-700 border-emerald-100",
-  short: "bg-purple-50 text-purple-700 border-purple-100",
+  OX: "bg-blue-50 text-blue-700 border-blue-100 dark:bg-blue-950/30 dark:text-blue-400 dark:border-blue-900/50",
+  "5-choice": "bg-emerald-50 text-emerald-700 border-emerald-100 dark:bg-emerald-950/30 dark:text-emerald-400 dark:border-emerald-900/50",
+  short: "bg-purple-50 text-purple-700 border-purple-100 dark:bg-purple-950/30 dark:text-purple-400 dark:border-purple-900/50",
 } as const;
 
 export function DashboardPage() {
@@ -27,9 +28,11 @@ export function DashboardPage() {
   const deleteSession = useTestStore((state) => state.deleteSession);
   const resetSessions = useTestStore((state) => state.resetSessions);
   const importSessions = useTestStore((state) => state.importSessions);
+  const { darkMode, toggleDarkMode, fontFamily, setFontFamily } = useSettingsStore();
   const navigate = useNavigate();
   const [openUpload, setOpenUpload] = useState(false);
   const [openManage, setOpenManage] = useState(false);
+  const [openSettings, setOpenSettings] = useState(false);
 
   const sortedSessions = useMemo(
     () =>
@@ -89,29 +92,35 @@ export function DashboardPage() {
   };
 
   return (
-    <div className="min-h-screen px-4 py-8 md:px-6">
+    <div className="min-h-screen px-4 py-8 md:px-6 dark:bg-stone-950 transition-colors duration-300">
       <div className="mx-auto max-w-6xl">
         <header className="mb-6 flex flex-wrap items-end justify-between gap-3">
           <div>
             <Link
               to="/"
-              className="inline-flex text-m font-bold text-red-600 hover:underline"
+              className="inline-flex text-m font-bold text-red-600 hover:underline dark:text-red-500"
               aria-label="메인으로 이동"
             >
               Law Solver
             </Link>
-            <h1 className="text-2xl font-semibold text-stone-900 md:text-3xl">문제 풀이 대시보드</h1>
+            <h1 className="text-2xl font-semibold text-stone-900 md:text-3xl dark:text-stone-100">문제 풀이 대시보드</h1>
           </div>
           <div className="flex gap-2">
             <button
+              onClick={() => setOpenSettings(true)}
+              className="rounded-lg border border-stone-300 bg-white px-4 py-2 text-sm font-semibold text-stone-700 transition hover:bg-stone-50 dark:border-stone-700 dark:bg-stone-900 dark:text-stone-300 dark:hover:bg-stone-800"
+            >
+              환경설정
+            </button>
+            <button
               onClick={() => setOpenManage(true)}
-              className="rounded-lg border border-stone-300 bg-white px-4 py-2 text-sm font-semibold text-stone-700 transition hover:bg-stone-50"
+              className="rounded-lg border border-stone-300 bg-white px-4 py-2 text-sm font-semibold text-stone-700 transition hover:bg-stone-50 dark:border-stone-700 dark:bg-stone-900 dark:text-stone-300 dark:hover:bg-stone-800"
             >
               대시보드 관리
             </button>
             <button
               onClick={() => setOpenUpload(true)}
-              className="rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-red-700"
+              className="rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-red-700 dark:bg-red-600 dark:hover:bg-red-700"
             >
               새 문제 등록
             </button>
@@ -119,29 +128,29 @@ export function DashboardPage() {
         </header>
 
         {sortedSessions.length === 0 ? (
-          <div className="rounded-2xl border border-dashed border-stone-300 bg-white p-10 text-center">
-            <p className="text-base font-medium text-stone-700">등록된 문제 세션이 없습니다.</p>
-            <p className="mt-1 text-sm text-stone-500">CSV 업로드로 OX, 5지선다 또는 단답형 문제를 시작하세요.</p>
+          <div className="rounded-2xl border border-dashed border-stone-300 bg-white p-10 text-center dark:border-stone-800 dark:bg-stone-900">
+            <p className="text-base font-medium text-stone-700 dark:text-stone-300">등록된 문제 세션이 없습니다.</p>
+            <p className="mt-1 text-sm text-stone-500 dark:text-stone-500">CSV 업로드로 OX, 5지선다 또는 단답형 문제를 시작하세요.</p>
           </div>
         ) : (
           <div className="grid gap-3 md:grid-cols-2">
             {sortedSessions.map((session) => (
-              <article key={session.id} className="rounded-2xl border border-stone-200 bg-white p-4 shadow-sm">
+              <article key={session.id} className="rounded-2xl border border-stone-200 bg-white p-4 shadow-sm dark:border-stone-800 dark:bg-stone-900 dark:shadow-stone-950/30">
                 <div className="mb-2 flex items-start justify-between gap-3">
-                  <h2 className="line-clamp-2 text-base font-semibold text-stone-900 break-all">{session.title}</h2>
+                  <h2 className="line-clamp-2 text-base font-semibold text-stone-900 break-all dark:text-stone-100">{session.title}</h2>
                   <span
                     className={[
                       "shrink-0 rounded-full px-2 py-1 text-xs font-semibold",
                       session.status === "completed"
-                        ? "bg-blue-50 text-blue-700"
-                        : "bg-red-50 text-red-700",
+                        ? "bg-blue-50 text-blue-700 dark:bg-blue-950/30 dark:text-blue-400"
+                        : "bg-red-50 text-red-700 dark:bg-red-950/30 dark:text-red-400",
                     ].join(" ")}
                   >
                     {session.status === "completed" ? "채점 완료" : "풀이 중"}
                   </span>
                 </div>
 
-                <div className="grid grid-cols-2 gap-x-3 gap-y-1 text-sm text-stone-600">
+                <div className="grid grid-cols-2 gap-x-3 gap-y-1 text-sm text-stone-600 dark:text-stone-400">
                   <div className="flex items-center gap-1.5">
                     <span>유형:</span>
                     <span
@@ -161,7 +170,7 @@ export function DashboardPage() {
                   <p>시간: {formatElapsedTime(session.elapsed_time)}</p>
                 </div>
 
-                <p className="mt-2 text-xs text-stone-400">
+                <p className="mt-2 text-xs text-stone-400 dark:text-stone-500">
                   생성일: {new Date(session.created_at).toLocaleString("ko-KR")}
                 </p>
 
@@ -169,14 +178,14 @@ export function DashboardPage() {
                   {session.status === "completed" ? (
                     <Link
                       to={`/result/${session.id}`}
-                      className="rounded-lg border border-stone-300 bg-white px-3 py-2 text-xs font-semibold text-stone-700"
+                      className="rounded-lg border border-stone-300 bg-white px-3 py-2 text-xs font-semibold text-stone-700 dark:border-stone-700 dark:bg-stone-800 dark:text-stone-300"
                     >
                       결과보기
                     </Link>
                   ) : (
                     <Link
                       to={`/solve/${session.id}`}
-                      className="rounded-lg bg-red-600 px-3 py-2 text-xs font-semibold text-white"
+                      className="rounded-lg bg-red-600 px-3 py-2 text-xs font-semibold text-white dark:bg-red-600"
                     >
                       이어풀기
                     </Link>
@@ -187,7 +196,7 @@ export function DashboardPage() {
                       if (!window.confirm("이 세션을 삭제할까요?")) return;
                       deleteSession(session.id);
                     }}
-                    className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs font-semibold text-red-700"
+                    className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs font-semibold text-red-700 dark:border-red-900/50 dark:bg-red-950/30 dark:text-red-400"
                   >
                     삭제
                   </button>
@@ -197,7 +206,7 @@ export function DashboardPage() {
           </div>
         )}
 
-        <footer className="mt-12 border-t border-stone-200 pt-6 text-center text-sm text-stone-500">
+        <footer className="mt-12 border-t border-stone-200 pt-6 text-center text-sm text-stone-500 dark:border-stone-800 dark:text-stone-600">
           <p>제작자: 경북대 로스쿨 17기 신하륜</p>
           <p className="mt-1">
             연락처:{" "}
@@ -211,11 +220,11 @@ export function DashboardPage() {
 
       {openUpload ? (
         <div className="fixed inset-0 z-50">
-          <button onClick={() => setOpenUpload(false)} className="absolute inset-0 bg-black/35" />
+          <button onClick={() => setOpenUpload(false)} className="absolute inset-0 bg-black/35 dark:bg-black/60" />
           <div className="absolute left-1/2 top-1/2 w-[92vw] max-w-lg -translate-x-1/2 -translate-y-1/2">
             <button
               onClick={() => setOpenUpload(false)}
-              className="absolute right-3 top-3 z-10 inline-flex h-8 w-8 items-center justify-center rounded-full border border-stone-300 bg-white text-sm font-semibold text-stone-600 shadow-sm transition hover:bg-stone-100"
+              className="absolute right-3 top-3 z-10 inline-flex h-8 w-8 items-center justify-center rounded-full border border-stone-300 bg-white text-sm font-semibold text-stone-600 shadow-sm transition hover:bg-stone-100 dark:border-stone-700 dark:bg-stone-900 dark:text-stone-400 dark:hover:bg-stone-800"
               aria-label="모달 닫기"
             >
               X
@@ -230,16 +239,80 @@ export function DashboardPage() {
         </div>
       ) : null}
 
+      {openSettings ? (
+        <div className="fixed inset-0 z-50">
+          <button onClick={() => setOpenSettings(false)} className="absolute inset-0 bg-black/35 dark:bg-black/60" />
+          <div className="absolute left-1/2 top-1/2 w-[92vw] max-w-sm -translate-x-1/2 -translate-y-1/2">
+            <div className="rounded-2xl border border-stone-200 bg-white p-6 shadow-2xl dark:border-stone-800 dark:bg-stone-900">
+              <div className="mb-4 flex items-center justify-between">
+                <h2 className="text-lg font-semibold text-stone-900 dark:text-stone-100">환경설정</h2>
+                <button
+                  onClick={() => setOpenSettings(false)}
+                  className="text-stone-400 hover:text-stone-600 dark:text-stone-500 dark:hover:text-stone-300"
+                >
+                  X
+                </button>
+              </div>
+              <div className="space-y-6">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium text-stone-700 dark:text-stone-300">다크 모드</span>
+                  <button
+                    onClick={toggleDarkMode}
+                    className={[
+                      "relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out outline-none",
+                      darkMode ? "bg-red-600" : "bg-stone-200 dark:bg-stone-800",
+                    ].join(" ")}
+                  >
+                    <span
+                      className={[
+                        "pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out dark:bg-stone-200",
+                        darkMode ? "translate-x-5" : "translate-x-0",
+                      ].join(" ")}
+                    />
+                  </button>
+                </div>
+
+                <div className="space-y-3">
+                  <span className="text-sm font-medium text-stone-700 dark:text-stone-300">글꼴 설정</span>
+                  <div className="grid grid-cols-1 gap-2">
+                    {[
+                      { id: "pretendard", label: "기본 (Pretendard)", class: "font-pretendard" },
+                      { id: "nanum-gothic", label: "나눔고딕", class: "font-nanum-gothic" },
+                      { id: "nanum-myeongjo", label: "나눔명조", class: "font-nanum-myeongjo" },
+                    ].map((font) => (
+                      <button
+                        key={font.id}
+                        onClick={() => setFontFamily(font.id as FontFamily)}
+                        className={[
+                          "flex items-center justify-between rounded-xl border px-4 py-3 text-sm transition",
+                          fontFamily === font.id
+                            ? "border-red-600 bg-red-50 text-red-700 dark:border-red-600 dark:bg-red-950/30 dark:text-red-400"
+                            : "border-stone-200 bg-white text-stone-700 dark:border-stone-800 dark:bg-stone-800 dark:text-stone-300 hover:bg-stone-50 dark:hover:bg-stone-700",
+                          font.class,
+                        ].join(" ")}
+                      >
+                        <span>{font.label}</span>
+                        {fontFamily === font.id && <span className="text-xs font-bold">●</span>}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : null}
+
       {openManage ? (
         <div className="fixed inset-0 z-50">
-          <button onClick={() => setOpenManage(false)} className="absolute inset-0 bg-black/35" />
+          <button onClick={() => setOpenManage(false)} className="absolute inset-0 bg-black/35 dark:bg-black/60" />
           <div className="absolute left-1/2 top-1/2 w-[92vw] max-w-sm -translate-x-1/2 -translate-y-1/2">
-            <div className="rounded-2xl border border-stone-200 bg-white p-6 shadow-2xl">
+            <div className="rounded-2xl border border-stone-200 bg-white p-6 shadow-2xl dark:border-stone-800 dark:bg-stone-900">
               <div className="mb-4 flex items-center justify-between">
-                <h2 className="text-lg font-semibold text-stone-900">대시보드 관리</h2>
+                <h2 className="text-lg font-semibold text-stone-900 dark:text-stone-100">대시보드 관리</h2>
                 <button
                   onClick={() => setOpenManage(false)}
-                  className="text-stone-400 hover:text-stone-600"
+                  className="text-stone-400 hover:text-stone-600 dark:text-stone-500 dark:hover:text-stone-300"
                 >
                   X
                 </button>
@@ -247,24 +320,24 @@ export function DashboardPage() {
               <div className="grid gap-3">
                 <button
                   onClick={handleBackup}
-                  className="flex w-full flex-col items-center justify-center rounded-xl border border-stone-200 bg-white p-4 transition hover:bg-stone-50"
+                  className="flex w-full flex-col items-center justify-center rounded-xl border border-stone-200 bg-white p-4 transition hover:bg-stone-50 dark:border-stone-800 dark:bg-stone-900 dark:hover:bg-stone-800"
                 >
-                  <span className="text-sm font-bold text-stone-800">대시보드 백업하기</span>
-                  <span className="text-xs text-stone-500">모든 데이터를 JSON으로 저장</span>
+                  <span className="text-sm font-bold text-stone-800 dark:text-stone-200">대시보드 백업하기</span>
+                  <span className="text-xs text-stone-500 dark:text-stone-500">모든 데이터를 JSON으로 저장</span>
                 </button>
                 <button
                   onClick={handleRestore}
-                  className="flex w-full flex-col items-center justify-center rounded-xl border border-stone-200 bg-white p-4 transition hover:bg-stone-50"
+                  className="flex w-full flex-col items-center justify-center rounded-xl border border-stone-200 bg-white p-4 transition hover:bg-stone-50 dark:border-stone-800 dark:bg-stone-900 dark:hover:bg-stone-800"
                 >
-                  <span className="text-sm font-bold text-stone-800">대시보드 불러오기</span>
-                  <span className="text-xs text-stone-500">백업 파일에서 데이터 복구</span>
+                  <span className="text-sm font-bold text-stone-800 dark:text-stone-200">대시보드 불러오기</span>
+                  <span className="text-xs text-stone-500 dark:text-stone-500">백업 파일에서 데이터 복구</span>
                 </button>
                 <button
                   onClick={handleReset}
-                  className="flex w-full flex-col items-center justify-center rounded-xl border border-red-100 bg-red-50 p-4 transition hover:bg-red-100/50"
+                  className="flex w-full flex-col items-center justify-center rounded-xl border border-red-100 bg-red-50 p-4 transition hover:bg-red-100/50 dark:border-red-900/50 dark:bg-red-950/30 dark:hover:bg-red-900/30"
                 >
-                  <span className="text-sm font-bold text-red-600">초기화</span>
-                  <span className="text-xs text-red-500">모든 데이터 영구 삭제</span>
+                  <span className="text-sm font-bold text-red-600 dark:text-red-400">초기화</span>
+                  <span className="text-xs text-red-500 dark:text-red-500">모든 데이터 영구 삭제</span>
                 </button>
               </div>
             </div>
