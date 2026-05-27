@@ -128,10 +128,10 @@ export function DashboardPage() {
             {sortedSessions.map((session) => (
               <article key={session.id} className="rounded-2xl border border-stone-200 bg-white p-4 shadow-sm">
                 <div className="mb-2 flex items-start justify-between gap-3">
-                  <h2 className="line-clamp-2 text-base font-semibold text-stone-900">{session.title}</h2>
+                  <h2 className="line-clamp-2 text-base font-semibold text-stone-900 break-all">{session.title}</h2>
                   <span
                     className={[
-                      "rounded-full px-2 py-1 text-xs font-semibold",
+                      "shrink-0 rounded-full px-2 py-1 text-xs font-semibold",
                       session.status === "completed"
                         ? "bg-blue-50 text-blue-700"
                         : "bg-red-50 text-red-700",

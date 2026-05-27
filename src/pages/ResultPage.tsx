@@ -20,6 +20,7 @@ export function ResultPage() {
 
   const [isRetryModalOpen, setIsRetryModalOpen] = useState(false);
   const [isWrongRetryModalOpen, setIsWrongRetryModalOpen] = useState(false);
+  const [isBookmarkRetryModalOpen, setIsBookmarkRetryModalOpen] = useState(false);
   const [isDownloadModalOpen, setIsDownloadModalOpen] = useState(false);
   const [retryTitle, setRetryTitle] = useState("");
   const [retryOrderMode, setRetryOrderMode] = useState<SolveOrder>("number");
@@ -52,11 +53,25 @@ export function ResultPage() {
     setIsWrongRetryModalOpen(true);
   };
 
-  const handleRetrySubmit = (e: React.FormEvent, onlyWrong: boolean = false) => {
+  const handleOpenBookmarkRetry = () => {
+    setRetryTitle(`${session.title} (책갈피 문제 풀기)`);
+    setRetryOrderMode("number");
+    setIsBookmarkRetryModalOpen(true);
+  };
+
+  const handleRetrySubmit = (
+    e: React.FormEvent,
+    options: { onlyWrong?: boolean; onlyBookmark?: boolean } = {},
+  ) => {
     e.preventDefault();
     if (!retryTitle.trim()) return;
 
-    const sourceQuestions = onlyWrong ? getWrongQuestions(session) : session.questions;
+    let sourceQuestions = session.questions;
+    if (options.onlyWrong) {
+      sourceQuestions = getWrongQuestions(session);
+    } else if (options.onlyBookmark) {
+      sourceQuestions = session.questions.filter((q) => q.bookmark);
+    }
 
     const resetQuestions: ParsedQuestion[] = sourceQuestions.map((q) => ({
       ...q,
@@ -117,14 +132,16 @@ export function ResultPage() {
     <div className="min-h-screen px-4 py-8 md:px-6">
       <div className="mx-auto max-w-3xl">
         <div className="rounded-2xl border border-stone-200 bg-white p-6 shadow-sm">
-          <div className="flex items-start justify-between">
-            <div>
+          <div className="flex items-start justify-between gap-4">
+            <div className="min-w-0 flex-1">
               <p className="text-sm font-semibold text-red-600">채점 결과</p>
-              <h1 className="mt-1 text-2xl font-semibold text-stone-900">{session.title}</h1>
+              <h1 className="mt-1 truncate text-2xl font-semibold text-stone-900" title={session.title}>
+                {session.title}
+              </h1>
             </div>
             <Link
               to="/dashboard"
-              className="rounded-lg border border-stone-300 bg-white px-3 py-1.5 text-xs font-semibold text-stone-600 transition hover:bg-stone-50"
+              className="shrink-0 rounded-lg border border-stone-300 bg-white px-3 py-1.5 text-xs font-semibold text-stone-600 transition hover:bg-stone-50"
             >
               메인으로
             </Link>
@@ -147,52 +164,70 @@ export function ResultPage() {
             </article>
           </div>
 
-          <div className="mt-6 flex flex-wrap gap-2">
-            <Link
-              to={`/wrong/${session.id}`}
-              className={[
-                "rounded-lg px-4 py-2 text-sm font-semibold",
-                wrongCount > 0 ? "bg-red-600 text-white" : "bg-stone-200 text-stone-500 pointer-events-none",
-              ].join(" ")}
-            >
-              오답 확인하기
-            </Link>
-            <Link
-              to={`/review/${session.id}`}
-              className="rounded-lg border border-red-600 bg-white px-4 py-2 text-sm font-semibold text-red-600 transition hover:bg-red-50"
-            >
-              모든 문제 확인하기
-            </Link>
-            <Link
-              to={`/review/${session.id}?onlyBookmarks=true`}
-              className={[
-                "rounded-lg border px-4 py-2 text-sm font-semibold transition",
-                bookmarkCount > 0
-                  ? "border-amber-500 bg-white text-amber-600 hover:bg-amber-50"
-                  : "border-stone-200 bg-stone-50 text-stone-400 pointer-events-none",
-              ].join(" ")}
-            >
-              책갈피 문제 확인하기 ({bookmarkCount})
-            </Link>
-            <button
-              onClick={handleOpenRetry}
-              className="rounded-lg border border-stone-300 bg-white px-4 py-2 text-sm font-semibold text-stone-700 transition hover:bg-stone-50"
-            >
-              새로 풀기
-            </button>
-            <button
-              onClick={handleOpenWrongRetry}
-              disabled={wrongCount === 0}
-              className="rounded-lg border border-stone-300 bg-white px-4 py-2 text-sm font-semibold text-stone-700 transition hover:bg-stone-50 disabled:opacity-40 disabled:cursor-not-allowed"
-            >
-              오답 풀기
-            </button>
-            <button
-              onClick={() => setIsDownloadModalOpen(true)}
-              className="rounded-lg border border-stone-300 bg-white px-4 py-2 text-sm font-semibold text-stone-700 transition hover:bg-stone-50"
-            >
-              CSV로 다운로드
-            </button>
+          <div className="mt-6 space-y-3">
+            {/* Line 1: Review Actions */}
+            <div className="flex flex-wrap gap-2">
+              <Link
+                to={`/wrong/${session.id}`}
+                className={[
+                  "rounded-lg px-4 py-2 text-sm font-semibold transition",
+                  wrongCount > 0 ? "bg-red-600 text-white hover:bg-red-700" : "bg-stone-200 text-stone-500 pointer-events-none",
+                ].join(" ")}
+              >
+                오답 확인하기
+              </Link>
+              <Link
+                to={`/review/${session.id}`}
+                className="rounded-lg border border-red-600 bg-white px-4 py-2 text-sm font-semibold text-red-600 transition hover:bg-red-50"
+              >
+                모든 문제 확인하기
+              </Link>
+              <Link
+                to={`/review/${session.id}?onlyBookmarks=true`}
+                className={[
+                  "rounded-lg border px-4 py-2 text-sm font-semibold transition",
+                  bookmarkCount > 0
+                    ? "border-amber-500 bg-white text-amber-600 hover:bg-amber-50"
+                    : "border-stone-200 bg-stone-50 text-stone-400 pointer-events-none",
+                ].join(" ")}
+              >
+                책갈피 문제 확인하기 ({bookmarkCount})
+              </Link>
+            </div>
+
+            {/* Line 2: Retry Actions */}
+            <div className="flex flex-wrap gap-2">
+              <button
+                onClick={handleOpenWrongRetry}
+                disabled={wrongCount === 0}
+                className="rounded-lg border border-stone-300 bg-white px-4 py-2 text-sm font-semibold text-stone-700 transition hover:bg-stone-50 disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                오답 풀기
+              </button>
+              <button
+                onClick={handleOpenRetry}
+                className="rounded-lg border border-stone-300 bg-white px-4 py-2 text-sm font-semibold text-stone-700 transition hover:bg-stone-50"
+              >
+                새로 풀기
+              </button>
+              <button
+                onClick={handleOpenBookmarkRetry}
+                disabled={bookmarkCount === 0}
+                className="rounded-lg border border-stone-300 bg-white px-4 py-2 text-sm font-semibold text-stone-700 transition hover:bg-stone-50 disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                책갈피 문제 풀기
+              </button>
+            </div>
+
+            {/* Line 3: Utility */}
+            <div className="flex flex-wrap gap-2">
+              <button
+                onClick={() => setIsDownloadModalOpen(true)}
+                className="rounded-lg border border-stone-300 bg-white px-4 py-2 text-sm font-semibold text-stone-700 transition hover:bg-stone-50"
+              >
+                CSV로 다운로드
+              </button>
+            </div>
           </div>
 
           <div className="mt-6">
@@ -231,7 +266,7 @@ export function ResultPage() {
           <button onClick={() => setIsRetryModalOpen(false)} className="absolute inset-0 bg-black/35" />
           <div className="absolute left-1/2 top-1/2 w-[92vw] max-w-md -translate-x-1/2 -translate-y-1/2">
             <form
-              onSubmit={(e) => handleRetrySubmit(e, false)}
+              onSubmit={(e) => handleRetrySubmit(e)}
               className="space-y-4 rounded-2xl border border-stone-200 bg-white p-6 shadow-2xl"
             >
               <div className="flex items-center justify-between">
@@ -286,7 +321,7 @@ export function ResultPage() {
           <button onClick={() => setIsWrongRetryModalOpen(false)} className="absolute inset-0 bg-black/35" />
           <div className="absolute left-1/2 top-1/2 w-[92vw] max-w-md -translate-x-1/2 -translate-y-1/2">
             <form
-              onSubmit={(e) => handleRetrySubmit(e, true)}
+              onSubmit={(e) => handleRetrySubmit(e, { onlyWrong: true })}
               className="space-y-4 rounded-2xl border border-stone-200 bg-white p-6 shadow-2xl"
             >
               <div className="flex items-center justify-between">
@@ -334,6 +369,66 @@ export function ResultPage() {
                   className="w-full rounded-lg bg-red-600 py-2.5 text-sm font-semibold text-white transition hover:bg-red-700"
                 >
                   오답 풀기 시작
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      ) : null}
+
+      {isBookmarkRetryModalOpen ? (
+        <div className="fixed inset-0 z-50">
+          <button onClick={() => setIsBookmarkRetryModalOpen(false)} className="absolute inset-0 bg-black/35" />
+          <div className="absolute left-1/2 top-1/2 w-[92vw] max-w-md -translate-x-1/2 -translate-y-1/2">
+            <form
+              onSubmit={(e) => handleRetrySubmit(e, { onlyBookmark: true })}
+              className="space-y-4 rounded-2xl border border-stone-200 bg-white p-6 shadow-2xl"
+            >
+              <div className="flex items-center justify-between">
+                <h2 className="text-lg font-semibold text-stone-900">책갈피 문제 풀기 설정</h2>
+                <button
+                  type="button"
+                  onClick={() => setIsBookmarkRetryModalOpen(false)}
+                  className="text-stone-400 hover:text-stone-600"
+                >
+                  X
+                </button>
+              </div>
+
+              <div className="rounded-xl bg-amber-50 p-3">
+                <p className="text-xs font-semibold text-amber-700">책갈피 문항 수: {bookmarkCount}개</p>
+                <p className="mt-0.5 text-[11px] text-amber-600">책갈피한 문제들만 모아 새로운 세션을 만듭니다.</p>
+              </div>
+
+              <label className="block space-y-2">
+                <span className="text-sm font-medium text-stone-700">세션 제목</span>
+                <input
+                  autoFocus
+                  value={retryTitle}
+                  onChange={(e) => setRetryTitle(e.target.value)}
+                  className="w-full rounded-lg border border-stone-300 bg-white px-3 py-2 text-sm text-stone-900 outline-none ring-red-200 transition focus:ring-2"
+                />
+              </label>
+
+              <label className="block space-y-2">
+                <span className="text-sm font-medium text-stone-700">풀이 순서</span>
+                <select
+                  value={retryOrderMode}
+                  onChange={(e) => setRetryOrderMode(e.target.value as SolveOrder)}
+                  className="w-full rounded-lg border border-stone-300 bg-white px-3 py-2 text-sm text-stone-900 outline-none ring-red-200 transition focus:ring-2"
+                >
+                  <option value="number">번호 순서대로 풀기</option>
+                  <option value="chapter-random">챕터별로 무작위 풀기</option>
+                  <option value="random">전체 무작위 풀기</option>
+                </select>
+              </label>
+
+              <div className="pt-2">
+                <button
+                  type="submit"
+                  className="w-full rounded-lg bg-amber-500 py-2.5 text-sm font-semibold text-white transition hover:bg-amber-600"
+                >
+                  책갈피 문제 풀기 시작
                 </button>
               </div>
             </form>

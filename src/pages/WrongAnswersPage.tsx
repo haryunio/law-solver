@@ -142,10 +142,14 @@ export function WrongAnswersPage() {
     <div className="min-h-screen bg-stone-50 text-stone-900">
       <header className="sticky top-0 z-20 border-b border-stone-200 bg-white/95 backdrop-blur">
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 py-3 md:px-6">
-          <h1 className="truncate text-sm font-semibold md:text-base">{session.title} · 오답 확인하기</h1>
+          <div className="min-w-0 flex-1">
+            <h1 className="truncate text-sm font-semibold md:text-base" title={session.title}>
+              {session.title} · 오답 확인하기
+            </h1>
+          </div>
           <button
             onClick={goToResult}
-            className="rounded-lg border border-stone-300 bg-white px-3 py-2 text-sm font-semibold text-stone-700 hover:bg-stone-50 transition"
+            className="shrink-0 rounded-lg border border-stone-300 bg-white px-3 py-2 text-sm font-semibold text-stone-700 hover:bg-stone-50 transition"
           >
             결과로
           </button>

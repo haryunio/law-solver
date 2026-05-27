@@ -102,8 +102,10 @@ export function CbtSolveScreen({ sessionId, onSubmitted }: CbtSolveScreenProps) 
             <p className="text-xs font-medium text-stone-500">타이머</p>
             <p className="text-lg font-semibold tabular-nums text-red-600">{formatElapsedTime(session.elapsed_time)}</p>
           </div>
-          <h1 className="truncate text-center text-sm font-semibold md:text-base">{session.title}</h1>
-          <div className="flex items-center gap-2">
+          <div className="min-w-0 flex-1 px-2">
+            <h1 className="truncate text-center text-sm font-semibold md:text-base">{session.title}</h1>
+          </div>
+          <div className="flex shrink-0 items-center gap-2">
             <button
               onClick={() => {
                 if (window.confirm("풀이를 일시 중단하고 메인으로 나갈까요?")) {
