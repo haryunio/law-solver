@@ -90,6 +90,24 @@ const parseChoiceRows = (rows: RawRow[]): ParsedQuestion[] => {
     ];
     const answerRaw = getValue(row, ["정답", "answer"], 7);
 
+    // 박스 헤더 추출 (박스1, 박스2, ... 또는 box1, box2, ...)
+    const boxes: string[] = [];
+    const boxKeys = Object.keys(row)
+      .filter((key) => {
+        const norm = normalize(key);
+        return norm.startsWith("박스") || norm.startsWith("box");
+      })
+      .sort((a, b) => {
+        const numA = parseInt(a.replace(/[^0-9]/g, "") || "0");
+        const numB = parseInt(b.replace(/[^0-9]/g, "") || "0");
+        return numA - numB;
+      });
+
+    boxKeys.forEach((key) => {
+      const val = row[key]?.trim();
+      if (val) boxes.push(val);
+    });
+
     if (!question || choices.some((choice) => !choice) || !answerRaw) {
       throw new Error(`${idx + 2}번째 행에 문제/선지/정답이 비어 있습니다.`);
     }
@@ -99,6 +117,7 @@ const parseChoiceRows = (rows: RawRow[]): ParsedQuestion[] => {
       no,
       chapter,
       question,
+      boxes: boxes.length > 0 ? boxes : undefined,
       choices,
       answer: parseChoiceAnswer(answerRaw),
       explanation: getValue(row, ["해설", "해설optional", "explanation"], 8),

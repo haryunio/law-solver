@@ -168,6 +168,23 @@ export function WrongAnswersPage() {
           ) : null}
           <h2 className="text-base font-semibold leading-7 md:text-lg md:leading-8 dark:text-stone-100">{current.question}</h2>
 
+          {current.boxes && current.boxes.length > 0 && (
+            <div className="mt-4 rounded-xl border-2 border-stone-200 bg-stone-50/50 p-4 dark:border-stone-800 dark:bg-stone-900/50">
+              <div className="space-y-2">
+                {current.boxes.map((box, idx) => {
+                  const symbols = ["ㄱ", "ㄴ", "ㄷ", "ㄹ", "ㅁ", "ㅂ", "ㅅ", "ㅇ", "ㅈ", "ㅊ", "ㅋ", "ㅌ", "ㅍ", "ㅎ"];
+                  const cleanBox = box.replace(/^[ㄱ-ㅎ]\.\s*/, "");
+                  return (
+                    <div key={idx} className="flex gap-2 text-sm md:text-base leading-relaxed">
+                      <span className="font-bold shrink-0">{symbols[idx] ?? idx + 1}.</span>
+                      <span className="text-stone-800 dark:text-stone-200">{cleanBox}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
           <div className="mt-6 space-y-3">
             <article className="rounded-xl border border-red-200 bg-red-50 p-4 dark:border-red-900/50 dark:bg-red-950/20">
               <p className="text-xs font-semibold text-red-700 dark:text-red-500">내가 고른 답</p>

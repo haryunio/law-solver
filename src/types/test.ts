@@ -11,6 +11,7 @@ export interface ParsedQuestion {
   no: number;
   chapter?: string;
   question: string;
+  boxes?: string[];
   choices?: [string, string, string, string, string];
   answer: AnswerValue;
   explanation?: string;
