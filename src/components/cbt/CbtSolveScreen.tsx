@@ -64,12 +64,13 @@ export function CbtSolveScreen({ sessionId, onSubmitted }: CbtSolveScreenProps) 
   const options =
     session.type === "OX"
       ? [
-          { key: "O", label: "O" },
-          { key: "X", label: "X" },
+          { key: "O", circle: null, text: "O" },
+          { key: "X", circle: null, text: "X" },
         ]
       : (current.choices ?? []).map((choice, idx) => ({
           key: String(idx + 1),
-          label: `${CIRCLED_NUMBERS[idx] ?? idx + 1} ${choice}`,
+          circle: CIRCLED_NUMBERS[idx] ?? String(idx + 1),
+          text: choice,
         }));
 
   const answeredCount = session.questions.filter((q) => q.my_answer !== "").length;
@@ -211,7 +212,7 @@ export function CbtSolveScreen({ sessionId, onSubmitted }: CbtSolveScreenProps) 
                     key={option.key}
                     onClick={() => handleAnswer(option.key)}
                     className={[
-                      "flex w-full items-start rounded-xl border px-4 py-3 text-left transition",
+                      "flex w-full items-start gap-2 rounded-xl border px-4 py-3 text-left transition",
                       selected
                         ? "border-red-600 bg-red-50 text-red-700 dark:border-red-600 dark:bg-red-950/30 dark:text-red-400"
                         : isCorrect
@@ -219,8 +220,11 @@ export function CbtSolveScreen({ sessionId, onSubmitted }: CbtSolveScreenProps) 
                           : "border-stone-300 bg-white text-stone-800 hover:border-red-300 dark:border-stone-700 dark:bg-stone-800 dark:text-stone-300 dark:hover:border-stone-600",
                     ].join(" ")}
                   >
-                    <span className="font-medium">{option.label}</span>
-                    {isCorrect && <span className="ml-auto text-xs font-bold text-blue-600 dark:text-blue-400">정답</span>}
+                    {option.circle && (
+                      <span className="shrink-0 font-bold">{option.circle}</span>
+                    )}
+                    <span className="flex-1 font-medium">{option.text}</span>
+                    {isCorrect && <span className="ml-auto shrink-0 text-xs font-bold text-blue-600 dark:text-blue-400">정답</span>}
                   </button>
                 );
               })

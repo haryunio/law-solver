@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { getAnswerLabel, getAnswerToken } from "../lib/answer";
+import { getAnswerParts, getAnswerToken } from "../lib/answer";
 import { getWrongQuestions } from "../lib/session";
 import { useTestStore } from "../store/useTestStore";
 
@@ -188,11 +188,31 @@ export function WrongAnswersPage() {
           <div className="mt-6 space-y-3">
             <article className="rounded-xl border border-red-200 bg-red-50 p-4 dark:border-red-900/50 dark:bg-red-950/20">
               <p className="text-xs font-semibold text-red-700 dark:text-red-500">내가 고른 답</p>
-              <p className="mt-1 text-sm text-red-700 dark:text-red-300">{getAnswerLabel(current, current.my_answer)}</p>
+              <div className="mt-1 flex gap-2 text-sm text-red-700 dark:text-red-300">
+                {(() => {
+                  const { circle, text } = getAnswerParts(current, current.my_answer);
+                  return (
+                    <>
+                      {circle && <span className="shrink-0 font-bold">{circle}</span>}
+                      <span className="flex-1">{text}</span>
+                    </>
+                  );
+                })()}
+              </div>
             </article>
             <article className="rounded-xl border border-blue-200 bg-blue-50 p-4 dark:border-blue-900/50 dark:bg-blue-950/20">
               <p className="text-xs font-semibold text-blue-700 dark:text-blue-500">실제 정답</p>
-              <p className="mt-1 text-sm text-blue-700 dark:text-blue-300">{getAnswerLabel(current, current.answer)}</p>
+              <div className="mt-1 flex gap-2 text-sm text-blue-700 dark:text-blue-300">
+                {(() => {
+                  const { circle, text } = getAnswerParts(current, current.answer);
+                  return (
+                    <>
+                      {circle && <span className="shrink-0 font-bold">{circle}</span>}
+                      <span className="flex-1">{text}</span>
+                    </>
+                  );
+                })()}
+              </div>
             </article>
             {current.explanation ? (
               <article className="rounded-xl border border-stone-200 bg-stone-50 p-4 dark:border-stone-800 dark:bg-stone-950/30">
