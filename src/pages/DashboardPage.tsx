@@ -2,6 +2,7 @@ import { FormEvent, useMemo, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { CsvUploadPanel } from "../components/upload/CsvUploadPanel";
 import { ConfirmDialog } from "../components/ui/ConfirmDialog";
+import { DashboardHeaderTitle } from "../components/ui/DashboardHeaderTitle";
 import { IconCloseButton } from "../components/ui/IconCloseButton";
 import { OverflowTooltipTitle } from "../components/ui/OverflowTooltipTitle";
 import { ReturnLinkLabel } from "../components/ui/ReturnLinkLabel";
@@ -128,19 +129,12 @@ export function DashboardPage() {
     <div className="min-h-screen px-4 py-8 md:px-6 dark:bg-stone-950 transition-colors duration-300">
       <div className="mx-auto max-w-6xl">
         <header className="mb-6 flex flex-wrap items-end justify-between gap-3">
-          <div className="space-y-1">
-            <Link
-              to="/dashboard"
-              className="block w-fit text-sm font-bold text-red-600 hover:underline dark:text-red-500"
-              aria-label="과목 대시보드로 이동"
-            >
-              Law Solver
-            </Link>
-            <h1 className="text-2xl font-semibold text-stone-900 md:text-3xl dark:text-stone-100">
-              {currentSubjectName}
-            </h1>
-            <p className="mt-1 text-sm text-stone-500 dark:text-stone-500">문제 풀이 대시보드</p>
-          </div>
+          <DashboardHeaderTitle
+            title={currentSubjectName}
+            description="문제 풀이 대시보드"
+            logoTo="/dashboard"
+            logoLabel="과목 대시보드로 이동"
+          />
           <div className="flex flex-wrap gap-2">
             <Link
               to="/dashboard"

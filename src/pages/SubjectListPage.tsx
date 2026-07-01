@@ -1,6 +1,7 @@
 import { CSSProperties, FormEvent, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { ConfirmDialog } from "../components/ui/ConfirmDialog";
+import { DashboardHeaderTitle } from "../components/ui/DashboardHeaderTitle";
 import { IconCloseButton } from "../components/ui/IconCloseButton";
 import { getSubjectDashboardPath } from "../lib/subject";
 import { NO_SUBJECT_ID, Subject } from "../types/test";
@@ -260,19 +261,12 @@ export function SubjectListPage() {
     <div className="min-h-screen px-4 py-8 md:px-6 dark:bg-stone-950 transition-colors duration-300">
       <div className="mx-auto max-w-6xl">
         <header className="mb-6 flex flex-wrap items-end justify-between gap-3">
-          <div>
-            <Link
-              to="/"
-              className="inline-flex text-sm font-bold text-red-600 hover:underline dark:text-red-500"
-              aria-label="메인으로 이동"
-            >
-              Law Solver
-            </Link>
-            <h1 className="text-2xl font-semibold text-stone-900 md:text-3xl dark:text-stone-100">과목 대시보드</h1>
-            <p className="mt-1 text-sm text-stone-500 dark:text-stone-500">
-              과목을 선택해 문제 풀이 대시보드로 이동하세요.
-            </p>
-          </div>
+          <DashboardHeaderTitle
+            title="과목 대시보드"
+            description="과목을 선택해 문제 풀이 대시보드로 이동하세요."
+            logoTo="/"
+            logoLabel="메인으로 이동"
+          />
           <div className="flex flex-wrap gap-2">
             <button
               onClick={() => setIsSettingsOpen(true)}
