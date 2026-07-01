@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useParams, useLocation } from "react-router-dom";
+import { ChoiceReviewList } from "../components/review/ChoiceReviewList";
 import { OverflowTooltipTitle } from "../components/ui/OverflowTooltipTitle";
 import { getAnswerParts, getAnswerToken } from "../lib/answer";
 import { useTestStore } from "../store/useTestStore";
@@ -156,42 +157,48 @@ export function ReviewAllPage() {
             </div>
           )}
 
+          <ChoiceReviewList question={current} />
+
           <div className="mt-6 space-y-3">
-            <article className={[
-              "rounded-xl border p-4",
-              isCorrect 
-                ? "border-emerald-200 bg-emerald-50 dark:border-emerald-900/50 dark:bg-emerald-950/20 dark:text-emerald-400" 
-                : "border-red-200 bg-red-50 dark:border-red-900/50 dark:bg-red-950/20 dark:text-red-400"
-            ].join(" ")}>
-              <p className={["text-xs font-semibold", isCorrect ? "text-emerald-700 dark:text-emerald-500" : "text-red-700 dark:text-red-500"].join(" ")}>내가 고른 답</p>
-              <div className={["mt-1 flex gap-2 text-sm", isCorrect ? "text-emerald-700 dark:text-emerald-300" : "text-red-700 dark:text-red-300"].join(" ")}>
-                {(() => {
-                  const { circle, text } = getAnswerParts(current, current.my_answer);
-                  return (
-                    <>
-                      {circle && <span className="shrink-0 font-bold">{circle}</span>}
-                      <span className="flex-1">{text}</span>
-                    </>
-                  );
-                })()}
-              </div>
-            </article>
-            {!isCorrect && (
-              <article className="rounded-xl border border-blue-200 bg-blue-50 p-4 dark:border-blue-900/50 dark:bg-blue-950/20">
-                <p className="text-xs font-semibold text-blue-700 dark:text-blue-500">실제 정답</p>
-                <div className="mt-1 flex gap-2 text-sm text-blue-700 dark:text-blue-300">
-                  {(() => {
-                    const { circle, text } = getAnswerParts(current, current.answer);
-                    return (
-                      <>
-                        {circle && <span className="shrink-0 font-bold">{circle}</span>}
-                        <span className="flex-1">{text}</span>
-                      </>
-                    );
-                  })()}
-                </div>
-              </article>
-            )}
+            {!current.choices ? (
+              <>
+                <article className={[
+                  "rounded-xl border p-4",
+                  isCorrect
+                    ? "border-emerald-200 bg-emerald-50 dark:border-emerald-900/50 dark:bg-emerald-950/20 dark:text-emerald-400"
+                    : "border-red-200 bg-red-50 dark:border-red-900/50 dark:bg-red-950/20 dark:text-red-400"
+                ].join(" ")}>
+                  <p className={["text-xs font-semibold", isCorrect ? "text-emerald-700 dark:text-emerald-500" : "text-red-700 dark:text-red-500"].join(" ")}>내가 고른 답</p>
+                  <div className={["mt-1 flex gap-2 text-sm", isCorrect ? "text-emerald-700 dark:text-emerald-300" : "text-red-700 dark:text-red-300"].join(" ")}>
+                    {(() => {
+                      const { circle, text } = getAnswerParts(current, current.my_answer);
+                      return (
+                        <>
+                          {circle && <span className="shrink-0 font-bold">{circle}</span>}
+                          <span className="flex-1">{text}</span>
+                        </>
+                      );
+                    })()}
+                  </div>
+                </article>
+                {!isCorrect && (
+                  <article className="rounded-xl border border-blue-200 bg-blue-50 p-4 dark:border-blue-900/50 dark:bg-blue-950/20">
+                    <p className="text-xs font-semibold text-blue-700 dark:text-blue-500">실제 정답</p>
+                    <div className="mt-1 flex gap-2 text-sm text-blue-700 dark:text-blue-300">
+                      {(() => {
+                        const { circle, text } = getAnswerParts(current, current.answer);
+                        return (
+                          <>
+                            {circle && <span className="shrink-0 font-bold">{circle}</span>}
+                            <span className="flex-1">{text}</span>
+                          </>
+                        );
+                      })()}
+                    </div>
+                  </article>
+                )}
+              </>
+            ) : null}
             {current.explanation ? (
               <article className="rounded-xl border border-stone-200 bg-stone-50 p-4 dark:border-stone-800 dark:bg-stone-950/30">
                 <p className="text-xs font-semibold text-stone-600 dark:text-stone-500">해설</p>
