@@ -32,13 +32,13 @@ const hashString = (value: string) =>
 
 const getSubjectCoverStyle = (subjectName: string): CSSProperties => {
   const hash = Math.abs(hashString(subjectName));
-  const hueA = hash % 360;
-  const hueB = (hueA + 45 + (hash % 80)) % 360;
-  const hueC = (hueA + 170 + (hash % 50)) % 360;
+  const hueA = 2 + (hash % 26);
+  const hueB = 24 + ((hash >> 3) % 22);
+  const hueC = 42 + ((hash >> 6) % 16);
   const angle = 105 + (hash % 151);
 
   return {
-    background: `linear-gradient(${angle}deg, hsl(${hueA} 42% 58%), hsl(${hueB} 38% 64%) 52%, hsl(${hueC} 34% 48%))`,
+    background: `linear-gradient(${angle}deg, hsl(${hueA} 68% 50%), hsl(${hueB} 72% 56%) 52%, hsl(${hueC} 78% 62%))`,
   };
 };
 
