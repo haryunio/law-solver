@@ -6,6 +6,7 @@ import { LandingPage } from "./pages/LandingPage";
 import { ResultPage } from "./pages/ResultPage";
 import { ReviewAllPage } from "./pages/ReviewAllPage";
 import { SolvePage } from "./pages/SolvePage";
+import { SubjectListPage } from "./pages/SubjectListPage";
 import { WrongAnswersPage } from "./pages/WrongAnswersPage";
 
 function ThemeWatcher() {
@@ -35,7 +36,8 @@ export default function App() {
       <ThemeWatcher />
       <Routes>
         <Route path="/" element={<LandingPage />} />
-        <Route path="/dashboard" element={<DashboardPage />} />
+        <Route path="/dashboard" element={<SubjectListPage />} />
+        <Route path="/dashboard/:subjectId" element={<DashboardPage />} />
         <Route path="/solve/:sessionId" element={<SolvePage />} />
         <Route path="/result/:sessionId" element={<ResultPage />} />
         <Route path="/wrong/:sessionId" element={<WrongAnswersPage />} />

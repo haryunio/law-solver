@@ -1,12 +1,13 @@
 import { FormEvent, useMemo, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import { CsvUploadPanel } from "../components/upload/CsvUploadPanel";
 import { ConfirmDialog } from "../components/ui/ConfirmDialog";
 import { IconCloseButton } from "../components/ui/IconCloseButton";
 import { OverflowTooltipTitle } from "../components/ui/OverflowTooltipTitle";
+import { ReturnLinkLabel } from "../components/ui/ReturnLinkLabel";
 import { formatElapsedTime } from "../lib/time";
 import { useTestStore } from "../store/useTestStore";
-import { useSettingsStore, FontFamily } from "../store/useSettingsStore";
+import { NO_SUBJECT_ID } from "../types/test";
 
 const orderModeLabel = {
   number: "번호 순서",
@@ -37,112 +38,38 @@ type DialogState = {
 };
 
 export function DashboardPage() {
+  const { subjectId = NO_SUBJECT_ID } = useParams();
   const sessions = useTestStore((state) => state.sessions);
+  const subjects = useTestStore((state) => state.subjects);
+  const sessionSubjectMap = useTestStore((state) => state.sessionSubjectMap);
   const deleteSession = useTestStore((state) => state.deleteSession);
   const updateSessionTitle = useTestStore((state) => state.updateSessionTitle);
-  const resetSessions = useTestStore((state) => state.resetSessions);
-  const importSessions = useTestStore((state) => state.importSessions);
-  const { darkMode, toggleDarkMode, fontFamily, setFontFamily } = useSettingsStore();
+  const assignSessionSubject = useTestStore((state) => state.assignSessionSubject);
   const navigate = useNavigate();
   const [openUpload, setOpenUpload] = useState(false);
-  const [openManage, setOpenManage] = useState(false);
-  const [openSettings, setOpenSettings] = useState(false);
   const [editingSessionId, setEditingSessionId] = useState<string | null>(null);
   const [editingTitle, setEditingTitle] = useState("");
+  const [editingSubjectId, setEditingSubjectId] = useState(NO_SUBJECT_ID);
   const [dialog, setDialog] = useState<DialogState | null>(null);
+
+  const isNoSubject = subjectId === NO_SUBJECT_ID;
+  const currentSubject = isNoSubject ? null : subjects.find((subject) => subject.id === subjectId);
+  const currentSubjectName = currentSubject?.name ?? "과목 없음";
+  const isInvalidSubject = !isNoSubject && !currentSubject;
 
   const sortedSessions = useMemo(
     () =>
-      [...sessions].sort(
-        (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
-      ),
-    [sessions],
+      sessions
+        .filter((session) =>
+          isNoSubject
+            ? !sessionSubjectMap[session.id]
+            : sessionSubjectMap[session.id] === subjectId,
+        )
+        .sort(
+          (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
+        ),
+    [isNoSubject, sessionSubjectMap, sessions, subjectId],
   );
-
-  const handleBackup = () => {
-    const data = JSON.stringify(sessions, null, 2);
-    const blob = new Blob([data], { type: "application/json" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `law-solver-backup-${new Date().toISOString().split("T")[0]}.json`;
-    a.click();
-    URL.revokeObjectURL(url);
-  };
-
-  const handleRestore = () => {
-    const input = document.createElement("input");
-    input.type = "file";
-    input.accept = ".json";
-    input.onchange = (e) => {
-      const file = (e.target as HTMLInputElement).files?.[0];
-      if (!file) return;
-      const reader = new FileReader();
-      reader.onload = (re) => {
-        try {
-          const content = re.target?.result as string;
-          const data = JSON.parse(content);
-          if (Array.isArray(data)) {
-            setDialog({
-              title: "대시보드를 불러올까요?",
-              description: "현재 문제, 풀이내역, 오답노트가 백업 파일 내용으로 덮어씌워집니다.",
-              confirmLabel: "불러오기",
-              variant: "danger",
-              onCancel: () => setDialog(null),
-              onConfirm: () => {
-                importSessions(data);
-                setOpenManage(false);
-                setDialog({
-                  title: "복구가 완료되었습니다.",
-                  description: "백업 파일의 데이터가 대시보드에 반영되었습니다.",
-                  confirmLabel: "확인",
-                  variant: "success",
-                  onConfirm: () => setDialog(null),
-                });
-              },
-            });
-          } else {
-            setDialog({
-              title: "백업 파일을 확인해 주세요.",
-              description: "올바른 Law Solver 백업 JSON 형식이 아닙니다.",
-              confirmLabel: "확인",
-              onConfirm: () => setDialog(null),
-            });
-          }
-        } catch (err) {
-          setDialog({
-            title: "파일을 읽지 못했습니다.",
-            description: "JSON 파일이 손상되었거나 읽을 수 없는 형식입니다.",
-            confirmLabel: "확인",
-            onConfirm: () => setDialog(null),
-          });
-        }
-      };
-      reader.readAsText(file);
-    };
-    input.click();
-  };
-
-  const handleReset = () => {
-    setDialog({
-      title: "모든 데이터를 초기화할까요?",
-      description: "문제, 풀이내역, 오답노트가 모두 삭제됩니다. 이 작업은 되돌릴 수 없습니다.",
-      confirmLabel: "초기화",
-      variant: "danger",
-      onCancel: () => setDialog(null),
-      onConfirm: () => {
-        resetSessions();
-        setOpenManage(false);
-        setDialog({
-          title: "초기화가 완료되었습니다.",
-          description: "대시보드의 모든 데이터가 삭제되었습니다.",
-          confirmLabel: "확인",
-          variant: "success",
-          onConfirm: () => setDialog(null),
-        });
-      },
-    });
-  };
 
   const handleDeleteSession = (sessionId: string, title: string) => {
     setDialog({
@@ -161,47 +88,66 @@ export function DashboardPage() {
   const openEditModal = (sessionId: string, title: string) => {
     setEditingSessionId(sessionId);
     setEditingTitle(title);
+    setEditingSubjectId(sessionSubjectMap[sessionId] ?? NO_SUBJECT_ID);
   };
 
   const closeEditModal = () => {
     setEditingSessionId(null);
     setEditingTitle("");
+    setEditingSubjectId(NO_SUBJECT_ID);
   };
 
   const handleEditSubmit = (event: FormEvent) => {
     event.preventDefault();
     if (!editingSessionId || !editingTitle.trim()) return;
     updateSessionTitle(editingSessionId, editingTitle.trim());
+    assignSessionSubject(
+      editingSessionId,
+      editingSubjectId === NO_SUBJECT_ID ? null : editingSubjectId,
+    );
     closeEditModal();
   };
+
+  if (isInvalidSubject) {
+    return (
+      <div className="min-h-screen px-4 py-8 md:px-6 dark:bg-stone-950">
+        <div className="mx-auto max-w-2xl rounded-2xl border border-stone-200 bg-white p-8 text-center dark:border-stone-800 dark:bg-stone-900">
+          <p className="text-stone-700 dark:text-stone-300">과목을 찾을 수 없습니다.</p>
+          <Link
+            to="/dashboard"
+            className="mt-4 inline-flex rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white"
+          >
+            <ReturnLinkLabel variant="solid">과목 목록으로</ReturnLinkLabel>
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen px-4 py-8 md:px-6 dark:bg-stone-950 transition-colors duration-300">
       <div className="mx-auto max-w-6xl">
         <header className="mb-6 flex flex-wrap items-end justify-between gap-3">
-          <div>
+          <div className="space-y-1">
             <Link
-              to="/"
-              className="inline-flex text-m font-bold text-red-600 hover:underline dark:text-red-500"
-              aria-label="메인으로 이동"
+              to="/dashboard"
+              className="block w-fit text-sm font-bold text-red-600 hover:underline dark:text-red-500"
+              aria-label="과목 대시보드로 이동"
             >
               Law Solver
             </Link>
-            <h1 className="text-2xl font-semibold text-stone-900 md:text-3xl dark:text-stone-100">문제 풀이 대시보드</h1>
+            <h1 className="text-2xl font-semibold text-stone-900 md:text-3xl dark:text-stone-100">
+              {currentSubjectName}
+            </h1>
+            <p className="mt-1 text-sm text-stone-500 dark:text-stone-500">문제 풀이 대시보드</p>
           </div>
-          <div className="flex gap-2">
-            <button
-              onClick={() => setOpenSettings(true)}
+          <div className="flex flex-wrap gap-2">
+            <Link
+              to="/dashboard"
               className="rounded-lg border border-stone-300 bg-white px-4 py-2 text-sm font-semibold text-stone-700 transition hover:bg-stone-50 dark:border-stone-700 dark:bg-stone-900 dark:text-stone-300 dark:hover:bg-stone-800"
             >
-              환경설정
-            </button>
-            <button
-              onClick={() => setOpenManage(true)}
-              className="rounded-lg border border-stone-300 bg-white px-4 py-2 text-sm font-semibold text-stone-700 transition hover:bg-stone-50 dark:border-stone-700 dark:bg-stone-900 dark:text-stone-300 dark:hover:bg-stone-800"
-            >
-              대시보드 관리
-            </button>
+              <ReturnLinkLabel>과목 목록으로</ReturnLinkLabel>
+            </Link>
             <button
               onClick={() => setOpenUpload(true)}
               className="rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-red-700 dark:bg-red-600 dark:hover:bg-red-700"
@@ -214,7 +160,9 @@ export function DashboardPage() {
         {sortedSessions.length === 0 ? (
           <div className="rounded-2xl border border-dashed border-stone-300 bg-white p-10 text-center dark:border-stone-800 dark:bg-stone-900">
             <p className="text-base font-medium text-stone-700 dark:text-stone-300">등록된 문제 세션이 없습니다.</p>
-            <p className="mt-1 text-sm text-stone-500 dark:text-stone-500">CSV 업로드로 OX, 5지선다 또는 단답형 문제를 시작하세요.</p>
+            <p className="mt-1 text-sm text-stone-500 dark:text-stone-500">
+              이 과목에 CSV 업로드로 OX, 5지선다 또는 단답형 문제를 시작하세요.
+            </p>
           </div>
         ) : (
           <div className="grid gap-3 md:grid-cols-2">
@@ -323,6 +271,7 @@ export function DashboardPage() {
               className="absolute right-3 top-3 z-10"
             />
             <CsvUploadPanel
+              subjectId={isNoSubject ? null : subjectId}
               onCreated={(sessionId) => {
                 setOpenUpload(false);
                 navigate(`/solve/${sessionId}`);
@@ -341,8 +290,8 @@ export function DashboardPage() {
               className="space-y-4 rounded-2xl border border-stone-200 bg-white p-6 shadow-2xl dark:border-stone-800 dark:bg-stone-900"
             >
               <div className="flex items-center justify-between">
-                <h2 className="text-lg font-semibold text-stone-900 dark:text-stone-100">문제 제목 편집</h2>
-                <IconCloseButton onClick={closeEditModal} label="문제 제목 편집 닫기" />
+                <h2 className="text-lg font-semibold text-stone-900 dark:text-stone-100">문제 편집</h2>
+                <IconCloseButton onClick={closeEditModal} label="문제 편집 닫기" />
               </div>
 
               <label className="block space-y-2">
@@ -354,6 +303,22 @@ export function DashboardPage() {
                   className="w-full rounded-lg border border-stone-300 bg-white px-3 py-2 text-sm text-stone-900 outline-none ring-red-200 transition focus:ring-2 dark:border-stone-700 dark:bg-stone-800 dark:text-stone-100 dark:ring-red-900/50"
                   placeholder="문제 세션 제목"
                 />
+              </label>
+
+              <label className="block space-y-2">
+                <span className="text-sm font-medium text-stone-700 dark:text-stone-300">과목</span>
+                <select
+                  value={editingSubjectId}
+                  onChange={(event) => setEditingSubjectId(event.target.value)}
+                  className="w-full rounded-lg border border-stone-300 bg-white px-3 py-2 text-sm text-stone-900 outline-none ring-red-200 transition focus:ring-2 dark:border-stone-700 dark:bg-stone-800 dark:text-stone-100 dark:ring-red-900/50"
+                >
+                  <option value={NO_SUBJECT_ID}>과목 없음</option>
+                  {subjects.map((subject) => (
+                    <option key={subject.id} value={subject.id}>
+                      {subject.name}
+                    </option>
+                  ))}
+                </select>
               </label>
 
               <div className="flex justify-end gap-2 pt-2">
@@ -373,102 +338,6 @@ export function DashboardPage() {
                 </button>
               </div>
             </form>
-          </div>
-        </div>
-      ) : null}
-
-      {openSettings ? (
-        <div className="fixed inset-0 z-50">
-          <button onClick={() => setOpenSettings(false)} className="absolute inset-0 bg-black/35 dark:bg-black/60" />
-          <div className="absolute left-1/2 top-1/2 w-[92vw] max-w-sm -translate-x-1/2 -translate-y-1/2">
-            <div className="rounded-2xl border border-stone-200 bg-white p-6 shadow-2xl dark:border-stone-800 dark:bg-stone-900">
-              <div className="mb-4 flex items-center justify-between">
-                <h2 className="text-lg font-semibold text-stone-900 dark:text-stone-100">환경설정</h2>
-                <IconCloseButton onClick={() => setOpenSettings(false)} label="환경설정 닫기" />
-              </div>
-              <div className="space-y-6">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium text-stone-700 dark:text-stone-300">다크 모드</span>
-                  <button
-                    onClick={toggleDarkMode}
-                    className={[
-                      "relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out outline-none",
-                      darkMode ? "bg-red-600" : "bg-stone-200 dark:bg-stone-800",
-                    ].join(" ")}
-                  >
-                    <span
-                      className={[
-                        "pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out dark:bg-stone-200",
-                        darkMode ? "translate-x-5" : "translate-x-0",
-                      ].join(" ")}
-                    />
-                  </button>
-                </div>
-
-                <div className="space-y-3">
-                  <span className="text-sm font-medium text-stone-700 dark:text-stone-300">글꼴 설정</span>
-                  <div className="grid grid-cols-1 gap-2">
-                    {[
-                      { id: "pretendard", label: "기본 (Pretendard)", class: "font-pretendard" },
-                      { id: "nanum-gothic", label: "나눔고딕", class: "font-nanum-gothic" },
-                      { id: "nanum-myeongjo", label: "나눔명조", class: "font-nanum-myeongjo" },
-                    ].map((font) => (
-                      <button
-                        key={font.id}
-                        onClick={() => setFontFamily(font.id as FontFamily)}
-                        className={[
-                          "flex items-center justify-between rounded-xl border px-4 py-3 text-sm transition",
-                          fontFamily === font.id
-                            ? "border-red-600 bg-red-50 text-red-700 dark:border-red-600 dark:bg-red-950/30 dark:text-red-400"
-                            : "border-stone-200 bg-white text-stone-700 dark:border-stone-800 dark:bg-stone-800 dark:text-stone-300 hover:bg-stone-50 dark:hover:bg-stone-700",
-                          font.class,
-                        ].join(" ")}
-                      >
-                        <span>{font.label}</span>
-                        {fontFamily === font.id && <span className="text-xs font-bold">●</span>}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      ) : null}
-
-      {openManage ? (
-        <div className="fixed inset-0 z-50">
-          <button onClick={() => setOpenManage(false)} className="absolute inset-0 bg-black/35 dark:bg-black/60" />
-          <div className="absolute left-1/2 top-1/2 w-[92vw] max-w-sm -translate-x-1/2 -translate-y-1/2">
-            <div className="rounded-2xl border border-stone-200 bg-white p-6 shadow-2xl dark:border-stone-800 dark:bg-stone-900">
-              <div className="mb-4 flex items-center justify-between">
-                <h2 className="text-lg font-semibold text-stone-900 dark:text-stone-100">대시보드 관리</h2>
-                <IconCloseButton onClick={() => setOpenManage(false)} label="대시보드 관리 닫기" />
-              </div>
-              <div className="grid gap-3">
-                <button
-                  onClick={handleBackup}
-                  className="flex w-full flex-col items-center justify-center rounded-xl border border-stone-200 bg-white p-4 transition hover:bg-stone-50 dark:border-stone-800 dark:bg-stone-900 dark:hover:bg-stone-800"
-                >
-                  <span className="text-sm font-bold text-stone-800 dark:text-stone-200">대시보드 백업하기</span>
-                  <span className="text-xs text-stone-500 dark:text-stone-500">모든 데이터를 JSON으로 저장</span>
-                </button>
-                <button
-                  onClick={handleRestore}
-                  className="flex w-full flex-col items-center justify-center rounded-xl border border-stone-200 bg-white p-4 transition hover:bg-stone-50 dark:border-stone-800 dark:bg-stone-900 dark:hover:bg-stone-800"
-                >
-                  <span className="text-sm font-bold text-stone-800 dark:text-stone-200">대시보드 불러오기</span>
-                  <span className="text-xs text-stone-500 dark:text-stone-500">백업 파일에서 데이터 복구</span>
-                </button>
-                <button
-                  onClick={handleReset}
-                  className="flex w-full flex-col items-center justify-center rounded-xl border border-red-100 bg-red-50 p-4 transition hover:bg-red-100/50 dark:border-red-900/50 dark:bg-red-950/30 dark:hover:bg-red-900/30"
-                >
-                  <span className="text-sm font-bold text-red-600 dark:text-red-400">초기화</span>
-                  <span className="text-xs text-red-500 dark:text-red-500">모든 데이터 영구 삭제</span>
-                </button>
-              </div>
-            </div>
           </div>
         </div>
       ) : null}

@@ -4,6 +4,7 @@ import { ConfirmDialog } from "../ui/ConfirmDialog";
 import { OverflowTooltipTitle } from "../ui/OverflowTooltipTitle";
 import { getAnswerToken } from "../../lib/answer";
 import { downloadSessionCsv } from "../../lib/csv";
+import { getSubjectDashboardPath } from "../../lib/subject";
 import { formatElapsedTime } from "../../lib/time";
 import { useTestStore } from "../../store/useTestStore";
 import { AnswerValue } from "../../types/test";
@@ -16,6 +17,7 @@ interface CbtSolveScreenProps {
 export function CbtSolveScreen({ sessionId, onSubmitted }: CbtSolveScreenProps) {
   const navigate = useNavigate();
   const sessions = useTestStore((state) => state.sessions);
+  const sessionSubjectMap = useTestStore((state) => state.sessionSubjectMap);
   const updateAnswer = useTestStore((state) => state.updateAnswer);
   const toggleBookmark = useTestStore((state) => state.toggleBookmark);
   const tickElapsedTime = useTestStore((state) => state.tickElapsedTime);
@@ -77,6 +79,7 @@ export function CbtSolveScreen({ sessionId, onSubmitted }: CbtSolveScreenProps) 
         }));
 
   const answeredCount = session.questions.filter((q) => q.my_answer !== "").length;
+  const subjectDashboardPath = getSubjectDashboardPath(sessionSubjectMap[session.id]);
 
   const handleAnswer = (answer: string) => {
     updateAnswer(session.id, current.id, answer as AnswerValue);
@@ -386,7 +389,7 @@ export function CbtSolveScreen({ sessionId, onSubmitted }: CbtSolveScreenProps) 
           confirmLabel="대시보드로 이동"
           cancelLabel="계속 풀기"
           onCancel={() => setIsPauseDialogOpen(false)}
-          onConfirm={() => navigate("/dashboard")}
+          onConfirm={() => navigate(subjectDashboardPath)}
         />
       ) : null}
     </div>

@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { ChoiceReviewList } from "../components/review/ChoiceReviewList";
 import { OverflowTooltipTitle } from "../components/ui/OverflowTooltipTitle";
+import { ReturnLinkLabel } from "../components/ui/ReturnLinkLabel";
 import { getAnswerParts, getAnswerToken } from "../lib/answer";
 import { getWrongQuestions } from "../lib/session";
 import { useTestStore } from "../store/useTestStore";
@@ -55,9 +56,9 @@ export function WrongAnswersPage() {
           <p className="text-stone-700">세션을 찾을 수 없습니다.</p>
           <Link
             to="/dashboard"
-            className="mt-4 inline-block rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white"
+            className="mt-4 inline-flex rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white"
           >
-            메인으로
+            <ReturnLinkLabel variant="solid">메인으로</ReturnLinkLabel>
           </Link>
         </div>
       </div>
@@ -87,9 +88,9 @@ export function WrongAnswersPage() {
           <p className="text-stone-700">오답이 없습니다.</p>
           <Link
             to={`/result/${session.id}`}
-            className="mt-4 inline-block rounded-lg border border-stone-300 bg-white px-4 py-2 text-sm font-semibold text-stone-700"
+            className="mt-4 inline-flex rounded-lg border border-stone-300 bg-white px-4 py-2 text-sm font-semibold text-stone-700"
           >
-            결과로 돌아가기
+            <ReturnLinkLabel>결과로 돌아가기</ReturnLinkLabel>
           </Link>
         </div>
       </div>
@@ -103,9 +104,9 @@ export function WrongAnswersPage() {
           <p className="text-stone-700">오답 데이터를 불러오지 못했습니다.</p>
           <Link
             to={`/result/${session.id}`}
-            className="mt-4 inline-block rounded-lg border border-stone-300 bg-white px-4 py-2 text-sm font-semibold text-stone-700"
+            className="mt-4 inline-flex rounded-lg border border-stone-300 bg-white px-4 py-2 text-sm font-semibold text-stone-700"
           >
-            결과로 돌아가기
+            <ReturnLinkLabel>결과로 돌아가기</ReturnLinkLabel>
           </Link>
         </div>
       </div>
@@ -154,7 +155,7 @@ export function WrongAnswersPage() {
             onClick={goToResult}
             className="shrink-0 rounded-lg border border-stone-300 bg-white px-3 py-2 text-sm font-semibold text-stone-700 hover:bg-stone-50 transition dark:border-stone-700 dark:bg-stone-800 dark:text-stone-300 dark:hover:bg-stone-700"
           >
-            결과로
+            <ReturnLinkLabel>결과로</ReturnLinkLabel>
           </button>
         </div>
       </header>

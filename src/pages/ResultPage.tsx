@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { IconCloseButton } from "../components/ui/IconCloseButton";
 import { OverflowTooltipTitle } from "../components/ui/OverflowTooltipTitle";
+import { ReturnLinkLabel } from "../components/ui/ReturnLinkLabel";
 import { getAnswerToken } from "../lib/answer";
 import {
   buildSessionExportCsv,
@@ -10,6 +11,7 @@ import {
   downloadCsvFile,
 } from "../lib/csv";
 import { getCorrectCount, getWrongQuestions, isCorrectQuestion } from "../lib/session";
+import { getSubjectDashboardPath } from "../lib/subject";
 import { formatElapsedTime } from "../lib/time";
 import { useTestStore } from "../store/useTestStore";
 import { ParsedQuestion, SolveOrder } from "../types/test";
@@ -20,6 +22,7 @@ export function ResultPage() {
   const { sessionId = "" } = useParams();
   const navigate = useNavigate();
   const session = useTestStore((state) => state.sessions.find((item) => item.id === sessionId));
+  const sessionSubjectMap = useTestStore((state) => state.sessionSubjectMap);
   const createSession = useTestStore((state) => state.createSession);
 
   const [isRetryModalOpen, setIsRetryModalOpen] = useState(false);
@@ -37,9 +40,9 @@ export function ResultPage() {
           <p className="text-stone-700 dark:text-stone-300">세션을 찾을 수 없습니다.</p>
           <Link
             to="/dashboard"
-            className="mt-4 inline-block rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white"
+            className="mt-4 inline-flex rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white"
           >
-            메인으로
+            <ReturnLinkLabel variant="solid">메인으로</ReturnLinkLabel>
           </Link>
         </div>
       </div>
@@ -90,6 +93,7 @@ export function ResultPage() {
       type: session.type,
       orderMode: retryOrderMode,
       questions: resetQuestions,
+      subjectId: sessionSubjectMap[session.id] ?? null,
     });
 
     navigate(`/solve/${newSessionId}`);
@@ -132,6 +136,7 @@ export function ResultPage() {
   const correctCount = getCorrectCount(session.questions);
   const wrongCount = getWrongQuestions(session).length;
   const bookmarkCount = session.questions.filter((q) => q.bookmark).length;
+  const subjectDashboardPath = getSubjectDashboardPath(sessionSubjectMap[session.id]);
   const chapterStats = Array.from(
     session.questions.reduce(
       (acc, question) => {
@@ -183,10 +188,10 @@ export function ResultPage() {
               </div>
             </div>
             <Link
-              to="/dashboard"
+              to={subjectDashboardPath}
               className="shrink-0 rounded-lg border border-stone-300 bg-white px-3 py-1.5 text-xs font-semibold text-stone-600 transition hover:bg-stone-50 dark:border-stone-700 dark:bg-stone-800 dark:text-stone-400 dark:hover:bg-stone-700"
             >
-              메인으로
+              <ReturnLinkLabel>메인으로</ReturnLinkLabel>
             </Link>
           </div>
 

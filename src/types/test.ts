@@ -1,6 +1,7 @@
 export type TestType = "OX" | "5-choice" | "short";
 export type SessionStatus = "in-progress" | "completed";
 export type SolveOrder = "number" | "chapter-random" | "random";
+export const NO_SUBJECT_ID = "__none__";
 
 export type OXAnswer = "O" | "X";
 export type ChoiceAnswer = "1" | "2" | "3" | "4" | "5";
@@ -35,4 +36,21 @@ export interface TestSession {
   created_at: string;
   status: SessionStatus;
   questions: ParsedQuestion[];
+}
+
+export interface Subject {
+  id: string;
+  name: string;
+  created_at: string;
+}
+
+export type SessionSubjectMap = Record<TestSession["id"], Subject["id"]>;
+
+export interface DashboardBackupData {
+  app: "law-solver";
+  version: 2;
+  exported_at: string;
+  sessions: TestSession[];
+  subjects: Subject[];
+  sessionSubjectMap: SessionSubjectMap;
 }

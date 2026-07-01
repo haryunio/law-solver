@@ -4,10 +4,11 @@ import { useTestStore } from "../../store/useTestStore";
 import { SolveOrder, TestType } from "../../types/test";
 
 interface CsvUploadPanelProps {
+  subjectId?: string | null;
   onCreated?: (sessionId: string) => void;
 }
 
-export function CsvUploadPanel({ onCreated }: CsvUploadPanelProps) {
+export function CsvUploadPanel({ subjectId, onCreated }: CsvUploadPanelProps) {
   const createSession = useTestStore((state) => state.createSession);
   const [title, setTitle] = useState("");
   const [type, setType] = useState<TestType>("OX");
@@ -37,6 +38,7 @@ export function CsvUploadPanel({ onCreated }: CsvUploadPanelProps) {
         type,
         orderMode,
         questions,
+        subjectId,
       });
       onCreated?.(sessionId);
     } catch (e) {

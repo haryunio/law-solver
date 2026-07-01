@@ -17,7 +17,8 @@ License: CC BY-NC-ND
 
 ## 주요 기능
 
-- 랜딩 페이지와 문제 풀이 대시보드
+- 랜딩 페이지, 과목 목록, 과목별 문제 풀이 대시보드
+- 과목 추가/삭제, 문제별 과목 배정, `과목 없음` 기본 폴더
 - OX, 5지선다, 단답형 CSV 업로드
 - 번호 순서, 챕터별 랜덤, 전체 랜덤 풀이 순서 선택
 - CBT 풀이 화면, 타이머, OMR, 모바일 Bottom Sheet
@@ -28,7 +29,7 @@ License: CC BY-NC-ND
 - 오답노트 작성 및 저장
 - 오답만 다시 풀기, 전체 새로 풀기, 책갈피 문제만 다시 풀기
 - 전체 결과 CSV, 오답 결과 CSV, 오답노트 CSV 다운로드
-- 대시보드 JSON 백업, 복원, 초기화
+- 과목/문제/풀이 기록을 포함한 대시보드 JSON 백업, 복원, 초기화
 - 다크 모드와 글꼴 설정
 - GitHub Pages 배포 설정과 SPA 새로고침 대응
 
@@ -56,6 +57,7 @@ License: CC BY-NC-ND
 ├── src/
 │   ├── components/
 │   │   ├── cbt/                        # CBT 풀이 UI
+│   │   ├── review/                     # 리뷰 화면용 재사용 UI
 │   │   └── upload/                     # CSV 업로드 UI
 │   ├── lib/                            # CSV, 정렬, 채점, ID, 시간 유틸 및 테스트
 │   ├── pages/                          # 라우트 단위 화면
@@ -72,13 +74,16 @@ License: CC BY-NC-ND
 ## 앱 실행 흐름
 
 - `/`: 랜딩 페이지
-- `/dashboard`: 세션 목록, CSV 업로드, 환경설정, 백업/복원/초기화
+- `/dashboard`: 과목 목록, 과목 관리, 환경설정, 전체 데이터 백업/복원/초기화
+- `/dashboard/:subjectId`: 과목별 세션 목록, CSV 업로드, 문제 제목/과목 편집
 - `/solve/:sessionId`: CBT 풀이
 - `/result/:sessionId`: 채점 결과와 재풀이/다운로드 액션
 - `/wrong/:sessionId`: 오답 확인 및 오답노트 작성
 - `/review/:sessionId`: 전체 문항 또는 책갈피 문항 확인
 
-세션 데이터는 `law-solver-storage` 키로 localStorage에 저장됩니다. 환경설정은 `law-solver-settings` 키로 저장됩니다.
+세션, 과목, 세션-과목 매핑 데이터는 `law-solver-storage` 키로 localStorage에 저장됩니다. 환경설정은 `law-solver-settings` 키로 저장됩니다.
+
+`과목 없음`은 실제 과목 객체로 저장하지 않습니다. 세션-과목 매핑이 없는 세션을 `과목 없음`으로 표시합니다.
 
 ## 설치 방법
 
@@ -126,6 +131,30 @@ GitHub Pages 배포:
 - 워크플로우는 `npm ci`, `npm run build` 후 `dist`를 Pages artifact로 업로드합니다.
 - `public/CNAME`에 `lawsolver.haryun.io`가 설정되어 있습니다.
 - `public/404.html`과 `index.html`의 redirect restore 스크립트로 GitHub Pages에서 SPA 라우트 새로고침 404를 우회합니다.
+
+## 데이터 백업/복원
+
+최상위 과목 대시보드의 `데이터 관리`에서 수행하는 백업/복원은 과목별이 아니라 전체 데이터베이스 단위입니다. 백업은 다음 데이터를 하나의 JSON으로 저장합니다.
+
+- 문제 세션과 유저 답안
+- 과목 목록
+- 세션-과목 매핑
+- 오답노트와 책갈피
+
+현재 백업 포맷은 객체 형태입니다.
+
+```json
+{
+  "app": "law-solver",
+  "version": 2,
+  "exported_at": "2026-07-01T00:00:00.000Z",
+  "sessions": [],
+  "subjects": [],
+  "sessionSubjectMap": {}
+}
+```
+
+이전 버전의 배열 형태 백업도 복원할 수 있습니다. 구형 백업을 복원하면 모든 세션은 `과목 없음`으로 들어갑니다.
 
 ## 테스트와 린트
 
@@ -185,6 +214,7 @@ npm run lint
 
 - 서버가 없으므로 모든 데이터는 사용자의 브라우저 localStorage에만 저장됩니다. 브라우저 데이터 삭제, 다른 기기 사용, 시크릿 모드에서는 데이터가 유지되지 않을 수 있습니다.
 - 중요한 풀이 기록은 대시보드 JSON 백업 또는 CSV 다운로드로 별도 보관해야 합니다.
+- 과목 삭제 시 문제 세션은 삭제되지 않고 `과목 없음`으로 이동합니다.
 - 단답형 채점은 현재 문자열 일치 기반입니다. 띄어쓰기, 대소문자, 동의어 처리 같은 정규화는 제한적입니다.
 - `npm run lint`는 아직 제공되지 않습니다. 린트 도입이 필요하면 별도 설정이 필요합니다.
 - `public/CNAME`은 `lawsolver.haryun.io` 기준입니다. GitHub 기본 도메인(`https://haryunio.github.io/law-solver/`)으로만 운영할 경우 CNAME과 Vite base 설정을 함께 점검해야 합니다.
@@ -193,4 +223,3 @@ npm run lint
 
 - `npm test`: 통과, 3개 테스트 파일 / 9개 테스트
 - `npm run build`: 통과
-
