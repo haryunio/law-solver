@@ -1,4 +1,4 @@
-import { CSSProperties, FormEvent, useMemo, useState } from "react";
+import { CSSProperties, FormEvent, PointerEvent, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { ConfirmDialog } from "../components/ui/ConfirmDialog";
 import { DashboardHeaderTitle } from "../components/ui/DashboardHeaderTitle";
@@ -100,6 +100,20 @@ export function SubjectListPage() {
   const [editingSubjectPalette, setEditingSubjectPalette] = useState<SubjectCoverPalette>("warm");
   const [draggingSubjectId, setDraggingSubjectId] = useState<string | null>(null);
   const [dialog, setDialog] = useState<DialogState | null>(null);
+  const touchDragTimerRef = useRef<number | null>(null);
+  const touchDragRef = useRef<{
+    pointerId: number | null;
+    subjectId: string | null;
+    lastTargetId: string | null;
+    activated: boolean;
+    capturedElement: HTMLElement | null;
+  }>({
+    pointerId: null,
+    subjectId: null,
+    lastTargetId: null,
+    activated: false,
+    capturedElement: null,
+  });
 
   const subjectCards = useMemo<SubjectCardData[]>(() => {
     const makeStats = (subject: Subject | null): SubjectCardData => {
@@ -195,6 +209,98 @@ export function SubjectListPage() {
     if (!draggingSubjectId) return;
     reorderSubject(draggingSubjectId, targetSubjectId);
     setDraggingSubjectId(null);
+  };
+
+  const clearTouchDragTimer = () => {
+    if (touchDragTimerRef.current === null) return;
+    window.clearTimeout(touchDragTimerRef.current);
+    touchDragTimerRef.current = null;
+  };
+
+  const resetTouchDrag = () => {
+    const { capturedElement, pointerId } = touchDragRef.current;
+    clearTouchDragTimer();
+
+    if (capturedElement && pointerId !== null && capturedElement.hasPointerCapture(pointerId)) {
+      capturedElement.releasePointerCapture(pointerId);
+    }
+
+    touchDragRef.current = {
+      pointerId: null,
+      subjectId: null,
+      lastTargetId: null,
+      activated: false,
+      capturedElement: null,
+    };
+    setDraggingSubjectId(null);
+  };
+
+  const handleSubjectPointerDown = (
+    event: PointerEvent<HTMLDivElement>,
+    subjectId: string,
+  ) => {
+    if (event.pointerType === "mouse") return;
+
+    const target = event.target as HTMLElement;
+    if (target.closest("button, a, input, select, textarea")) return;
+
+    const currentTarget = event.currentTarget;
+    clearTouchDragTimer();
+    touchDragRef.current = {
+      pointerId: event.pointerId,
+      subjectId,
+      lastTargetId: subjectId,
+      activated: false,
+      capturedElement: null,
+    };
+
+    touchDragTimerRef.current = window.setTimeout(() => {
+      const dragState = touchDragRef.current;
+      if (dragState.pointerId !== event.pointerId || dragState.subjectId !== subjectId) return;
+
+      dragState.activated = true;
+      dragState.capturedElement = currentTarget;
+      setDraggingSubjectId(subjectId);
+
+      if (!currentTarget.hasPointerCapture(event.pointerId)) {
+        currentTarget.setPointerCapture(event.pointerId);
+      }
+    }, 180);
+  };
+
+  const handleSubjectPointerMove = (event: PointerEvent<HTMLDivElement>) => {
+    const dragState = touchDragRef.current;
+    if (
+      event.pointerType === "mouse" ||
+      dragState.pointerId !== event.pointerId ||
+      !dragState.activated ||
+      !dragState.subjectId
+    ) {
+      return;
+    }
+
+    event.preventDefault();
+
+    const targetElement = document
+      .elementFromPoint(event.clientX, event.clientY)
+      ?.closest<HTMLElement>("[data-subject-drop-id]");
+    const targetSubjectId = targetElement?.dataset.subjectDropId;
+
+    if (
+      !targetSubjectId ||
+      targetSubjectId === dragState.subjectId ||
+      targetSubjectId === dragState.lastTargetId
+    ) {
+      return;
+    }
+
+    reorderSubject(dragState.subjectId, targetSubjectId);
+    dragState.lastTargetId = targetSubjectId;
+  };
+
+  const handleSubjectPointerEnd = (event: PointerEvent<HTMLDivElement>) => {
+    if (event.pointerType === "mouse") return;
+    resetTouchDrag();
   };
 
   const renderPaletteOptions = (
@@ -454,26 +560,31 @@ export function SubjectListPage() {
                 ) : (
                   <>
                     <p className="px-1 pb-1 text-xs font-medium text-stone-500 dark:text-stone-500">
-                      과목 카드를 잡고 드래그해서 순서를 바꿀 수 있습니다.
+                      과목 카드를 잡고 드래그해서 순서를 바꿀 수 있습니다. 모바일에서는 카드를 잠깐 누른 뒤 움직이세요.
                     </p>
                     {subjects.map((subject) => (
                       <div
                         key={subject.id}
+                        data-subject-drop-id={subject.id}
                         draggable
                         onDragStart={(event) => {
                           event.dataTransfer.effectAllowed = "move";
                           setDraggingSubjectId(subject.id);
                         }}
                         onDragEnd={() => setDraggingSubjectId(null)}
+                        onPointerDown={(event) => handleSubjectPointerDown(event, subject.id)}
+                        onPointerMove={handleSubjectPointerMove}
+                        onPointerUp={handleSubjectPointerEnd}
+                        onPointerCancel={handleSubjectPointerEnd}
                         onDragOver={(event) => {
                           event.preventDefault();
                           event.dataTransfer.dropEffect = "move";
                         }}
                         onDrop={() => handleDropSubject(subject.id)}
                         className={[
-                          "flex cursor-grab items-center justify-between gap-3 rounded-xl border border-stone-200 bg-white p-3 transition hover:border-red-200 hover:bg-red-50/30 active:cursor-grabbing dark:border-stone-800 dark:bg-stone-900 dark:hover:border-red-900/60 dark:hover:bg-red-950/10",
+                          "flex cursor-grab touch-pan-y items-center justify-between gap-3 rounded-xl border border-stone-200 bg-white p-3 transition hover:border-red-200 hover:bg-red-50/30 active:cursor-grabbing dark:border-stone-800 dark:bg-stone-900 dark:hover:border-red-900/60 dark:hover:bg-red-950/10",
                           draggingSubjectId === subject.id
-                            ? "opacity-60 ring-2 ring-red-100 dark:ring-red-900/40"
+                            ? "touch-none opacity-60 ring-2 ring-red-100 dark:ring-red-900/40"
                             : "",
                         ].join(" ")}
                         title="과목 카드를 드래그해서 순서 변경"
