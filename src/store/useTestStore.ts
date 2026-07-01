@@ -192,7 +192,7 @@ export const useTestStore = create<TestStore>()(
           created_at: new Date().toISOString(),
           cover_palette: coverPalette,
         };
-        set((state) => ({ subjects: [...state.subjects, subject] }));
+        set((state) => ({ subjects: [subject, ...state.subjects] }));
         return id;
       },
       renameSubject: (subjectId, name) => {
