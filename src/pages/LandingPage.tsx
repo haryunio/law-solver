@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
+import { IconCloseButton } from "../components/ui/IconCloseButton";
 
 export function LandingPage() {
   const [isCsvGuideOpen, setIsCsvGuideOpen] = useState(false);
@@ -62,13 +63,11 @@ export function LandingPage() {
         <div className="fixed inset-0 z-50">
           <button onClick={() => setIsCsvGuideOpen(false)} className="absolute inset-0 bg-black/40" />
           <div className="absolute left-1/2 top-1/2 w-[92vw] max-w-2xl -translate-x-1/2 -translate-y-1/2 rounded-2xl border border-stone-200 bg-white p-6 shadow-2xl">
-            <button
+            <IconCloseButton
               onClick={() => setIsCsvGuideOpen(false)}
-              className="absolute right-3 top-3 inline-flex h-8 w-8 items-center justify-center rounded-full border border-stone-300 bg-white text-sm font-semibold text-stone-600 hover:bg-stone-100"
-              aria-label="CSV 가이드 닫기"
-            >
-              X
-            </button>
+              label="CSV 가이드 닫기"
+              className="absolute right-3 top-3"
+            />
 
             <h2 className="text-lg font-semibold text-stone-900">CSV 헤더 가이드</h2>
 

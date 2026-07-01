@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
+import { IconCloseButton } from "../components/ui/IconCloseButton";
+import { OverflowTooltipTitle } from "../components/ui/OverflowTooltipTitle";
 import { getAnswerToken } from "../lib/answer";
 import {
   buildSessionExportCsv,
@@ -11,6 +13,8 @@ import { getCorrectCount, getWrongQuestions, isCorrectQuestion } from "../lib/se
 import { formatElapsedTime } from "../lib/time";
 import { useTestStore } from "../store/useTestStore";
 import { ParsedQuestion, SolveOrder } from "../types/test";
+
+type ResultTab = "omr" | "chapter";
 
 export function ResultPage() {
   const { sessionId = "" } = useParams();
@@ -24,6 +28,7 @@ export function ResultPage() {
   const [isDownloadModalOpen, setIsDownloadModalOpen] = useState(false);
   const [retryTitle, setRetryTitle] = useState("");
   const [retryOrderMode, setRetryOrderMode] = useState<SolveOrder>("number");
+  const [resultTab, setResultTab] = useState<ResultTab>("omr");
 
   if (!session) {
     return (
@@ -127,6 +132,40 @@ export function ResultPage() {
   const correctCount = getCorrectCount(session.questions);
   const wrongCount = getWrongQuestions(session).length;
   const bookmarkCount = session.questions.filter((q) => q.bookmark).length;
+  const chapterStats = Array.from(
+    session.questions.reduce(
+      (acc, question) => {
+        const chapter = question.chapter?.trim();
+        if (!chapter) return acc;
+
+        const current = acc.get(chapter) ?? {
+          chapter,
+          total: 0,
+          correct: 0,
+          wrong: 0,
+          unanswered: 0,
+        };
+
+        const isCorrect = isCorrectQuestion(question);
+        current.total += 1;
+        current.correct += isCorrect ? 1 : 0;
+        current.wrong += isCorrect ? 0 : 1;
+        current.unanswered += question.my_answer ? 0 : 1;
+        acc.set(chapter, current);
+        return acc;
+      },
+      new Map<
+        string,
+        {
+          chapter: string;
+          total: number;
+          correct: number;
+          wrong: number;
+          unanswered: number;
+        }
+      >(),
+    ).values(),
+  );
 
   return (
     <div className="min-h-screen px-4 py-8 md:px-6 dark:bg-stone-950 transition-colors duration-300">
@@ -135,9 +174,13 @@ export function ResultPage() {
           <div className="flex items-start justify-between gap-4">
             <div className="min-w-0 flex-1">
               <p className="text-sm font-semibold text-red-600 dark:text-red-500">채점 결과</p>
-              <h1 className="mt-1 truncate text-2xl font-semibold text-stone-900 dark:text-stone-100" title={session.title}>
-                {session.title}
-              </h1>
+              <div className="mt-1 min-w-0">
+                <OverflowTooltipTitle
+                  text={session.title}
+                  className="text-2xl font-semibold text-stone-900 dark:text-stone-100"
+                  tooltipClassName="max-w-md"
+                />
+              </div>
             </div>
             <Link
               to="/dashboard"
@@ -233,34 +276,108 @@ export function ResultPage() {
           </div>
 
           <div className="mt-6">
-            <h2 className="mb-2 text-sm font-semibold text-stone-700 dark:text-stone-300">OMR 채점표</h2>
-            <div className="overflow-hidden rounded-xl border border-stone-200 dark:border-stone-800">
-              <div className="grid grid-cols-[1fr_1fr_1fr] border-b border-stone-200 bg-stone-50 px-3 py-2 text-xs font-semibold text-stone-600 dark:border-stone-800 dark:bg-stone-950 dark:text-stone-400">
-                <span>문제번호</span>
-                <span>나의 답</span>
-                <span>정답</span>
-              </div>
-              <div className="max-h-[48vh] overflow-y-auto">
-                {session.questions.map((question, idx) => {
-                  const isCorrect = isCorrectQuestion(question);
-                  return (
-                    <div
-                      key={question.id}
-                      className={[
-                        "grid grid-cols-[1fr_1fr_1fr] border-b border-stone-100 px-3 py-2 text-sm text-stone-700 last:border-b-0 dark:border-stone-800/50",
-                        isCorrect 
-                          ? "bg-emerald-50 dark:bg-emerald-950/20 dark:text-emerald-400" 
-                          : "bg-red-50 dark:bg-red-950/20 dark:text-red-400",
-                      ].join(" ")}
-                    >
-                      <span>{idx + 1}</span>
-                      <span>{getAnswerToken(question.my_answer)}</span>
-                      <span>{getAnswerToken(question.answer)}</span>
-                    </div>
-                  );
-                })}
-              </div>
+            <div className="mb-3 flex rounded-xl border border-stone-200 bg-stone-50 p-1 dark:border-stone-800 dark:bg-stone-950">
+              {[
+                ["omr", "OMR 채점표"],
+                ["chapter", "파트별 분석"],
+              ].map(([tab, label]) => (
+                <button
+                  key={tab}
+                  type="button"
+                  onClick={() => setResultTab(tab as ResultTab)}
+                  className={[
+                    "flex-1 rounded-lg px-3 py-2 text-sm font-semibold transition",
+                    resultTab === tab
+                      ? "bg-white text-red-600 shadow-sm dark:bg-stone-900 dark:text-red-500"
+                      : "text-stone-500 hover:text-stone-800 dark:text-stone-400 dark:hover:text-stone-200",
+                  ].join(" ")}
+                >
+                  {label}
+                </button>
+              ))}
             </div>
+
+            {resultTab === "omr" ? (
+              <div className="overflow-hidden rounded-xl border border-stone-200 dark:border-stone-800">
+                <div className="grid grid-cols-[1fr_1fr_1fr] border-b border-stone-200 bg-stone-50 px-3 py-2 text-xs font-semibold text-stone-600 dark:border-stone-800 dark:bg-stone-950 dark:text-stone-400">
+                  <span>문제번호</span>
+                  <span>나의 답</span>
+                  <span>정답</span>
+                </div>
+                <div className="max-h-[48vh] overflow-y-auto">
+                  {session.questions.map((question, idx) => {
+                    const isCorrect = isCorrectQuestion(question);
+                    return (
+                      <div
+                        key={question.id}
+                        className={[
+                          "grid grid-cols-[1fr_1fr_1fr] border-b border-stone-100 px-3 py-2 text-sm text-stone-700 last:border-b-0 dark:border-stone-800/50",
+                          isCorrect
+                            ? "bg-emerald-50 dark:bg-emerald-950/20 dark:text-emerald-400"
+                            : "bg-red-50 dark:bg-red-950/20 dark:text-red-400",
+                        ].join(" ")}
+                      >
+                        <span>{idx + 1}</span>
+                        <span>{getAnswerToken(question.my_answer)}</span>
+                        <span>{getAnswerToken(question.answer)}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            ) : (
+              <div className="overflow-x-auto rounded-xl border border-stone-200 dark:border-stone-800">
+                {chapterStats.length > 0 ? (
+                  <div className="min-w-[38rem]">
+                    <div className="grid grid-cols-[minmax(0,1.7fr)_0.7fr_0.7fr_0.7fr_0.7fr_0.8fr] gap-2 border-b border-stone-200 bg-stone-50 px-3 py-2 text-xs font-semibold text-stone-600 dark:border-stone-800 dark:bg-stone-950 dark:text-stone-400">
+                      <span>파트</span>
+                      <span className="text-right">문제수</span>
+                      <span className="text-right">정답</span>
+                      <span className="text-right">오답</span>
+                      <span className="text-right">미응답</span>
+                      <span className="text-right">정답률</span>
+                    </div>
+                    <div className="max-h-[48vh] overflow-y-auto">
+                      {chapterStats.map((stat) => {
+                        const accuracy = Math.round((stat.correct / stat.total) * 100);
+                        return (
+                          <div
+                            key={stat.chapter}
+                            className="grid grid-cols-[minmax(0,1.7fr)_0.7fr_0.7fr_0.7fr_0.7fr_0.8fr] gap-2 border-b border-stone-100 px-3 py-2.5 text-sm text-stone-700 last:border-b-0 dark:border-stone-800/50 dark:text-stone-300"
+                          >
+                            <span className="min-w-0 truncate font-medium text-stone-900 dark:text-stone-100">
+                              {stat.chapter}
+                            </span>
+                            <span className="text-right tabular-nums text-stone-700 dark:text-stone-300">
+                              {stat.total}
+                            </span>
+                            <span className="text-right tabular-nums text-emerald-700 dark:text-emerald-400">
+                              {stat.correct}
+                            </span>
+                            <span className="text-right tabular-nums text-red-700 dark:text-red-400">{stat.wrong}</span>
+                            <span className="text-right tabular-nums text-stone-500 dark:text-stone-500">
+                              {stat.unanswered}
+                            </span>
+                            <span className="text-right font-semibold tabular-nums text-red-600 dark:text-red-500">
+                              {accuracy}%
+                            </span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="bg-stone-50 px-4 py-8 text-center dark:bg-stone-950">
+                    <p className="text-sm font-semibold text-stone-700 dark:text-stone-300">
+                      파트별 분석에 사용할 챕터 정보가 없습니다.
+                    </p>
+                    <p className="mt-1 text-xs text-stone-500 dark:text-stone-500">
+                      CSV에 `챕터`, `chapter`, `단원`, `파트` 중 하나의 헤더를 추가하면 이곳에 분석이 표시됩니다.
+                    </p>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -275,13 +392,7 @@ export function ResultPage() {
             >
               <div className="flex items-center justify-between">
                 <h2 className="text-lg font-semibold text-stone-900 dark:text-stone-100">새로 풀기 설정</h2>
-                <button
-                  type="button"
-                  onClick={() => setIsRetryModalOpen(false)}
-                  className="text-stone-400 hover:text-stone-600 dark:text-stone-500 dark:hover:text-stone-300"
-                >
-                  X
-                </button>
+                <IconCloseButton onClick={() => setIsRetryModalOpen(false)} label="새로 풀기 설정 닫기" />
               </div>
 
               <label className="block space-y-2">
@@ -330,13 +441,7 @@ export function ResultPage() {
             >
               <div className="flex items-center justify-between">
                 <h2 className="text-lg font-semibold text-stone-900 dark:text-stone-100">오답 풀기 설정</h2>
-                <button
-                  type="button"
-                  onClick={() => setIsWrongRetryModalOpen(false)}
-                  className="text-stone-400 hover:text-stone-600 dark:text-stone-500 dark:hover:text-stone-300"
-                >
-                  X
-                </button>
+                <IconCloseButton onClick={() => setIsWrongRetryModalOpen(false)} label="오답 풀기 설정 닫기" />
               </div>
 
               <div className="rounded-xl bg-red-50 p-3 dark:bg-red-950/30 dark:border dark:border-red-900/50">
@@ -390,13 +495,7 @@ export function ResultPage() {
             >
               <div className="flex items-center justify-between">
                 <h2 className="text-lg font-semibold text-stone-900 dark:text-stone-100">책갈피 문제 풀기 설정</h2>
-                <button
-                  type="button"
-                  onClick={() => setIsBookmarkRetryModalOpen(false)}
-                  className="text-stone-400 hover:text-stone-600 dark:text-stone-500 dark:hover:text-stone-300"
-                >
-                  X
-                </button>
+                <IconCloseButton onClick={() => setIsBookmarkRetryModalOpen(false)} label="책갈피 문제 풀기 설정 닫기" />
               </div>
 
               <div className="rounded-xl bg-amber-50 p-3 dark:bg-amber-950/30 dark:border dark:border-amber-900/50">
@@ -447,12 +546,7 @@ export function ResultPage() {
             <div className="rounded-2xl border border-stone-200 bg-white p-6 shadow-2xl dark:border-stone-800 dark:bg-stone-900">
               <div className="mb-4 flex items-center justify-between">
                 <h2 className="text-lg font-semibold text-stone-900 dark:text-stone-100">CSV 다운로드 옵션</h2>
-                <button
-                  onClick={() => setIsDownloadModalOpen(false)}
-                  className="text-stone-400 hover:text-stone-600 dark:text-stone-500 dark:hover:text-stone-300"
-                >
-                  X
-                </button>
+                <IconCloseButton onClick={() => setIsDownloadModalOpen(false)} label="CSV 다운로드 옵션 닫기" />
               </div>
               <div className="grid gap-3">
                 <button

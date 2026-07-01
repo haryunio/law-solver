@@ -1,6 +1,9 @@
-import { useMemo, useState } from "react";
+import { FormEvent, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { CsvUploadPanel } from "../components/upload/CsvUploadPanel";
+import { ConfirmDialog } from "../components/ui/ConfirmDialog";
+import { IconCloseButton } from "../components/ui/IconCloseButton";
+import { OverflowTooltipTitle } from "../components/ui/OverflowTooltipTitle";
 import { formatElapsedTime } from "../lib/time";
 import { useTestStore } from "../store/useTestStore";
 import { useSettingsStore, FontFamily } from "../store/useSettingsStore";
@@ -23,9 +26,20 @@ const typeStyle = {
   short: "bg-purple-50 text-purple-700 border-purple-100 dark:bg-purple-950/30 dark:text-purple-400 dark:border-purple-900/50",
 } as const;
 
+type DialogState = {
+  title: string;
+  description?: string;
+  confirmLabel?: string;
+  cancelLabel?: string;
+  variant?: "default" | "danger" | "success";
+  onConfirm: () => void;
+  onCancel?: () => void;
+};
+
 export function DashboardPage() {
   const sessions = useTestStore((state) => state.sessions);
   const deleteSession = useTestStore((state) => state.deleteSession);
+  const updateSessionTitle = useTestStore((state) => state.updateSessionTitle);
   const resetSessions = useTestStore((state) => state.resetSessions);
   const importSessions = useTestStore((state) => state.importSessions);
   const { darkMode, toggleDarkMode, fontFamily, setFontFamily } = useSettingsStore();
@@ -33,6 +47,9 @@ export function DashboardPage() {
   const [openUpload, setOpenUpload] = useState(false);
   const [openManage, setOpenManage] = useState(false);
   const [openSettings, setOpenSettings] = useState(false);
+  const [editingSessionId, setEditingSessionId] = useState<string | null>(null);
+  const [editingTitle, setEditingTitle] = useState("");
+  const [dialog, setDialog] = useState<DialogState | null>(null);
 
   const sortedSessions = useMemo(
     () =>
@@ -66,16 +83,39 @@ export function DashboardPage() {
           const content = re.target?.result as string;
           const data = JSON.parse(content);
           if (Array.isArray(data)) {
-            if (window.confirm("현재 데이터를 덮어씌우고 백업 데이터를 불러올까요?")) {
-              importSessions(data);
-              setOpenManage(false);
-              alert("복구가 완료되었습니다.");
-            }
+            setDialog({
+              title: "대시보드를 불러올까요?",
+              description: "현재 문제, 풀이내역, 오답노트가 백업 파일 내용으로 덮어씌워집니다.",
+              confirmLabel: "불러오기",
+              variant: "danger",
+              onCancel: () => setDialog(null),
+              onConfirm: () => {
+                importSessions(data);
+                setOpenManage(false);
+                setDialog({
+                  title: "복구가 완료되었습니다.",
+                  description: "백업 파일의 데이터가 대시보드에 반영되었습니다.",
+                  confirmLabel: "확인",
+                  variant: "success",
+                  onConfirm: () => setDialog(null),
+                });
+              },
+            });
           } else {
-            alert("올바른 백업 파일이 아닙니다.");
+            setDialog({
+              title: "백업 파일을 확인해 주세요.",
+              description: "올바른 Law Solver 백업 JSON 형식이 아닙니다.",
+              confirmLabel: "확인",
+              onConfirm: () => setDialog(null),
+            });
           }
         } catch (err) {
-          alert("파일을 읽는 중 오류가 발생했습니다.");
+          setDialog({
+            title: "파일을 읽지 못했습니다.",
+            description: "JSON 파일이 손상되었거나 읽을 수 없는 형식입니다.",
+            confirmLabel: "확인",
+            onConfirm: () => setDialog(null),
+          });
         }
       };
       reader.readAsText(file);
@@ -84,11 +124,55 @@ export function DashboardPage() {
   };
 
   const handleReset = () => {
-    if (window.confirm("정말로 모든 데이터를 초기화할까요? 이 작업은 되돌릴 수 없습니다.")) {
-      resetSessions();
-      setOpenManage(false);
-      alert("모든 데이터가 초기화되었습니다.");
-    }
+    setDialog({
+      title: "모든 데이터를 초기화할까요?",
+      description: "문제, 풀이내역, 오답노트가 모두 삭제됩니다. 이 작업은 되돌릴 수 없습니다.",
+      confirmLabel: "초기화",
+      variant: "danger",
+      onCancel: () => setDialog(null),
+      onConfirm: () => {
+        resetSessions();
+        setOpenManage(false);
+        setDialog({
+          title: "초기화가 완료되었습니다.",
+          description: "대시보드의 모든 데이터가 삭제되었습니다.",
+          confirmLabel: "확인",
+          variant: "success",
+          onConfirm: () => setDialog(null),
+        });
+      },
+    });
+  };
+
+  const handleDeleteSession = (sessionId: string, title: string) => {
+    setDialog({
+      title: "이 세션을 삭제할까요?",
+      description: `${title}\n\n삭제하면 해당 문제와 풀이 기록을 복구할 수 없습니다.`,
+      confirmLabel: "삭제",
+      variant: "danger",
+      onCancel: () => setDialog(null),
+      onConfirm: () => {
+        deleteSession(sessionId);
+        setDialog(null);
+      },
+    });
+  };
+
+  const openEditModal = (sessionId: string, title: string) => {
+    setEditingSessionId(sessionId);
+    setEditingTitle(title);
+  };
+
+  const closeEditModal = () => {
+    setEditingSessionId(null);
+    setEditingTitle("");
+  };
+
+  const handleEditSubmit = (event: FormEvent) => {
+    event.preventDefault();
+    if (!editingSessionId || !editingTitle.trim()) return;
+    updateSessionTitle(editingSessionId, editingTitle.trim());
+    closeEditModal();
   };
 
   return (
@@ -135,9 +219,15 @@ export function DashboardPage() {
         ) : (
           <div className="grid gap-3 md:grid-cols-2">
             {sortedSessions.map((session) => (
-              <article key={session.id} className="rounded-2xl border border-stone-200 bg-white p-4 shadow-sm dark:border-stone-800 dark:bg-stone-900 dark:shadow-stone-950/30">
+              <article key={session.id} className="min-w-0 rounded-2xl border border-stone-200 bg-white p-4 shadow-sm dark:border-stone-800 dark:bg-stone-900 dark:shadow-stone-950/30">
                 <div className="mb-2 flex items-start justify-between gap-3">
-                  <h2 className="line-clamp-2 text-base font-semibold text-stone-900 break-all dark:text-stone-100">{session.title}</h2>
+                  <div className="min-w-0 flex-1">
+                    <OverflowTooltipTitle
+                      as="h2"
+                      text={session.title}
+                      className="text-base font-semibold text-stone-900 dark:text-stone-100"
+                    />
+                  </div>
                   <span
                     className={[
                       "shrink-0 rounded-full px-2 py-1 text-xs font-semibold",
@@ -174,29 +264,34 @@ export function DashboardPage() {
                   생성일: {new Date(session.created_at).toLocaleString("ko-KR")}
                 </p>
 
-                <div className="mt-4 flex flex-wrap gap-2">
-                  {session.status === "completed" ? (
-                    <Link
-                      to={`/result/${session.id}`}
+                <div className="mt-4 flex items-center gap-2">
+                  <div className="flex flex-wrap gap-2">
+                    {session.status === "completed" ? (
+                      <Link
+                        to={`/result/${session.id}`}
+                        className="rounded-lg border border-stone-300 bg-white px-3 py-2 text-xs font-semibold text-stone-700 dark:border-stone-700 dark:bg-stone-800 dark:text-stone-300"
+                      >
+                        결과보기
+                      </Link>
+                    ) : (
+                      <Link
+                        to={`/solve/${session.id}`}
+                        className="rounded-lg bg-red-600 px-3 py-2 text-xs font-semibold text-white dark:bg-red-600"
+                      >
+                        이어풀기
+                      </Link>
+                    )}
+                    <button
+                      onClick={() => openEditModal(session.id, session.title)}
                       className="rounded-lg border border-stone-300 bg-white px-3 py-2 text-xs font-semibold text-stone-700 dark:border-stone-700 dark:bg-stone-800 dark:text-stone-300"
                     >
-                      결과보기
-                    </Link>
-                  ) : (
-                    <Link
-                      to={`/solve/${session.id}`}
-                      className="rounded-lg bg-red-600 px-3 py-2 text-xs font-semibold text-white dark:bg-red-600"
-                    >
-                      이어풀기
-                    </Link>
-                  )}
+                      편집
+                    </button>
+                  </div>
 
                   <button
-                    onClick={() => {
-                      if (!window.confirm("이 세션을 삭제할까요?")) return;
-                      deleteSession(session.id);
-                    }}
-                    className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs font-semibold text-red-700 dark:border-red-900/50 dark:bg-red-950/30 dark:text-red-400"
+                    onClick={() => handleDeleteSession(session.id, session.title)}
+                    className="ml-auto rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs font-semibold text-red-700 dark:border-red-900/50 dark:bg-red-950/30 dark:text-red-400"
                   >
                     삭제
                   </button>
@@ -222,19 +317,62 @@ export function DashboardPage() {
         <div className="fixed inset-0 z-50">
           <button onClick={() => setOpenUpload(false)} className="absolute inset-0 bg-black/35 dark:bg-black/60" />
           <div className="absolute left-1/2 top-1/2 w-[92vw] max-w-lg -translate-x-1/2 -translate-y-1/2">
-            <button
+            <IconCloseButton
               onClick={() => setOpenUpload(false)}
-              className="absolute right-3 top-3 z-10 inline-flex h-8 w-8 items-center justify-center rounded-full border border-stone-300 bg-white text-sm font-semibold text-stone-600 shadow-sm transition hover:bg-stone-100 dark:border-stone-700 dark:bg-stone-900 dark:text-stone-400 dark:hover:bg-stone-800"
-              aria-label="모달 닫기"
-            >
-              X
-            </button>
+              label="새 문제 등록 닫기"
+              className="absolute right-3 top-3 z-10"
+            />
             <CsvUploadPanel
               onCreated={(sessionId) => {
                 setOpenUpload(false);
                 navigate(`/solve/${sessionId}`);
               }}
             />
+          </div>
+        </div>
+      ) : null}
+
+      {editingSessionId ? (
+        <div className="fixed inset-0 z-50">
+          <button onClick={closeEditModal} className="absolute inset-0 bg-black/35 dark:bg-black/60" />
+          <div className="absolute left-1/2 top-1/2 w-[92vw] max-w-md -translate-x-1/2 -translate-y-1/2">
+            <form
+              onSubmit={handleEditSubmit}
+              className="space-y-4 rounded-2xl border border-stone-200 bg-white p-6 shadow-2xl dark:border-stone-800 dark:bg-stone-900"
+            >
+              <div className="flex items-center justify-between">
+                <h2 className="text-lg font-semibold text-stone-900 dark:text-stone-100">문제 제목 편집</h2>
+                <IconCloseButton onClick={closeEditModal} label="문제 제목 편집 닫기" />
+              </div>
+
+              <label className="block space-y-2">
+                <span className="text-sm font-medium text-stone-700 dark:text-stone-300">제목</span>
+                <input
+                  autoFocus
+                  value={editingTitle}
+                  onChange={(event) => setEditingTitle(event.target.value)}
+                  className="w-full rounded-lg border border-stone-300 bg-white px-3 py-2 text-sm text-stone-900 outline-none ring-red-200 transition focus:ring-2 dark:border-stone-700 dark:bg-stone-800 dark:text-stone-100 dark:ring-red-900/50"
+                  placeholder="문제 세션 제목"
+                />
+              </label>
+
+              <div className="flex justify-end gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={closeEditModal}
+                  className="rounded-lg border border-stone-300 bg-white px-4 py-2 text-sm font-semibold text-stone-700 transition hover:bg-stone-50 dark:border-stone-700 dark:bg-stone-800 dark:text-stone-300 dark:hover:bg-stone-700"
+                >
+                  취소
+                </button>
+                <button
+                  type="submit"
+                  disabled={!editingTitle.trim()}
+                  className="rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-red-600 dark:hover:bg-red-700"
+                >
+                  저장
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       ) : null}
@@ -246,12 +384,7 @@ export function DashboardPage() {
             <div className="rounded-2xl border border-stone-200 bg-white p-6 shadow-2xl dark:border-stone-800 dark:bg-stone-900">
               <div className="mb-4 flex items-center justify-between">
                 <h2 className="text-lg font-semibold text-stone-900 dark:text-stone-100">환경설정</h2>
-                <button
-                  onClick={() => setOpenSettings(false)}
-                  className="text-stone-400 hover:text-stone-600 dark:text-stone-500 dark:hover:text-stone-300"
-                >
-                  X
-                </button>
+                <IconCloseButton onClick={() => setOpenSettings(false)} label="환경설정 닫기" />
               </div>
               <div className="space-y-6">
                 <div className="flex items-center justify-between">
@@ -310,12 +443,7 @@ export function DashboardPage() {
             <div className="rounded-2xl border border-stone-200 bg-white p-6 shadow-2xl dark:border-stone-800 dark:bg-stone-900">
               <div className="mb-4 flex items-center justify-between">
                 <h2 className="text-lg font-semibold text-stone-900 dark:text-stone-100">대시보드 관리</h2>
-                <button
-                  onClick={() => setOpenManage(false)}
-                  className="text-stone-400 hover:text-stone-600 dark:text-stone-500 dark:hover:text-stone-300"
-                >
-                  X
-                </button>
+                <IconCloseButton onClick={() => setOpenManage(false)} label="대시보드 관리 닫기" />
               </div>
               <div className="grid gap-3">
                 <button
@@ -343,6 +471,18 @@ export function DashboardPage() {
             </div>
           </div>
         </div>
+      ) : null}
+
+      {dialog ? (
+        <ConfirmDialog
+          title={dialog.title}
+          description={dialog.description}
+          confirmLabel={dialog.confirmLabel}
+          cancelLabel={dialog.cancelLabel}
+          variant={dialog.variant}
+          onConfirm={dialog.onConfirm}
+          onCancel={dialog.onCancel}
+        />
       ) : null}
     </div>
   );

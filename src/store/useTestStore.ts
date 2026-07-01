@@ -15,6 +15,7 @@ interface TestStore {
   sessions: TestSession[];
   createSession: (input: CreateSessionInput) => string;
   deleteSession: (sessionId: string) => void;
+  updateSessionTitle: (sessionId: string, title: string) => void;
   updateAnswer: (sessionId: string, questionId: string, answer: AnswerValue) => void;
   updateWrongNote: (sessionId: string, questionId: string, note: string) => void;
   toggleBookmark: (sessionId: string, questionId: string) => void;
@@ -60,6 +61,12 @@ export const useTestStore = create<TestStore>()(
       deleteSession: (sessionId) =>
         set((state) => ({
           sessions: state.sessions.filter((session) => session.id !== sessionId),
+        })),
+      updateSessionTitle: (sessionId, title) =>
+        set((state) => ({
+          sessions: state.sessions.map((session) =>
+            session.id === sessionId ? { ...session, title } : session,
+          ),
         })),
       updateAnswer: (sessionId, questionId, answer) =>
         set((state) => ({

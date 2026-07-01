@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useParams, useLocation } from "react-router-dom";
+import { OverflowTooltipTitle } from "../components/ui/OverflowTooltipTitle";
 import { getAnswerParts, getAnswerToken } from "../lib/answer";
 import { useTestStore } from "../store/useTestStore";
 
@@ -95,9 +96,10 @@ export function ReviewAllPage() {
       <header className="sticky top-0 z-20 border-b border-stone-200 bg-white/95 backdrop-blur dark:border-stone-800 dark:bg-stone-900/90">
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 py-3 md:px-6">
           <div className="min-w-0 flex-1">
-            <h1 className="truncate text-sm font-semibold md:text-base dark:text-stone-100" title={session.title}>
-              {session.title} · {onlyBookmarks ? "책갈피 문제 확인하기" : "모든 문제 확인하기"}
-            </h1>
+            <OverflowTooltipTitle
+              text={`${session.title} · ${onlyBookmarks ? "책갈피 문제 확인하기" : "모든 문제 확인하기"}`}
+              className="text-sm font-semibold md:text-base dark:text-stone-100"
+            />
           </div>
           <Link
             to={`/result/${session.id}`}

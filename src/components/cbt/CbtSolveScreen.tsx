@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { ConfirmDialog } from "../ui/ConfirmDialog";
+import { OverflowTooltipTitle } from "../ui/OverflowTooltipTitle";
 import { getAnswerToken } from "../../lib/answer";
 import { downloadSessionCsv } from "../../lib/csv";
 import { formatElapsedTime } from "../../lib/time";
@@ -24,6 +26,7 @@ export function CbtSolveScreen({ sessionId, onSubmitted }: CbtSolveScreenProps) 
   const [index, setIndex] = useState(0);
   const [showAnswer, setShowAnswer] = useState(false);
   const [isOmrOpen, setIsOmrOpen] = useState(false);
+  const [isPauseDialogOpen, setIsPauseDialogOpen] = useState(false);
   const omrRefs = useMemo(() => new Map<number, HTMLButtonElement | null>(), []);
 
   useEffect(() => {
@@ -104,15 +107,15 @@ export function CbtSolveScreen({ sessionId, onSubmitted }: CbtSolveScreenProps) 
             <p className="text-lg font-semibold tabular-nums text-red-600 dark:text-red-500">{formatElapsedTime(session.elapsed_time)}</p>
           </div>
           <div className="min-w-0 flex-1 px-2">
-            <h1 className="truncate text-center text-sm font-semibold md:text-base dark:text-stone-100">{session.title}</h1>
+            <OverflowTooltipTitle
+              text={session.title}
+              className="text-center text-sm font-semibold md:text-base dark:text-stone-100"
+              tooltipClassName="left-1/2 max-w-sm -translate-x-1/2"
+            />
           </div>
           <div className="flex shrink-0 items-center gap-2">
             <button
-              onClick={() => {
-                if (window.confirm("풀이를 일시 중단하고 메인으로 나갈까요?")) {
-                  navigate("/dashboard");
-                }
-              }}
+              onClick={() => setIsPauseDialogOpen(true)}
               className="rounded-lg border border-stone-300 bg-white px-3 py-2 text-sm font-semibold text-stone-700 transition hover:bg-stone-50 dark:border-stone-700 dark:bg-stone-800 dark:text-stone-300 dark:hover:bg-stone-700"
             >
               일시 중단
@@ -374,6 +377,17 @@ export function CbtSolveScreen({ sessionId, onSubmitted }: CbtSolveScreenProps) 
             </div>
           </div>
         </div>
+      ) : null}
+
+      {isPauseDialogOpen ? (
+        <ConfirmDialog
+          title="풀이를 일시 중단할까요?"
+          description="현재까지 입력한 답과 경과 시간은 저장됩니다. 대시보드에서 이어서 풀 수 있습니다."
+          confirmLabel="대시보드로 이동"
+          cancelLabel="계속 풀기"
+          onCancel={() => setIsPauseDialogOpen(false)}
+          onConfirm={() => navigate("/dashboard")}
+        />
       ) : null}
     </div>
   );
