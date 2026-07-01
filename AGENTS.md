@@ -160,7 +160,7 @@ npm run lint
 - `src/store/useTestStore.ts`: 세션 생성, 과목 CRUD, 세션-과목 매핑, 답안 저장, 오답노트, 북마크, 백업/복원 동작의 중심입니다.
 - `src/components/cbt/CbtSolveScreen.tsx`: 풀이 UX, 타이머, OMR, 단답형 입력, 정답 보기, 책갈피 기능이 모여 있습니다.
 - `src/pages/ResultPage.tsx`: 재풀이, CSV 다운로드, 결과 요약 액션이 많아 회귀 가능성이 큽니다.
-- `src/pages/SubjectListPage.tsx`: `/dashboard` 과목 목록 화면입니다. 과목 관리, 환경설정, 전체 데이터 백업/복원/초기화가 이 페이지에 있습니다. 과목 삭제는 세션 삭제가 아니라 매핑 삭제로 처리해야 합니다.
+- `src/pages/SubjectListPage.tsx`: `/dashboard` 과목 목록 화면입니다. 과목 관리, 표지 색상 선택, 과목 카드 드래그 순서 변경, 환경설정, 전체 데이터 백업/복원/초기화가 이 페이지에 있습니다. 과목 삭제는 세션 삭제가 아니라 매핑 삭제로 처리해야 합니다.
 - `src/pages/DashboardPage.tsx`: `/dashboard/:subjectId` 과목별 세션 대시보드입니다. 새 문제 등록과 편집 시 세션-과목 매핑이 맞는지 확인하세요. 전체 데이터 백업/복원 UI는 이 페이지에 두지 않습니다.
 - `public/404.html` 및 `index.html`: GitHub Pages SPA 새로고침 대응 스크립트가 들어 있습니다. 라우팅/배포 변경 시 함께 확인하세요.
 - `vite.config.ts`: GitHub Pages 기본 도메인과 커스텀 도메인 운영 방식에 따라 `base` 설정 영향이 큽니다.
@@ -189,7 +189,7 @@ SPA 라우트 새로고침은 `public/404.html`과 `index.html`의 redirect rest
 `law-solver-storage`는 Zustand persist `version: 2`를 사용합니다.
 
 - `sessions`: 문제 세션과 답안
-- `subjects`: 사용자가 만든 과목 목록
+- `subjects`: 사용자가 만든 과목 목록, 표지 색상, 표시 순서
 - `sessionSubjectMap`: `sessionId -> subjectId` 매핑
 
 기존 v1 데이터는 `sessions`만 있었기 때문에 마이그레이션 시 `subjects: []`, `sessionSubjectMap: {}`로 보정합니다. 즉 기존 문제는 모두 `과목 없음`으로 표시됩니다.

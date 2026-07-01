@@ -1,6 +1,7 @@
 export type TestType = "OX" | "5-choice" | "short";
 export type SessionStatus = "in-progress" | "completed";
 export type SolveOrder = "number" | "chapter-random" | "random";
+export type SubjectCoverPalette = "warm" | "green" | "blue" | "purple" | "gray";
 export const NO_SUBJECT_ID = "__none__";
 
 export type OXAnswer = "O" | "X";
@@ -42,6 +43,7 @@ export interface Subject {
   id: string;
   name: string;
   created_at: string;
+  cover_palette?: SubjectCoverPalette;
 }
 
 export type SessionSubjectMap = Record<TestSession["id"], Subject["id"]>;

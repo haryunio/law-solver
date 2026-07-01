@@ -10,6 +10,7 @@ import {
   SessionSubjectMap,
   SolveOrder,
   Subject,
+  SubjectCoverPalette,
   TestSession,
   TestType,
 } from "../types/test";
@@ -35,8 +36,13 @@ interface TestStore {
   createSession: (input: CreateSessionInput) => string;
   deleteSession: (sessionId: string) => void;
   updateSessionTitle: (sessionId: string, title: string) => void;
-  createSubject: (name: string) => string;
+  createSubject: (name: string, coverPalette?: SubjectCoverPalette) => string;
   renameSubject: (subjectId: string, name: string) => void;
+  updateSubject: (
+    subjectId: string,
+    updates: { name?: string; coverPalette?: SubjectCoverPalette },
+  ) => void;
+  reorderSubject: (sourceSubjectId: string, targetSubjectId: string) => void;
   deleteSubject: (subjectId: string) => void;
   assignSessionSubject: (sessionId: string, subjectId: string | null) => void;
   getSessionSubjectId: (sessionId: string) => string | null;
@@ -64,6 +70,13 @@ const calcScore = (questions: ParsedQuestion[]) => {
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === "object" && value !== null;
 
+const subjectCoverPalettes: SubjectCoverPalette[] = ["warm", "green", "blue", "purple", "gray"];
+
+const normalizeSubjectCoverPalette = (value: unknown): SubjectCoverPalette | undefined =>
+  typeof value === "string" && subjectCoverPalettes.includes(value as SubjectCoverPalette)
+    ? (value as SubjectCoverPalette)
+    : undefined;
+
 const normalizeSubjects = (value: unknown): Subject[] => {
   if (!Array.isArray(value)) return [];
 
@@ -74,10 +87,11 @@ const normalizeSubjects = (value: unknown): Subject[] => {
     const name = typeof subject.name === "string" ? subject.name.trim() : "";
     const createdAt =
       typeof subject.created_at === "string" ? subject.created_at : new Date().toISOString();
+    const coverPalette = normalizeSubjectCoverPalette(subject.cover_palette);
 
     if (!id || id === NO_SUBJECT_ID || !name || seen.has(id)) return [];
     seen.add(id);
-    return [{ id, name, created_at: createdAt }];
+    return [{ id, name, created_at: createdAt, cover_palette: coverPalette }];
   });
 };
 
@@ -167,7 +181,7 @@ export const useTestStore = create<TestStore>()(
             session.id === sessionId ? { ...session, title } : session,
           ),
         })),
-      createSubject: (name) => {
+      createSubject: (name, coverPalette = "warm") => {
         const trimmedName = name.trim();
         if (!trimmedName) return "";
 
@@ -176,6 +190,7 @@ export const useTestStore = create<TestStore>()(
           id,
           name: trimmedName,
           created_at: new Date().toISOString(),
+          cover_palette: coverPalette,
         };
         set((state) => ({ subjects: [...state.subjects, subject] }));
         return id;
@@ -190,6 +205,37 @@ export const useTestStore = create<TestStore>()(
           ),
         }));
       },
+      updateSubject: (subjectId, updates) => {
+        if (subjectId === NO_SUBJECT_ID) return;
+
+        set((state) => ({
+          subjects: state.subjects.map((subject) => {
+            if (subject.id !== subjectId) return subject;
+            const nextName = updates.name?.trim();
+
+            return {
+              ...subject,
+              ...(nextName ? { name: nextName } : {}),
+              ...(updates.coverPalette ? { cover_palette: updates.coverPalette } : {}),
+            };
+          }),
+        }));
+      },
+      reorderSubject: (sourceSubjectId, targetSubjectId) =>
+        set((state) => {
+          if (sourceSubjectId === targetSubjectId) return state;
+
+          const sourceIndex = state.subjects.findIndex((subject) => subject.id === sourceSubjectId);
+          const targetIndex = state.subjects.findIndex((subject) => subject.id === targetSubjectId);
+          if (sourceIndex < 0 || targetIndex < 0) return state;
+
+          const nextSubjects = [...state.subjects];
+          const [sourceSubject] = nextSubjects.splice(sourceIndex, 1);
+          if (!sourceSubject) return state;
+          nextSubjects.splice(targetIndex, 0, sourceSubject);
+
+          return { subjects: nextSubjects };
+        }),
       deleteSubject: (subjectId) =>
         set((state) => {
           if (subjectId === NO_SUBJECT_ID) return state;

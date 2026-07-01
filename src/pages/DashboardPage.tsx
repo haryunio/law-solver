@@ -211,21 +211,21 @@ export function DashboardPage() {
                     {session.status === "completed" ? (
                       <Link
                         to={`/result/${session.id}`}
-                        className="rounded-lg border border-stone-300 bg-white px-3 py-2 text-xs font-semibold text-stone-700 dark:border-stone-700 dark:bg-stone-800 dark:text-stone-300"
+                        className="rounded-lg border border-stone-300 bg-white px-3 py-2 text-xs font-semibold text-stone-700 transition hover:bg-stone-50 hover:text-red-600 dark:border-stone-700 dark:bg-stone-800 dark:text-stone-300 dark:hover:bg-stone-700 dark:hover:text-red-400"
                       >
                         결과보기
                       </Link>
                     ) : (
                       <Link
                         to={`/solve/${session.id}`}
-                        className="rounded-lg bg-red-600 px-3 py-2 text-xs font-semibold text-white dark:bg-red-600"
+                        className="rounded-lg bg-red-600 px-3 py-2 text-xs font-semibold text-white transition hover:bg-red-700 dark:bg-red-600 dark:hover:bg-red-700"
                       >
                         이어풀기
                       </Link>
                     )}
                     <button
                       onClick={() => openEditModal(session.id, session.title)}
-                      className="rounded-lg border border-stone-300 bg-white px-3 py-2 text-xs font-semibold text-stone-700 dark:border-stone-700 dark:bg-stone-800 dark:text-stone-300"
+                      className="rounded-lg border border-stone-300 bg-white px-3 py-2 text-xs font-semibold text-stone-700 transition hover:bg-stone-50 hover:text-red-600 dark:border-stone-700 dark:bg-stone-800 dark:text-stone-300 dark:hover:bg-stone-700 dark:hover:text-red-400"
                     >
                       편집
                     </button>
@@ -233,7 +233,7 @@ export function DashboardPage() {
 
                   <button
                     onClick={() => handleDeleteSession(session.id, session.title)}
-                    className="ml-auto rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs font-semibold text-red-700 dark:border-red-900/50 dark:bg-red-950/30 dark:text-red-400"
+                    className="ml-auto rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs font-semibold text-red-700 transition hover:bg-red-100 dark:border-red-900/50 dark:bg-red-950/30 dark:text-red-400 dark:hover:bg-red-900/30"
                   >
                     삭제
                   </button>

@@ -4,7 +4,7 @@ import { ConfirmDialog } from "../components/ui/ConfirmDialog";
 import { DashboardHeaderTitle } from "../components/ui/DashboardHeaderTitle";
 import { IconCloseButton } from "../components/ui/IconCloseButton";
 import { getSubjectDashboardPath } from "../lib/subject";
-import { NO_SUBJECT_ID, Subject } from "../types/test";
+import { NO_SUBJECT_ID, Subject, SubjectCoverPalette } from "../types/test";
 import { useTestStore } from "../store/useTestStore";
 import { FontFamily, useSettingsStore } from "../store/useSettingsStore";
 
@@ -25,20 +25,54 @@ interface SubjectCardData {
   completed: number;
   inProgress: number;
   isDefault?: boolean;
+  coverPalette?: SubjectCoverPalette;
 }
 
 const hashString = (value: string) =>
   [...value].reduce((hash, char) => ((hash << 5) - hash + char.charCodeAt(0)) | 0, 0);
 
-const getSubjectCoverStyle = (subjectName: string): CSSProperties => {
+const coverPalettes: Array<{
+  id: SubjectCoverPalette;
+  label: string;
+  base?: [number, number, number];
+}> = [
+  { id: "warm", label: "노을", base: [8, 32, 50] },
+  { id: "green", label: "새싹", base: [104, 78, 48] },
+  { id: "blue", label: "바다", base: [218, 202, 188] },
+  { id: "purple", label: "마법", base: [278, 304, 330] },
+  { id: "gray", label: "우주" },
+];
+
+const defaultCoverPalette = coverPalettes[0]!;
+
+const getPaletteById = (paletteId: SubjectCoverPalette) =>
+  coverPalettes.find((palette) => palette.id === paletteId) ?? defaultCoverPalette;
+
+const getSubjectCoverStyle = (
+  subjectName: string,
+  paletteId: SubjectCoverPalette,
+): CSSProperties => {
   const hash = Math.abs(hashString(subjectName));
-  const hueA = 2 + (hash % 26);
-  const hueB = 24 + ((hash >> 3) % 22);
-  const hueC = 42 + ((hash >> 6) % 16);
+  const palette = getPaletteById(paletteId);
   const angle = 105 + (hash % 151);
 
+  if (palette.id === "gray") {
+    const start = 16 + (hash % 8);
+    const mid = 42 + ((hash >> 3) % 12);
+    const end = 78 + ((hash >> 6) % 10);
+
+    return {
+      background: `linear-gradient(${angle}deg, hsl(0 0% ${start}%), hsl(0 0% ${mid}%) 52%, hsl(0 0% ${end}%))`,
+    };
+  }
+
+  const [baseStart, baseMid, baseEnd] = palette?.base ?? [8, 32, 50];
+  const start = baseStart + (hash % 12) - 6;
+  const mid = baseMid + ((hash >> 3) % 12) - 6;
+  const end = baseEnd + ((hash >> 6) % 12) - 6;
+
   return {
-    background: `linear-gradient(${angle}deg, hsl(${hueA} 68% 50%), hsl(${hueB} 72% 56%) 52%, hsl(${hueC} 78% 62%))`,
+    background: `linear-gradient(${angle}deg, hsl(${start} 68% 50%), hsl(${mid} 72% 56%) 52%, hsl(${end} 78% 62%))`,
   };
 };
 
@@ -47,7 +81,8 @@ export function SubjectListPage() {
   const subjects = useTestStore((state) => state.subjects);
   const sessionSubjectMap = useTestStore((state) => state.sessionSubjectMap);
   const createSubject = useTestStore((state) => state.createSubject);
-  const renameSubject = useTestStore((state) => state.renameSubject);
+  const updateSubject = useTestStore((state) => state.updateSubject);
+  const reorderSubject = useTestStore((state) => state.reorderSubject);
   const deleteSubject = useTestStore((state) => state.deleteSubject);
   const resetSessions = useTestStore((state) => state.resetSessions);
   const importDashboardData = useTestStore((state) => state.importDashboardData);
@@ -55,11 +90,15 @@ export function SubjectListPage() {
   const { darkMode, toggleDarkMode, fontFamily, setFontFamily } = useSettingsStore();
 
   const [isSubjectManageOpen, setIsSubjectManageOpen] = useState(false);
+  const [isCreateSubjectOpen, setIsCreateSubjectOpen] = useState(false);
   const [isDashboardManageOpen, setIsDashboardManageOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-  const [subjectName, setSubjectName] = useState("");
+  const [newSubjectName, setNewSubjectName] = useState("");
+  const [newSubjectPalette, setNewSubjectPalette] = useState<SubjectCoverPalette>("warm");
   const [editingSubjectId, setEditingSubjectId] = useState<string | null>(null);
   const [editingSubjectName, setEditingSubjectName] = useState("");
+  const [editingSubjectPalette, setEditingSubjectPalette] = useState<SubjectCoverPalette>("warm");
+  const [draggingSubjectId, setDraggingSubjectId] = useState<string | null>(null);
   const [dialog, setDialog] = useState<DialogState | null>(null);
 
   const subjectCards = useMemo<SubjectCardData[]>(() => {
@@ -77,18 +116,32 @@ export function SubjectListPage() {
         completed: relatedSessions.filter((session) => session.status === "completed").length,
         inProgress: relatedSessions.filter((session) => session.status === "in-progress").length,
         isDefault: !subject,
+        coverPalette: subject?.cover_palette,
       };
     };
 
     return [makeStats(null), ...subjects.map((subject) => makeStats(subject))];
   }, [sessions, sessionSubjectMap, subjects]);
 
+  const hasDuplicateSubjectName = (name: string, ignoredSubjectId?: string) =>
+    subjects.some(
+      (subject) =>
+        subject.id !== ignoredSubjectId &&
+        subject.name.trim().toLowerCase() === name.trim().toLowerCase(),
+    );
+
+  const closeCreateSubject = () => {
+    setIsCreateSubjectOpen(false);
+    setNewSubjectName("");
+    setNewSubjectPalette("warm");
+  };
+
   const handleCreateSubject = (event: FormEvent) => {
     event.preventDefault();
-    const trimmedName = subjectName.trim();
+    const trimmedName = newSubjectName.trim();
     if (!trimmedName) return;
 
-    if (subjects.some((subject) => subject.name.trim().toLowerCase() === trimmedName.toLowerCase())) {
+    if (hasDuplicateSubjectName(trimmedName)) {
       setDialog({
         title: "이미 있는 과목입니다.",
         description: "같은 이름의 과목이 이미 등록되어 있습니다.",
@@ -98,18 +151,20 @@ export function SubjectListPage() {
       return;
     }
 
-    createSubject(trimmedName);
-    setSubjectName("");
+    createSubject(trimmedName, newSubjectPalette);
+    closeCreateSubject();
   };
 
   const openEditSubject = (subject: Subject) => {
     setEditingSubjectId(subject.id);
     setEditingSubjectName(subject.name);
+    setEditingSubjectPalette(subject.cover_palette ?? "warm");
   };
 
   const closeEditSubject = () => {
     setEditingSubjectId(null);
     setEditingSubjectName("");
+    setEditingSubjectPalette("warm");
   };
 
   const handleEditSubjectSubmit = (event: FormEvent) => {
@@ -119,13 +174,7 @@ export function SubjectListPage() {
     const trimmedName = editingSubjectName.trim();
     if (!trimmedName) return;
 
-    if (
-      subjects.some(
-        (subject) =>
-          subject.id !== editingSubjectId &&
-          subject.name.trim().toLowerCase() === trimmedName.toLowerCase(),
-      )
-    ) {
+    if (hasDuplicateSubjectName(trimmedName, editingSubjectId)) {
       setDialog({
         title: "이미 있는 과목입니다.",
         description: "같은 이름의 과목이 이미 등록되어 있습니다.",
@@ -135,9 +184,45 @@ export function SubjectListPage() {
       return;
     }
 
-    renameSubject(editingSubjectId, trimmedName);
+    updateSubject(editingSubjectId, {
+      name: trimmedName,
+      coverPalette: editingSubjectPalette,
+    });
     closeEditSubject();
   };
+
+  const handleDropSubject = (targetSubjectId: string) => {
+    if (!draggingSubjectId) return;
+    reorderSubject(draggingSubjectId, targetSubjectId);
+    setDraggingSubjectId(null);
+  };
+
+  const renderPaletteOptions = (
+    selectedPalette: SubjectCoverPalette,
+    onSelect: (palette: SubjectCoverPalette) => void,
+  ) => (
+    <div className="flex flex-wrap gap-3">
+      {coverPalettes.map((palette) => (
+        <button
+          key={palette.id}
+          type="button"
+          onClick={() => onSelect(palette.id)}
+          className={[
+            "flex items-center gap-2 rounded-full border px-2.5 py-2 text-xs font-semibold transition",
+            selectedPalette === palette.id
+              ? "border-red-500 bg-red-50 text-red-700 dark:border-red-600 dark:bg-red-950/30 dark:text-red-400"
+              : "border-stone-200 bg-white text-stone-600 hover:bg-stone-50 dark:border-stone-700 dark:bg-stone-900 dark:text-stone-300 dark:hover:bg-stone-800",
+          ].join(" ")}
+        >
+          <span
+            className="h-6 w-6 rounded-full border border-white/60 shadow-sm ring-1 ring-black/10"
+            style={getSubjectCoverStyle(palette.label, palette.id)}
+          />
+          <span>{palette.label}</span>
+        </button>
+      ))}
+    </div>
+  );
 
   const handleDeleteSubject = (subject: Subject) => {
     const affectedCount = sessions.filter(
@@ -298,7 +383,10 @@ export function SubjectListPage() {
             >
               <div
                 className="relative h-[104px] overflow-hidden"
-                style={getSubjectCoverStyle(subject.name)}
+                style={getSubjectCoverStyle(
+                  subject.name,
+                  subject.coverPalette ?? "warm",
+                )}
               >
                 <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(255,255,255,0.30),transparent_34%),radial-gradient(circle_at_88%_12%,rgba(255,255,255,0.20),transparent_28%)]" />
                 <div className="absolute inset-0 hidden bg-black/30 dark:block" />
@@ -351,21 +439,12 @@ export function SubjectListPage() {
                 <IconCloseButton onClick={() => setIsSubjectManageOpen(false)} label="과목 관리 닫기" />
               </div>
 
-              <form onSubmit={handleCreateSubject} className="flex gap-2">
-                <input
-                  value={subjectName}
-                  onChange={(event) => setSubjectName(event.target.value)}
-                  className="min-w-0 flex-1 rounded-lg border border-stone-300 bg-white px-3 py-2 text-sm text-stone-900 outline-none ring-red-200 transition focus:ring-2 dark:border-stone-700 dark:bg-stone-800 dark:text-stone-100 dark:ring-red-900/50"
-                  placeholder="예: 민법"
-                />
-                <button
-                  type="submit"
-                  disabled={!subjectName.trim()}
-                  className="rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50"
-                >
-                  추가
-                </button>
-              </form>
+              <button
+                onClick={() => setIsCreateSubjectOpen(true)}
+                className="w-full rounded-xl bg-red-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-red-700"
+              >
+                새 과목 추가
+              </button>
 
               <div className="mt-5 max-h-[42vh] space-y-2 overflow-y-auto">
                 {subjects.length === 0 ? (
@@ -373,38 +452,110 @@ export function SubjectListPage() {
                     아직 추가한 과목이 없습니다.
                   </p>
                 ) : (
-                  subjects.map((subject) => (
-                    <div
-                      key={subject.id}
-                      className="flex items-center justify-between gap-3 rounded-xl border border-stone-200 bg-white p-3 dark:border-stone-800 dark:bg-stone-900"
-                    >
-                      <div className="min-w-0">
-                        <p className="truncate text-sm font-semibold text-stone-800 dark:text-stone-200">
-                          {subject.name}
-                        </p>
-                        <p className="text-xs text-stone-500 dark:text-stone-500">
-                          {sessions.filter((session) => sessionSubjectMap[session.id] === subject.id).length}개 문제
-                        </p>
+                  <>
+                    <p className="px-1 pb-1 text-xs font-medium text-stone-500 dark:text-stone-500">
+                      과목 카드를 잡고 드래그해서 순서를 바꿀 수 있습니다.
+                    </p>
+                    {subjects.map((subject) => (
+                      <div
+                        key={subject.id}
+                        draggable
+                        onDragStart={(event) => {
+                          event.dataTransfer.effectAllowed = "move";
+                          setDraggingSubjectId(subject.id);
+                        }}
+                        onDragEnd={() => setDraggingSubjectId(null)}
+                        onDragOver={(event) => {
+                          event.preventDefault();
+                          event.dataTransfer.dropEffect = "move";
+                        }}
+                        onDrop={() => handleDropSubject(subject.id)}
+                        className={[
+                          "flex cursor-grab items-center justify-between gap-3 rounded-xl border border-stone-200 bg-white p-3 transition hover:border-red-200 hover:bg-red-50/30 active:cursor-grabbing dark:border-stone-800 dark:bg-stone-900 dark:hover:border-red-900/60 dark:hover:bg-red-950/10",
+                          draggingSubjectId === subject.id
+                            ? "opacity-60 ring-2 ring-red-100 dark:ring-red-900/40"
+                            : "",
+                        ].join(" ")}
+                        title="과목 카드를 드래그해서 순서 변경"
+                      >
+                        <div className="min-w-0">
+                          <p className="truncate text-sm font-semibold text-stone-800 dark:text-stone-200">
+                            {subject.name}
+                          </p>
+                          <p className="text-xs text-stone-500 dark:text-stone-500">
+                            {sessions.filter((session) => sessionSubjectMap[session.id] === subject.id).length}개 문제
+                          </p>
+                        </div>
+                        <div className="flex shrink-0 items-center gap-2">
+                          <button
+                            onClick={() => openEditSubject(subject)}
+                            className="rounded-lg border border-stone-300 bg-white px-3 py-1.5 text-xs font-semibold text-stone-700 transition hover:bg-stone-50 dark:border-stone-700 dark:bg-stone-800 dark:text-stone-300 dark:hover:bg-stone-700"
+                          >
+                            편집
+                          </button>
+                          <button
+                            onClick={() => handleDeleteSubject(subject)}
+                            className="rounded-lg border border-red-200 bg-red-50 px-3 py-1.5 text-xs font-semibold text-red-700 transition hover:bg-red-100 dark:border-red-900/50 dark:bg-red-950/30 dark:text-red-400 dark:hover:bg-red-900/30"
+                          >
+                            삭제
+                          </button>
+                        </div>
                       </div>
-                      <div className="flex shrink-0 items-center gap-2">
-                        <button
-                          onClick={() => openEditSubject(subject)}
-                          className="rounded-lg border border-stone-300 bg-white px-3 py-1.5 text-xs font-semibold text-stone-700 transition hover:bg-stone-50 dark:border-stone-700 dark:bg-stone-800 dark:text-stone-300 dark:hover:bg-stone-700"
-                        >
-                          편집
-                        </button>
-                        <button
-                          onClick={() => handleDeleteSubject(subject)}
-                          className="rounded-lg border border-red-200 bg-red-50 px-3 py-1.5 text-xs font-semibold text-red-700 transition hover:bg-red-100 dark:border-red-900/50 dark:bg-red-950/30 dark:text-red-400 dark:hover:bg-red-900/30"
-                        >
-                          삭제
-                        </button>
-                      </div>
-                    </div>
-                  ))
+                    ))}
+                  </>
                 )}
               </div>
             </div>
+          </div>
+        </div>
+      ) : null}
+
+      {isCreateSubjectOpen ? (
+        <div className="fixed inset-0 z-[55]">
+          <button onClick={closeCreateSubject} className="absolute inset-0 bg-black/35 dark:bg-black/60" />
+          <div className="absolute left-1/2 top-1/2 w-[92vw] max-w-md -translate-x-1/2 -translate-y-1/2">
+            <form
+              onSubmit={handleCreateSubject}
+              className="space-y-4 rounded-2xl border border-stone-200 bg-white p-6 shadow-2xl dark:border-stone-800 dark:bg-stone-900"
+            >
+              <div className="flex items-center justify-between gap-3">
+                <h2 className="text-lg font-semibold text-stone-900 dark:text-stone-100">과목 추가</h2>
+                <IconCloseButton onClick={closeCreateSubject} label="과목 추가 닫기" />
+              </div>
+
+              <label className="block space-y-2">
+                <span className="text-sm font-medium text-stone-700 dark:text-stone-300">과목명</span>
+                <input
+                  autoFocus
+                  value={newSubjectName}
+                  onChange={(event) => setNewSubjectName(event.target.value)}
+                  className="w-full rounded-lg border border-stone-300 bg-white px-3 py-2 text-sm text-stone-900 outline-none ring-red-200 transition focus:ring-2 dark:border-stone-700 dark:bg-stone-800 dark:text-stone-100 dark:ring-red-900/50"
+                  placeholder="예: 민법"
+                />
+              </label>
+
+              <div className="space-y-2">
+                <p className="text-sm font-medium text-stone-700 dark:text-stone-300">표지 색상</p>
+                {renderPaletteOptions(newSubjectPalette, setNewSubjectPalette)}
+              </div>
+
+              <div className="flex justify-end gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={closeCreateSubject}
+                  className="rounded-lg border border-stone-300 bg-white px-4 py-2 text-sm font-semibold text-stone-700 transition hover:bg-stone-50 dark:border-stone-700 dark:bg-stone-800 dark:text-stone-300 dark:hover:bg-stone-700"
+                >
+                  취소
+                </button>
+                <button
+                  type="submit"
+                  disabled={!newSubjectName.trim()}
+                  className="rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  추가
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       ) : null}
@@ -432,6 +583,11 @@ export function SubjectListPage() {
                   placeholder="예: 민법"
                 />
               </label>
+
+              <div className="space-y-2">
+                <p className="text-sm font-medium text-stone-700 dark:text-stone-300">표지 색상</p>
+                {renderPaletteOptions(editingSubjectPalette, setEditingSubjectPalette)}
+              </div>
 
               <div className="flex justify-end gap-2 pt-2">
                 <button
