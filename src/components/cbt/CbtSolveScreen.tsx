@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ConfirmDialog } from "../ui/ConfirmDialog";
 import { OverflowTooltipTitle } from "../ui/OverflowTooltipTitle";
@@ -29,10 +29,12 @@ export function CbtSolveScreen({ sessionId, onSubmitted }: CbtSolveScreenProps) 
   const [showAnswer, setShowAnswer] = useState(false);
   const [isOmrOpen, setIsOmrOpen] = useState(false);
   const [isPauseDialogOpen, setIsPauseDialogOpen] = useState(false);
+  const contentRef = useRef<HTMLDivElement | null>(null);
   const omrRefs = useMemo(() => new Map<number, HTMLButtonElement | null>(), []);
 
   useEffect(() => {
     setShowAnswer(false);
+    contentRef.current?.scrollTo({ top: 0 });
   }, [index]);
 
   useEffect(() => {
@@ -104,7 +106,7 @@ export function CbtSolveScreen({ sessionId, onSubmitted }: CbtSolveScreenProps) 
   return (
     <div className="min-h-screen bg-stone-50 text-stone-900 dark:bg-stone-950 dark:text-stone-100 transition-colors duration-300">
       <header className="sticky top-0 z-20 border-b border-stone-200 bg-white/95 backdrop-blur dark:border-stone-800 dark:bg-stone-900/90">
-        <div className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 py-3 md:px-6">
+        <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-3 md:px-6">
           <div className="min-w-0">
             <p className="text-xs font-medium text-stone-500 dark:text-stone-500">타이머</p>
             <p className="text-lg font-semibold tabular-nums text-red-600 dark:text-red-500">{formatElapsedTime(session.elapsed_time)}</p>
@@ -133,17 +135,18 @@ export function CbtSolveScreen({ sessionId, onSubmitted }: CbtSolveScreenProps) 
         </div>
       </header>
 
-      <div className="mx-auto grid max-w-7xl grid-cols-1 gap-4 px-4 py-4 md:grid-cols-[1fr_220px] md:px-6">
-        <main className="max-h-[calc(100vh-140px)] overflow-y-auto rounded-2xl border border-stone-200 bg-white p-5 md:p-8 dark:border-stone-800 dark:bg-stone-900">
-          <div className="mb-4 flex items-start justify-between">
-            <div>
-              <p className="mb-2 text-xs font-medium text-stone-500 dark:text-stone-500">
+      <div className="mx-auto grid max-w-6xl grid-cols-1 gap-4 px-4 py-4 md:grid-cols-[1fr_220px] md:px-6">
+        <main className="flex max-h-[calc(100vh-140px)] flex-col overflow-hidden rounded-2xl border border-stone-200 bg-white dark:border-stone-800 dark:bg-stone-900">
+          <div className="shrink-0 p-5 pb-4 md:px-8 md:pt-8">
+          <div className="flex items-start justify-between gap-3">
+            <div className="flex min-w-0 flex-wrap items-center gap-2">
+              <span className="inline-flex rounded-full border border-stone-200 bg-stone-100 px-3 py-1 text-xs font-semibold text-stone-600 dark:border-stone-800 dark:bg-stone-800 dark:text-stone-400">
                 {index + 1}번 / 총 {session.total_questions}문항
-              </p>
+              </span>
               {current.chapter ? (
-                <p className="inline-flex rounded-full border border-red-200 bg-red-50 px-3 py-1 text-xs font-semibold text-red-700 dark:border-red-900/50 dark:bg-red-950/30 dark:text-red-400">
-                  챕터 · {current.chapter}
-                </p>
+                <span className="inline-flex max-w-full rounded-full border border-red-200 bg-red-50 px-3 py-1 text-xs font-semibold text-red-700 dark:border-red-900/50 dark:bg-red-950/30 dark:text-red-400">
+                  <span className="truncate">챕터 · {current.chapter}</span>
+                </span>
               ) : null}
             </div>
             <div className="flex items-center gap-2">
@@ -173,7 +176,18 @@ export function CbtSolveScreen({ sessionId, onSubmitted }: CbtSolveScreenProps) 
               </button>
             </div>
           </div>
-          <h2 className="text-base font-semibold leading-7 md:text-lg md:leading-8 dark:text-stone-100">{current.question}</h2>
+          </div>
+          <div ref={contentRef} className="min-h-0 flex-auto overflow-y-auto px-5 pb-6 md:px-8">
+          <h2
+            className={[
+              "font-semibold dark:text-stone-100",
+              session.type === "5-choice"
+                ? "text-sm leading-6 md:text-base md:leading-7"
+                : "text-base leading-7 md:text-lg md:leading-8",
+            ].join(" ")}
+          >
+            {current.question}
+          </h2>
 
           {current.boxes && current.boxes.length > 0 && (
             <div className="mt-4 rounded-xl border-2 border-stone-200 bg-stone-50/50 p-4 dark:border-stone-800 dark:bg-stone-900/50">
@@ -183,7 +197,13 @@ export function CbtSolveScreen({ sessionId, onSubmitted }: CbtSolveScreenProps) 
                   // 기존에 포함된 "ㄱ.", "ㄴ. " 등의 접두어 제거
                   const cleanBox = box.replace(/^[ㄱ-ㅎ]\.\s*/, "");
                   return (
-                    <div key={idx} className="flex gap-2 text-sm md:text-base leading-relaxed">
+                    <div
+                      key={idx}
+                      className={[
+                        "flex gap-2 leading-relaxed",
+                        session.type === "5-choice" ? "text-xs md:text-sm" : "text-sm md:text-base",
+                      ].join(" ")}
+                    >
                       <span className="font-bold shrink-0">{symbols[idx] ?? idx + 1}.</span>
                       <span className="text-stone-800 dark:text-stone-200">{cleanBox}</span>
                     </div>
@@ -212,26 +232,43 @@ export function CbtSolveScreen({ sessionId, onSubmitted }: CbtSolveScreenProps) 
               options.map((option) => {
                 const selected = current.my_answer === option.key;
                 const isCorrect = showAnswer && String(current.answer) === option.key;
+                const showInlineNext =
+                  session.type === "OX" && selected && !showAnswer && index < session.total_questions - 1;
 
                 return (
-                  <button
-                    key={option.key}
-                    onClick={() => handleAnswer(option.key)}
-                    className={[
-                      "flex w-full items-start gap-2 rounded-xl border px-4 py-3 text-left transition",
-                      selected
-                        ? "border-red-600 bg-red-50 text-red-700 dark:border-red-600 dark:bg-red-950/30 dark:text-red-400"
-                        : isCorrect
+                  <div key={option.key} className="relative">
+                    <button
+                      onClick={() => handleAnswer(option.key)}
+                      className={[
+                        "flex w-full items-start gap-2 rounded-xl border px-4 py-3 text-left transition",
+                        showInlineNext ? "pr-32 md:pr-36" : "",
+                        session.type === "5-choice" ? "text-sm md:text-sm" : "text-base",
+                        isCorrect
                           ? "border-blue-600 bg-blue-50 text-blue-700 dark:border-blue-600 dark:bg-blue-950/30 dark:text-blue-400"
-                          : "border-stone-300 bg-white text-stone-800 hover:border-red-300 dark:border-stone-700 dark:bg-stone-800 dark:text-stone-300 dark:hover:border-stone-600",
-                    ].join(" ")}
-                  >
-                    {option.circle && (
-                      <span className="shrink-0 font-bold">{option.circle}</span>
-                    )}
-                    <span className="flex-1 font-medium">{option.text}</span>
-                    {isCorrect && <span className="ml-auto shrink-0 text-xs font-bold text-blue-600 dark:text-blue-400">정답</span>}
-                  </button>
+                          : selected
+                            ? "border-red-600 bg-red-50 text-red-700 dark:border-red-600 dark:bg-red-950/30 dark:text-red-400"
+                            : "border-stone-300 bg-white text-stone-800 hover:border-red-300 dark:border-stone-700 dark:bg-stone-800 dark:text-stone-300 dark:hover:border-stone-600",
+                      ].join(" ")}
+                    >
+                      {option.circle && (
+                        <span className="shrink-0 font-bold">{option.circle}</span>
+                      )}
+                      <span className="flex-1 font-medium">{option.text}</span>
+                      {isCorrect && !showInlineNext && (
+                        <span className="ml-auto shrink-0 text-xs font-bold text-blue-600 dark:text-blue-400">정답</span>
+                      )}
+                    </button>
+                    {showInlineNext ? (
+                      <button
+                        type="button"
+                        onClick={goToNext}
+                        className="absolute right-2 top-1/2 -translate-y-1/2 rounded-lg bg-red-600 px-3 py-1.5 text-xs font-bold text-white shadow-sm transition hover:bg-red-700 dark:bg-red-600 dark:hover:bg-red-700"
+                      >
+                        다음 문제로
+                        <span className="ml-1 text-red-200">›</span>
+                      </button>
+                    ) : null}
+                  </div>
                 );
               })
             )}
@@ -256,26 +293,25 @@ export function CbtSolveScreen({ sessionId, onSubmitted }: CbtSolveScreenProps) 
               )}
             </div>
           )}
+          </div>
 
-          <div className="mt-8 flex items-center gap-2 border-t border-stone-200 pt-4 dark:border-stone-800">
+          <div className="grid shrink-0 grid-cols-2 overflow-hidden border-t border-stone-200 dark:border-stone-800">
             <button
               onClick={() => setIndex((prev) => Math.max(0, prev - 1))}
               disabled={index === 0}
-              className="rounded-lg border border-stone-300 bg-white px-4 py-2 text-sm font-semibold text-stone-700 disabled:cursor-not-allowed disabled:opacity-40 dark:border-stone-700 dark:bg-stone-800 dark:text-stone-300"
+              className="border-r border-stone-200 bg-stone-50 px-4 py-3 text-sm font-bold text-stone-800 shadow-[0_-1px_0_rgba(0,0,0,0.02)] transition hover:bg-stone-100 disabled:cursor-not-allowed disabled:opacity-40 dark:border-stone-800 dark:bg-stone-950/40 dark:text-stone-200 dark:hover:bg-stone-800"
             >
+              <span className="mr-1 text-stone-400 dark:text-stone-500">‹</span>
               이전 문제
             </button>
             <button
               onClick={goToNext}
               disabled={index >= session.total_questions - 1}
-              className="rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-40 dark:bg-red-600"
+              className="border-l border-red-700/20 bg-red-600 px-4 py-3 text-sm font-bold text-white shadow-[0_-1px_0_rgba(255,255,255,0.18),0_-8px_18px_rgba(185,28,28,0.06)] transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-40 dark:border-red-500/20 dark:bg-red-600 dark:hover:bg-red-700"
             >
               다음 문제
+              <span className="ml-1 text-red-200">›</span>
             </button>
-
-            <span className="ml-auto text-xs font-medium text-stone-500 dark:text-stone-500">
-              진행률 {answeredCount}/{session.total_questions}
-            </span>
           </div>
         </main>
 

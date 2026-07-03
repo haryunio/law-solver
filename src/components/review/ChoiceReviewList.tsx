@@ -25,7 +25,7 @@ export function ChoiceReviewList({ question }: ChoiceReviewListProps) {
             <div
               key={value}
               className={[
-                "flex gap-3 rounded-lg border px-3 py-2.5 text-sm leading-6 transition",
+                "flex gap-3 rounded-lg border px-3 py-2.5 text-xs leading-5 transition md:text-sm md:leading-6",
                 isMine && isAnswer
                   ? "border-emerald-200 bg-emerald-50 text-emerald-900 dark:border-emerald-900/60 dark:bg-emerald-950/20 dark:text-emerald-200"
                   : isAnswer
@@ -35,7 +35,7 @@ export function ChoiceReviewList({ question }: ChoiceReviewListProps) {
                       : "border-stone-200 bg-white text-stone-700 dark:border-stone-800 dark:bg-stone-900 dark:text-stone-300",
               ].join(" ")}
             >
-              <span className="shrink-0 text-base font-bold leading-6">{choiceMarkers[idx]}</span>
+              <span className="shrink-0 text-sm font-bold leading-5 md:text-base md:leading-6">{choiceMarkers[idx]}</span>
               <span className="min-w-0 flex-1 whitespace-pre-wrap">{choice}</span>
               <span className="flex shrink-0 flex-col items-end gap-1 sm:flex-row sm:items-center">
                 {isMine ? (

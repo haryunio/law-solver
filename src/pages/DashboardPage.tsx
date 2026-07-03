@@ -175,6 +175,10 @@ export function DashboardPage() {
                 session.total_questions > 0
                   ? Math.round((session.solved_questions / session.total_questions) * 100)
                   : 0;
+              const averageSecondsPerQuestion =
+                session.total_questions > 0
+                  ? Math.round(session.elapsed_time / session.total_questions)
+                  : 0;
               const isCompleted = session.status === "completed";
 
               return (
@@ -273,10 +277,13 @@ export function DashboardPage() {
                         <p className="mt-1 truncate font-bold text-stone-900 dark:text-stone-100">
                           {formatElapsedTime(session.elapsed_time)}
                         </p>
+                        <p className="mt-0.5 truncate text-[10px] font-light leading-none text-stone-400 dark:text-stone-500">
+                          문제당 {formatElapsedTime(averageSecondsPerQuestion)}
+                        </p>
                       </div>
                       <div className="min-w-0 rounded-xl bg-stone-50 px-3 py-2 dark:bg-stone-950/40">
                         <p className="text-[11px] font-medium text-stone-500 dark:text-stone-500">점수</p>
-                        <p className="mt-1 truncate font-bold text-stone-900 dark:text-stone-100">
+                        <p className="mt-1 truncate text-base font-bold leading-tight text-stone-900 dark:text-stone-100">
                           {isCompleted ? `${session.score}%` : "풀이 중"}
                         </p>
                       </div>
@@ -286,7 +293,7 @@ export function DashboardPage() {
                   {isCompleted ? (
                     <Link
                       to={`/result/${session.id}`}
-                      className="block rounded-b-[calc(1rem-1px)] border-t border-stone-200 bg-stone-50 px-4 py-3 text-center text-sm font-bold text-stone-800 shadow-[0_-1px_0_rgba(0,0,0,0.02)] transition hover:bg-blue-50 hover:text-blue-700 dark:border-stone-800 dark:bg-stone-950/40 dark:text-stone-200 dark:hover:bg-blue-950/30 dark:hover:text-blue-400"
+                      className="block rounded-b-[calc(1rem-1px)] border-t border-stone-200 bg-stone-50 px-4 py-3 text-center text-sm font-bold text-stone-800 shadow-[0_-1px_0_rgba(0,0,0,0.02)] transition hover:bg-orange-50 hover:text-orange-700 dark:border-stone-800 dark:bg-stone-950/40 dark:text-stone-200 dark:hover:bg-orange-950/30 dark:hover:text-orange-400"
                     >
                       결과 확인하기
                     </Link>

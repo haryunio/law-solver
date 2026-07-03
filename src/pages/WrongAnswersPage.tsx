@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { ChoiceReviewList } from "../components/review/ChoiceReviewList";
 import { OverflowTooltipTitle } from "../components/ui/OverflowTooltipTitle";
@@ -25,6 +25,7 @@ export function WrongAnswersPage() {
   const [index, setIndex] = useState(0);
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [note, setNote] = useState("");
+  const contentRef = useRef<HTMLDivElement | null>(null);
   const omrRefs = useMemo(() => new Map<number, HTMLButtonElement | null>(), []);
 
   const current = wrongQuestions[index];
@@ -35,6 +36,10 @@ export function WrongAnswersPage() {
       setNote(current.wrong_note || "");
     }
   }, [current]);
+
+  useEffect(() => {
+    contentRef.current?.scrollTo({ top: 0 });
+  }, [index]);
 
   useEffect(() => {
     const activeBtn = omrRefs.get(index);
@@ -144,7 +149,7 @@ export function WrongAnswersPage() {
   return (
     <div className="min-h-screen bg-stone-50 text-stone-900 dark:bg-stone-950 dark:text-stone-100 transition-colors duration-300">
       <header className="sticky top-0 z-20 border-b border-stone-200 bg-white/95 backdrop-blur dark:border-stone-800 dark:bg-stone-900/90">
-        <div className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 py-3 md:px-6">
+        <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-3 md:px-6">
           <div className="min-w-0 flex-1">
             <OverflowTooltipTitle
               text={`${session.title} · 오답 확인하기`}
@@ -160,17 +165,31 @@ export function WrongAnswersPage() {
         </div>
       </header>
 
-      <div className="mx-auto grid max-w-7xl grid-cols-1 gap-4 px-4 py-4 md:grid-cols-[1fr_220px] md:px-6">
-        <main className="max-h-[calc(100vh-100px)] overflow-y-auto rounded-2xl border border-stone-200 bg-white p-5 md:p-8 dark:border-stone-800 dark:bg-stone-900">
-          <p className="mb-3 text-xs font-medium text-stone-500 dark:text-stone-500">
-            오답 {index + 1} / {wrongQuestions.length} · 풀이순번 {solveNo}번
-          </p>
-          {current.chapter ? (
-            <p className="mb-3 inline-flex rounded-full border border-red-200 bg-red-50 px-3 py-1 text-xs font-semibold text-red-700 dark:border-red-900/50 dark:bg-red-950/30 dark:text-red-400">
-              챕터 · {current.chapter}
-            </p>
-          ) : null}
-          <h2 className="text-base font-semibold leading-7 md:text-lg md:leading-8 dark:text-stone-100">{current.question}</h2>
+      <div className="mx-auto grid max-w-6xl grid-cols-1 gap-4 px-4 py-4 md:grid-cols-[1fr_220px] md:px-6">
+        <main className="flex max-h-[calc(100vh-100px)] flex-col overflow-hidden rounded-2xl border border-stone-200 bg-white dark:border-stone-800 dark:bg-stone-900">
+          <div className="shrink-0 p-5 pb-3 md:px-8 md:pt-8">
+          <div className="flex min-w-0 flex-wrap items-center gap-2">
+            <span className="inline-flex rounded-full border border-stone-200 bg-stone-100 px-3 py-1 text-xs font-semibold text-stone-600 dark:border-stone-800 dark:bg-stone-800 dark:text-stone-400">
+              오답 {index + 1} / {wrongQuestions.length} · 풀이순번 {solveNo}번
+            </span>
+            {current.chapter ? (
+              <span className="inline-flex max-w-full rounded-full border border-red-200 bg-red-50 px-3 py-1 text-xs font-semibold text-red-700 dark:border-red-900/50 dark:bg-red-950/30 dark:text-red-400">
+                <span className="truncate">챕터 · {current.chapter}</span>
+              </span>
+            ) : null}
+          </div>
+          </div>
+          <div ref={contentRef} className="min-h-0 flex-auto overflow-y-auto px-5 pb-6 md:px-8">
+          <h2
+            className={[
+              "font-semibold dark:text-stone-100",
+              current.choices
+                ? "text-sm leading-6 md:text-base md:leading-7"
+                : "text-base leading-7 md:text-lg md:leading-8",
+            ].join(" ")}
+          >
+            {current.question}
+          </h2>
 
           {current.boxes && current.boxes.length > 0 && (
             <div className="mt-4 rounded-xl border-2 border-stone-200 bg-stone-50/50 p-4 dark:border-stone-800 dark:bg-stone-900/50">
@@ -179,7 +198,13 @@ export function WrongAnswersPage() {
                   const symbols = ["ㄱ", "ㄴ", "ㄷ", "ㄹ", "ㅁ", "ㅂ", "ㅅ", "ㅇ", "ㅈ", "ㅊ", "ㅋ", "ㅌ", "ㅍ", "ㅎ"];
                   const cleanBox = box.replace(/^[ㄱ-ㅎ]\.\s*/, "");
                   return (
-                    <div key={idx} className="flex gap-2 text-sm md:text-base leading-relaxed">
+                    <div
+                      key={idx}
+                      className={[
+                        "flex gap-2 leading-relaxed",
+                        current.choices ? "text-xs md:text-sm" : "text-sm md:text-base",
+                      ].join(" ")}
+                    >
                       <span className="font-bold shrink-0">{symbols[idx] ?? idx + 1}.</span>
                       <span className="text-stone-800 dark:text-stone-200">{cleanBox}</span>
                     </div>
@@ -247,21 +272,24 @@ export function WrongAnswersPage() {
               />
             </article>
           </div>
+          </div>
 
-          <div className="mt-8 flex flex-wrap gap-2 border-t border-stone-200 pt-4 dark:border-stone-800">
+          <div className="grid shrink-0 grid-cols-2 overflow-hidden border-t border-stone-200 dark:border-stone-800">
             <button
               onClick={goToPrev}
               disabled={index === 0}
-              className="rounded-lg border border-stone-300 bg-white px-4 py-2 text-sm font-semibold text-stone-700 disabled:cursor-not-allowed disabled:opacity-40 dark:border-stone-700 dark:bg-stone-800 dark:text-stone-300"
+              className="border-r border-stone-200 bg-stone-50 px-4 py-3 text-sm font-bold text-stone-800 shadow-[0_-1px_0_rgba(0,0,0,0.02)] transition hover:bg-stone-100 disabled:cursor-not-allowed disabled:opacity-40 dark:border-stone-800 dark:bg-stone-950/40 dark:text-stone-200 dark:hover:bg-stone-800"
             >
+              <span className="mr-1 text-stone-400 dark:text-stone-500">‹</span>
               이전 오답
             </button>
             <button
               onClick={goToNext}
               disabled={index === wrongQuestions.length - 1}
-              className="rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-40 dark:bg-red-600"
+              className="border-l border-red-700/20 bg-red-600 px-4 py-3 text-sm font-bold text-white shadow-[0_-1px_0_rgba(255,255,255,0.18),0_-8px_18px_rgba(185,28,28,0.06)] transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-40 dark:border-red-500/20 dark:bg-red-600 dark:hover:bg-red-700"
             >
               다음 오답
+              <span className="ml-1 text-red-200">›</span>
             </button>
           </div>
         </main>
