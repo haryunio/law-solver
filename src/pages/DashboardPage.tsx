@@ -28,6 +28,14 @@ const typeStyle = {
   short: "bg-purple-50 text-purple-700 border-purple-100 dark:bg-purple-950/30 dark:text-purple-400 dark:border-purple-900/50",
 } as const;
 
+const sessionDateTimeFormatter = new Intl.DateTimeFormat("ko-KR", {
+  year: "numeric",
+  month: "numeric",
+  day: "numeric",
+  hour: "2-digit",
+  minute: "2-digit",
+});
+
 type DialogState = {
   title: string;
   description?: string;
@@ -51,6 +59,7 @@ export function DashboardPage() {
   const [editingSessionId, setEditingSessionId] = useState<string | null>(null);
   const [editingTitle, setEditingTitle] = useState("");
   const [editingSubjectId, setEditingSubjectId] = useState(NO_SUBJECT_ID);
+  const [openSessionMenuId, setOpenSessionMenuId] = useState<string | null>(null);
   const [dialog, setDialog] = useState<DialogState | null>(null);
 
   const isNoSubject = subjectId === NO_SUBJECT_ID;
@@ -87,6 +96,7 @@ export function DashboardPage() {
   };
 
   const openEditModal = (sessionId: string, title: string) => {
+    setOpenSessionMenuId(null);
     setEditingSessionId(sessionId);
     setEditingTitle(title);
     setEditingSubjectId(sessionSubjectMap[sessionId] ?? NO_SUBJECT_ID);
@@ -160,86 +170,137 @@ export function DashboardPage() {
           </div>
         ) : (
           <div className="grid gap-3 md:grid-cols-2">
-            {sortedSessions.map((session) => (
-              <article key={session.id} className="min-w-0 rounded-2xl border border-stone-200 bg-white p-4 shadow-sm dark:border-stone-800 dark:bg-stone-900 dark:shadow-stone-950/30">
-                <div className="mb-2 flex items-start justify-between gap-3">
-                  <div className="min-w-0 flex-1">
+            {sortedSessions.map((session) => {
+              const progressPercent =
+                session.total_questions > 0
+                  ? Math.round((session.solved_questions / session.total_questions) * 100)
+                  : 0;
+              const isCompleted = session.status === "completed";
+
+              return (
+                <article
+                  key={session.id}
+                  className="flex min-w-0 flex-col overflow-visible rounded-2xl border border-stone-200 bg-white shadow-sm dark:border-stone-800 dark:bg-stone-900 dark:shadow-stone-950/30"
+                >
+                  <div className="relative px-4 pb-2 pt-4 pr-12">
                     <OverflowTooltipTitle
                       as="h2"
                       text={session.title}
-                      className="text-base font-semibold text-stone-900 dark:text-stone-100"
+                      className="text-base font-bold leading-snug text-stone-900 dark:text-stone-100"
                     />
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setOpenSessionMenuId((currentId) =>
+                          currentId === session.id ? null : session.id,
+                        )
+                      }
+                      className="absolute right-3 top-3 flex h-7 w-7 items-center justify-center rounded-full border border-stone-200 bg-white text-base font-bold leading-none text-stone-500 shadow-sm transition hover:bg-stone-50 hover:text-stone-800 dark:border-stone-700 dark:bg-stone-900 dark:text-stone-400 dark:hover:bg-stone-800 dark:hover:text-stone-100"
+                      aria-label={`${session.title} 메뉴 열기`}
+                      aria-expanded={openSessionMenuId === session.id}
+                    >
+                      ⋮
+                    </button>
+                    {openSessionMenuId === session.id ? (
+                      <div className="absolute right-3 top-12 z-20 w-32 overflow-hidden rounded-xl border border-stone-200 bg-white py-1 shadow-xl dark:border-stone-700 dark:bg-stone-900">
+                        <button
+                          type="button"
+                          onClick={() => openEditModal(session.id, session.title)}
+                          className="block w-full px-4 py-2 text-left text-sm font-semibold text-stone-700 transition hover:bg-stone-50 dark:text-stone-200 dark:hover:bg-stone-800"
+                        >
+                          편집
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setOpenSessionMenuId(null);
+                            handleDeleteSession(session.id, session.title);
+                          }}
+                          className="block w-full px-4 py-2 text-left text-sm font-semibold text-red-700 transition hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/30"
+                        >
+                          삭제
+                        </button>
+                      </div>
+                    ) : null}
                   </div>
-                  <span
-                    className={[
-                      "shrink-0 rounded-full px-2 py-1 text-xs font-semibold",
-                      session.status === "completed"
-                        ? "bg-blue-50 text-blue-700 dark:bg-blue-950/30 dark:text-blue-400"
-                        : "bg-red-50 text-red-700 dark:bg-red-950/30 dark:text-red-400",
-                    ].join(" ")}
-                  >
-                    {session.status === "completed" ? "채점 완료" : "풀이 중"}
-                  </span>
-                </div>
 
-                <div className="grid grid-cols-2 gap-x-3 gap-y-1 text-sm text-stone-600 dark:text-stone-400">
-                  <div className="flex items-center gap-1.5">
-                    <span>유형:</span>
+                  <div className="flex flex-wrap items-center gap-2 px-4 pb-3">
                     <span
                       className={[
-                        "rounded-full px-2 py-0.5 text-[11px] font-semibold",
+                        "rounded-full border px-2.5 py-0.5 text-[11px] font-bold",
                         typeStyle[session.type],
                       ].join(" ")}
                     >
                       {typeLabel[session.type]}
                     </span>
-                  </div>
-                  <p>
-                    진도: {session.solved_questions}/{session.total_questions}
-                  </p>
-                  <p>순서: {orderModeLabel[session.order_mode ?? "number"]}</p>
-                  <p>점수: {session.score}%</p>
-                  <p>시간: {formatElapsedTime(session.elapsed_time)}</p>
-                </div>
-
-                <p className="mt-2 text-xs text-stone-400 dark:text-stone-500">
-                  생성일: {new Date(session.created_at).toLocaleString("ko-KR")}
-                </p>
-
-                <div className="mt-4 flex items-center gap-2">
-                  <div className="flex flex-wrap gap-2">
-                    {session.status === "completed" ? (
-                      <Link
-                        to={`/result/${session.id}`}
-                        className="rounded-lg border border-stone-300 bg-white px-3 py-2 text-xs font-semibold text-stone-700 transition hover:bg-stone-50 hover:text-red-600 dark:border-stone-700 dark:bg-stone-800 dark:text-stone-300 dark:hover:bg-stone-700 dark:hover:text-red-400"
-                      >
-                        결과보기
-                      </Link>
-                    ) : (
-                      <Link
-                        to={`/solve/${session.id}`}
-                        className="rounded-lg bg-red-600 px-3 py-2 text-xs font-semibold text-white transition hover:bg-red-700 dark:bg-red-600 dark:hover:bg-red-700"
-                      >
-                        이어풀기
-                      </Link>
-                    )}
-                    <button
-                      onClick={() => openEditModal(session.id, session.title)}
-                      className="rounded-lg border border-stone-300 bg-white px-3 py-2 text-xs font-semibold text-stone-700 transition hover:bg-stone-50 hover:text-red-600 dark:border-stone-700 dark:bg-stone-800 dark:text-stone-300 dark:hover:bg-stone-700 dark:hover:text-red-400"
+                    <span
+                      className={[
+                        "rounded-full border px-2.5 py-0.5 text-[11px] font-bold",
+                        isCompleted
+                          ? "border-blue-100 bg-blue-50 text-blue-700 dark:border-blue-900/50 dark:bg-blue-950/30 dark:text-blue-400"
+                          : "border-red-100 bg-red-50 text-red-700 dark:border-red-900/50 dark:bg-red-950/30 dark:text-red-400",
+                      ].join(" ")}
                     >
-                      편집
-                    </button>
+                      {isCompleted ? "채점 완료" : "풀이 중"}
+                    </span>
+                    <span className="rounded-full border border-stone-200 bg-stone-50 px-2.5 py-0.5 text-[11px] font-bold text-stone-600 dark:border-stone-700 dark:bg-stone-950/40 dark:text-stone-300">
+                      {orderModeLabel[session.order_mode ?? "number"]}
+                    </span>
+                    <span className="ml-auto text-xs text-stone-400 dark:text-stone-500 max-sm:ml-0 max-sm:w-full">
+                      {sessionDateTimeFormatter.format(new Date(session.created_at))}
+                    </span>
                   </div>
 
-                  <button
-                    onClick={() => handleDeleteSession(session.id, session.title)}
-                    className="ml-auto rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs font-semibold text-red-700 transition hover:bg-red-100 dark:border-red-900/50 dark:bg-red-950/30 dark:text-red-400 dark:hover:bg-red-900/30"
-                  >
-                    삭제
-                  </button>
-                </div>
-              </article>
-            ))}
+                  <div className="flex-1 px-4 pb-3">
+                    <div className="grid grid-cols-2 gap-2 text-sm sm:grid-cols-3">
+                      <div className="col-span-2 min-w-0 rounded-xl bg-stone-50 px-3 py-2 dark:bg-stone-950/40 sm:col-span-1">
+                        <p className="text-[11px] font-medium text-stone-500 dark:text-stone-500">진행률</p>
+                        <p className="mt-1 truncate font-bold text-stone-900 dark:text-stone-100">
+                          {session.solved_questions}/{session.total_questions}
+                        </p>
+                        <div className="mt-1.5 h-1 overflow-hidden rounded-full bg-stone-200 dark:bg-stone-800">
+                          <div
+                            className={[
+                              "h-full rounded-full transition-all",
+                              isCompleted ? "bg-blue-600 dark:bg-blue-500" : "bg-red-600 dark:bg-red-500",
+                            ].join(" ")}
+                            style={{ width: `${progressPercent}%` }}
+                          />
+                        </div>
+                      </div>
+                      <div className="min-w-0 rounded-xl bg-stone-50 px-3 py-2 dark:bg-stone-950/40">
+                        <p className="text-[11px] font-medium text-stone-500 dark:text-stone-500">시간</p>
+                        <p className="mt-1 truncate font-bold text-stone-900 dark:text-stone-100">
+                          {formatElapsedTime(session.elapsed_time)}
+                        </p>
+                      </div>
+                      <div className="min-w-0 rounded-xl bg-stone-50 px-3 py-2 dark:bg-stone-950/40">
+                        <p className="text-[11px] font-medium text-stone-500 dark:text-stone-500">점수</p>
+                        <p className="mt-1 truncate font-bold text-stone-900 dark:text-stone-100">
+                          {isCompleted ? `${session.score}%` : "풀이 중"}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {isCompleted ? (
+                    <Link
+                      to={`/result/${session.id}`}
+                      className="block rounded-b-[calc(1rem-1px)] border-t border-stone-200 bg-stone-50 px-4 py-3 text-center text-sm font-bold text-stone-800 shadow-[0_-1px_0_rgba(0,0,0,0.02)] transition hover:bg-blue-50 hover:text-blue-700 dark:border-stone-800 dark:bg-stone-950/40 dark:text-stone-200 dark:hover:bg-blue-950/30 dark:hover:text-blue-400"
+                    >
+                      결과 확인하기
+                    </Link>
+                  ) : (
+                    <Link
+                      to={`/solve/${session.id}`}
+                      className="block rounded-b-[calc(1rem-1px)] border-t border-red-700/20 bg-red-600 px-4 py-3 text-center text-sm font-bold text-white shadow-[0_-1px_0_rgba(255,255,255,0.18),0_-8px_18px_rgba(185,28,28,0.06)] transition hover:bg-red-700 dark:border-red-500/20 dark:bg-red-600 dark:hover:bg-red-700"
+                    >
+                      이어서 풀기
+                    </Link>
+                  )}
+                </article>
+              );
+            })}
           </div>
         )}
 

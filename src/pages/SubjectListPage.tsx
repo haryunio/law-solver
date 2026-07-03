@@ -76,6 +76,14 @@ const getSubjectCoverStyle = (
   };
 };
 
+const getSubjectAccentColor = (paletteId: SubjectCoverPalette) => {
+  const palette = getPaletteById(paletteId);
+  if (palette.id === "gray") return "hsl(0 0% 46%)";
+
+  const [, baseMid] = palette.base ?? defaultCoverPalette.base ?? [8, 32, 50];
+  return `hsl(${baseMid} 72% 54%)`;
+};
+
 export function SubjectListPage() {
   const sessions = useTestStore((state) => state.sessions);
   const subjects = useTestStore((state) => state.subjects);
@@ -485,7 +493,12 @@ export function SubjectListPage() {
             <Link
               key={subject.id}
               to={getSubjectDashboardPath(subject.id)}
-              className="group overflow-hidden rounded-2xl border border-stone-200 bg-white shadow-sm transition hover:-translate-y-0.5 hover:border-red-200 hover:shadow-md dark:border-stone-800 dark:bg-stone-900 dark:hover:border-red-900/60"
+              className="group overflow-hidden rounded-2xl border border-stone-200 bg-white shadow-sm transition hover:-translate-y-0.5 hover:border-[var(--subject-accent)] hover:shadow-md dark:border-stone-800 dark:bg-stone-900 dark:hover:border-[var(--subject-accent)]"
+              style={
+                {
+                  "--subject-accent": getSubjectAccentColor(subject.coverPalette ?? "warm"),
+                } as CSSProperties
+              }
             >
               <div
                 className="relative h-[104px] overflow-hidden"
