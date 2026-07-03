@@ -274,7 +274,7 @@ export function WrongAnswersPage() {
           </div>
           </div>
 
-          <div className="grid shrink-0 grid-cols-2 overflow-hidden border-t border-stone-200 dark:border-stone-800">
+          <div className="grid shrink-0 grid-cols-[2fr_1fr_2fr] overflow-hidden border-t border-stone-200 md:grid-cols-2 dark:border-stone-800">
             <button
               onClick={goToPrev}
               disabled={index === 0}
@@ -284,9 +284,16 @@ export function WrongAnswersPage() {
               이전 오답
             </button>
             <button
+              type="button"
+              onClick={() => setIsSheetOpen(true)}
+              className="border-r border-stone-200 bg-white px-2 py-3 text-xs font-bold text-stone-600 shadow-[0_-1px_0_rgba(0,0,0,0.02)] transition hover:bg-stone-50 dark:border-stone-800 dark:bg-stone-900 dark:text-stone-300 dark:hover:bg-stone-800 md:hidden"
+            >
+              OMR
+            </button>
+            <button
               onClick={goToNext}
               disabled={index === wrongQuestions.length - 1}
-              className="border-l border-red-700/20 bg-red-600 px-4 py-3 text-sm font-bold text-white shadow-[0_-1px_0_rgba(255,255,255,0.18),0_-8px_18px_rgba(185,28,28,0.06)] transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-40 dark:border-red-500/20 dark:bg-red-600 dark:hover:bg-red-700"
+              className="bg-red-600 px-4 py-3 text-sm font-bold text-white shadow-[0_-1px_0_rgba(255,255,255,0.18),0_-8px_18px_rgba(185,28,28,0.06)] transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-40 md:border-l md:border-red-700/20 dark:border-red-500/20 dark:bg-red-600 dark:hover:bg-red-700"
             >
               다음 오답
               <span className="ml-1 text-red-200">›</span>
@@ -324,13 +331,6 @@ export function WrongAnswersPage() {
           </div>
         </aside>
       </div>
-
-      <button
-        onClick={() => setIsSheetOpen(true)}
-        className="fixed bottom-5 right-4 z-20 rounded-full bg-red-600 px-4 py-2 text-sm font-semibold text-white shadow-lg md:hidden dark:bg-red-600"
-      >
-        오답 목록
-      </button>
 
       {isSheetOpen ? (
         <div className="fixed inset-0 z-30 md:hidden">
