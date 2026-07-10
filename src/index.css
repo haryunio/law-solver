@@ -50,6 +50,11 @@ body,
   min-height: 100%;
 }
 
+/* Keep centered layouts fixed when a tab changes the document height. */
+html {
+  scrollbar-gutter: stable;
+}
+
 body {
   background:
     radial-gradient(circle at 80% 0%, rgba(230, 57, 70, 0.08), transparent 36%),
