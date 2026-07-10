@@ -2,6 +2,7 @@ import { FormEvent, useMemo, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { CsvUploadPanel } from "../components/upload/CsvUploadPanel";
 import { ConfirmDialog } from "../components/ui/ConfirmDialog";
+import { AppFooter } from "../components/ui/AppFooter";
 import { DashboardHeaderTitle } from "../components/ui/DashboardHeaderTitle";
 import { IconCloseButton } from "../components/ui/IconCloseButton";
 import { OverflowTooltipTitle } from "../components/ui/OverflowTooltipTitle";
@@ -23,9 +24,9 @@ const typeLabel = {
 } as const;
 
 const typeStyle = {
-  OX: "bg-blue-50 text-blue-700 border-blue-100 dark:bg-blue-950/30 dark:text-blue-400 dark:border-blue-900/50",
-  "5-choice": "bg-emerald-50 text-emerald-700 border-emerald-100 dark:bg-emerald-950/30 dark:text-emerald-400 dark:border-emerald-900/50",
-  short: "bg-purple-50 text-purple-700 border-purple-100 dark:bg-purple-950/30 dark:text-purple-400 dark:border-purple-900/50",
+  OX: "border-red-100 bg-red-50 text-red-700 dark:border-red-900/50 dark:bg-red-950/30 dark:text-red-400",
+  "5-choice": "border-orange-100 bg-orange-50 text-orange-700 dark:border-orange-900/50 dark:bg-orange-950/30 dark:text-orange-400",
+  short: "border-amber-100 bg-amber-50 text-amber-700 dark:border-amber-900/50 dark:bg-amber-950/30 dark:text-amber-400",
 } as const;
 
 const sessionDateTimeFormatter = new Intl.DateTimeFormat("ko-KR", {
@@ -121,12 +122,12 @@ export function DashboardPage() {
 
   if (isInvalidSubject) {
     return (
-      <div className="min-h-screen px-4 py-8 md:px-6 dark:bg-stone-950">
-        <div className="mx-auto max-w-2xl rounded-2xl border border-stone-200 bg-white p-8 text-center dark:border-stone-800 dark:bg-stone-900">
+      <div className="app-page px-4 py-8 md:px-6">
+        <div className="app-card mx-auto max-w-2xl rounded-2xl border p-8 text-center">
           <p className="text-stone-700 dark:text-stone-300">과목을 찾을 수 없습니다.</p>
           <Link
             to="/dashboard"
-            className="mt-4 inline-flex rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white"
+            className="app-button-primary mt-4 inline-flex rounded-lg px-4 py-2 text-sm font-semibold"
           >
             <ReturnLinkLabel variant="solid">과목 목록으로</ReturnLinkLabel>
           </Link>
@@ -136,7 +137,7 @@ export function DashboardPage() {
   }
 
   return (
-    <div className="min-h-screen px-4 py-8 md:px-6 dark:bg-stone-950 transition-colors duration-300">
+    <div className="app-page px-4 py-8 transition-colors duration-300 md:px-6">
       <div className="mx-auto max-w-6xl">
         <header className="mb-6 flex flex-wrap items-end justify-between gap-3">
           <DashboardHeaderTitle
@@ -148,13 +149,13 @@ export function DashboardPage() {
           <div className="flex flex-wrap gap-2">
             <Link
               to="/dashboard"
-              className="rounded-lg border border-stone-300 bg-white px-4 py-2 text-sm font-semibold text-stone-700 transition hover:bg-stone-50 dark:border-stone-700 dark:bg-stone-900 dark:text-stone-300 dark:hover:bg-stone-800"
+              className="app-button-secondary rounded-lg px-4 py-2 text-sm font-semibold"
             >
               <ReturnLinkLabel>과목 목록으로</ReturnLinkLabel>
             </Link>
             <button
               onClick={() => setOpenUpload(true)}
-              className="rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-red-700 dark:bg-red-600 dark:hover:bg-red-700"
+              className="app-button-primary app-button-primary-standalone rounded-lg px-4 py-2 text-sm font-semibold"
             >
               새 문제 등록
             </button>
@@ -162,7 +163,7 @@ export function DashboardPage() {
         </header>
 
         {sortedSessions.length === 0 ? (
-          <div className="rounded-2xl border border-dashed border-stone-300 bg-white p-10 text-center dark:border-stone-800 dark:bg-stone-900">
+          <div className="app-card rounded-2xl border border-dashed p-10 text-center">
             <p className="text-base font-medium text-stone-700 dark:text-stone-300">등록된 문제 세션이 없습니다.</p>
             <p className="mt-1 text-sm text-stone-500 dark:text-stone-500">
               이 과목에 CSV 업로드로 OX, 5지선다 또는 단답형 문제를 시작하세요.
@@ -184,7 +185,7 @@ export function DashboardPage() {
               return (
                 <article
                   key={session.id}
-                  className="flex min-w-0 flex-col overflow-visible rounded-2xl border border-stone-200 bg-white shadow-sm dark:border-stone-800 dark:bg-stone-900 dark:shadow-stone-950/30"
+                  className="app-card app-problem-card flex min-w-0 flex-col overflow-visible rounded-2xl border"
                 >
                   <div className="relative px-4 pb-2 pt-4 pr-12">
                     <OverflowTooltipTitle
@@ -266,7 +267,7 @@ export function DashboardPage() {
                           <div
                             className={[
                               "h-full rounded-full transition-all",
-                              isCompleted ? "bg-blue-600 dark:bg-blue-500" : "bg-red-600 dark:bg-red-500",
+                              isCompleted ? "bg-blue-600 dark:bg-blue-500" : "app-progress-gradient",
                             ].join(" ")}
                             style={{ width: `${progressPercent}%` }}
                           />
@@ -293,14 +294,14 @@ export function DashboardPage() {
                   {isCompleted ? (
                     <Link
                       to={`/result/${session.id}`}
-                      className="block rounded-b-[calc(1rem-1px)] border-t border-stone-200 bg-stone-50 px-4 py-3 text-center text-sm font-bold text-stone-800 shadow-[0_-1px_0_rgba(0,0,0,0.02)] transition hover:bg-orange-50 hover:text-orange-700 dark:border-stone-800 dark:bg-stone-950/40 dark:text-stone-200 dark:hover:bg-orange-950/30 dark:hover:text-orange-400"
+                      className="app-result-link block rounded-b-[calc(1rem-1px)] border-t px-4 py-3 text-center text-sm font-bold shadow-[0_-1px_0_rgba(0,0,0,0.02)]"
                     >
                       결과 확인하기
                     </Link>
                   ) : (
                     <Link
                       to={`/solve/${session.id}`}
-                      className="block rounded-b-[calc(1rem-1px)] border-t border-red-700/20 bg-red-600 px-4 py-3 text-center text-sm font-bold text-white shadow-[0_-1px_0_rgba(255,255,255,0.18),0_-8px_18px_rgba(185,28,28,0.06)] transition hover:bg-red-700 dark:border-red-500/20 dark:bg-red-600 dark:hover:bg-red-700"
+                      className="app-button-primary block rounded-b-[calc(1rem-1px)] border-t px-4 py-3 text-center text-sm font-bold"
                     >
                       이어서 풀기
                     </Link>
@@ -311,21 +312,12 @@ export function DashboardPage() {
           </div>
         )}
 
-        <footer className="mt-12 border-t border-stone-200 pt-6 text-center text-sm text-stone-500 dark:border-stone-800 dark:text-stone-600">
-          <p>제작자: 경북대 로스쿨 17기 신하륜</p>
-          <p className="mt-1">
-            연락처:{" "}
-            <a className="font-medium text-red-600 underline" href="mailto:haryun@knu.ac.kr">
-              haryun@knu.ac.kr
-            </a>
-          </p>
-          <p className="mt-1">CC BY-NC-ND ⓒ 2026 Haryun all rights reserved</p>
-        </footer>
+        <AppFooter />
       </div>
 
       {openUpload ? (
         <div className="fixed inset-0 z-50">
-          <button onClick={() => setOpenUpload(false)} className="absolute inset-0 bg-black/35 dark:bg-black/60" />
+          <button onClick={() => setOpenUpload(false)} className="app-modal-backdrop absolute inset-0" />
           <div className="absolute left-1/2 top-1/2 w-[92vw] max-w-lg -translate-x-1/2 -translate-y-1/2">
             <IconCloseButton
               onClick={() => setOpenUpload(false)}
@@ -345,11 +337,11 @@ export function DashboardPage() {
 
       {editingSessionId ? (
         <div className="fixed inset-0 z-50">
-          <button onClick={closeEditModal} className="absolute inset-0 bg-black/35 dark:bg-black/60" />
+          <button onClick={closeEditModal} className="app-modal-backdrop absolute inset-0" />
           <div className="absolute left-1/2 top-1/2 w-[92vw] max-w-md -translate-x-1/2 -translate-y-1/2">
             <form
               onSubmit={handleEditSubmit}
-              className="space-y-4 rounded-2xl border border-stone-200 bg-white p-6 shadow-2xl dark:border-stone-800 dark:bg-stone-900"
+              className="app-modal-surface space-y-4 rounded-2xl border p-6"
             >
               <div className="flex items-center justify-between">
                 <h2 className="text-lg font-semibold text-stone-900 dark:text-stone-100">문제 편집</h2>
@@ -362,7 +354,7 @@ export function DashboardPage() {
                   autoFocus
                   value={editingTitle}
                   onChange={(event) => setEditingTitle(event.target.value)}
-                  className="w-full rounded-lg border border-stone-300 bg-white px-3 py-2 text-sm text-stone-900 outline-none ring-red-200 transition focus:ring-2 dark:border-stone-700 dark:bg-stone-800 dark:text-stone-100 dark:ring-red-900/50"
+                  className="app-control w-full rounded-lg px-3 py-2 text-sm"
                   placeholder="문제 세션 제목"
                 />
               </label>
@@ -372,7 +364,7 @@ export function DashboardPage() {
                 <select
                   value={editingSubjectId}
                   onChange={(event) => setEditingSubjectId(event.target.value)}
-                  className="w-full rounded-lg border border-stone-300 bg-white px-3 py-2 text-sm text-stone-900 outline-none ring-red-200 transition focus:ring-2 dark:border-stone-700 dark:bg-stone-800 dark:text-stone-100 dark:ring-red-900/50"
+                  className="app-control w-full rounded-lg px-3 py-2 text-sm"
                 >
                   <option value={NO_SUBJECT_ID}>과목 없음</option>
                   {subjects.map((subject) => (
@@ -387,14 +379,14 @@ export function DashboardPage() {
                 <button
                   type="button"
                   onClick={closeEditModal}
-                  className="rounded-lg border border-stone-300 bg-white px-4 py-2 text-sm font-semibold text-stone-700 transition hover:bg-stone-50 dark:border-stone-700 dark:bg-stone-800 dark:text-stone-300 dark:hover:bg-stone-700"
+                  className="app-button-secondary rounded-lg px-4 py-2 text-sm font-semibold"
                 >
                   취소
                 </button>
                 <button
                   type="submit"
                   disabled={!editingTitle.trim()}
-                  className="rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-red-600 dark:hover:bg-red-700"
+                  className="app-button-primary rounded-lg px-4 py-2 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   저장
                 </button>

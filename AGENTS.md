@@ -80,10 +80,48 @@ GitHub Pages용 정적 파일입니다. `404.html`은 SPA 새로고침 대응용
 - 유틸 함수 파일은 `camelCase` 또는 기능명 기반 짧은 이름을 사용합니다. 예: `csv.ts`, `order.ts`, `session.ts`.
 - Zustand store는 `useSomethingStore.ts` 형태를 유지합니다.
 - Tailwind CSS 유틸 클래스를 우선 사용하고, 전역 CSS는 `src/index.css`에 한정합니다.
+- 공통 브랜드 마크는 `src/components/ui/BrandMark.tsx`, 공통 푸터는 `src/components/ui/AppFooter.tsx`를 사용합니다. 화면마다 로고나 푸터를 다시 만들지 마세요.
 - 서버 API가 없으므로 브라우저 API 사용 시 호환성을 고려합니다. 예: `crypto.randomUUID()` 직접 호출 대신 `src/lib/id.ts`의 `createId()` 사용.
 - CSV 헤더 호환성은 `src/lib/csv.ts`의 `normalize`, `getValue` 흐름을 기준으로 확장합니다.
 - localStorage 데이터 구조를 바꿀 때는 기존 사용자 데이터와 마이그레이션 영향을 고려합니다.
 - `과목 없음`은 저장되는 subject가 아니라 세션-과목 매핑이 없는 상태입니다. `NO_SUBJECT_ID`는 라우팅/UI용 sentinel로만 사용하세요.
+
+## 디자인 시스템
+
+랜딩과 앱 내부 화면은 미색 배경, 따뜻한 백색 표면, 레드 포인트를 공유합니다. 그라디언트가 필요한 강조 요소는 레드에서 주황·오렌지로 부드럽게 이어집니다. 문제 풀이와 복기 화면에서는 장식보다 가독성과 집중을 우선합니다.
+
+공통 토큰과 컴포넌트 클래스는 `src/index.css`에 있습니다.
+
+- `app-page`: 랜딩을 제외한 라우트 화면의 공통 미색/다크 배경
+- `app-card`: 주요 콘텐츠 카드와 OMR 패널
+- `app-subtle-surface`: 카드 안의 보조 영역
+- `app-topbar`: 풀이·복기 화면의 고정 헤더
+- `app-button-primary`: 레드→오렌지 그라디언트가 적용되는 대표 행동
+- `app-button-primary-standalone`: 단독 배치된 대표 CTA에만 hover 상승 효과를 허용하는 modifier
+- `app-button-secondary`: 중립적인 보조 행동
+- `app-control`: input, select, textarea의 공통 포커스와 표면
+- `app-modal-backdrop`, `app-modal-surface`: 모달과 모바일 bottom sheet
+- `app-progress-gradient`: 진행률처럼 제한된 면적의 브랜드 그라디언트
+
+디자인 작업에서는 다음 원칙을 지킵니다.
+
+- 기존 라우트, 레이아웃, 정보 순서, 버튼 위치, 사용자 흐름을 임의로 바꾸지 않습니다.
+- `app-button-*`, `app-card` 같은 공통 시각 클래스에는 `position`, `display`, `width`, `height`, `overflow`처럼 배치를 바꾸는 속성을 넣지 않습니다. 위치와 크기는 페이지 컴포넌트의 Tailwind 클래스가 소유하며, 공통 클래스는 색상·테두리·그림자·전환만 담당합니다.
+- 대표 CTA와 작은 진행률에만 레드→오렌지 그라디언트를 사용하고, 넓은 문제 본문이나 표 전체에는 사용하지 않습니다.
+- 그라디언트 버튼의 기본 `app-button-primary`는 hover 시 배경 레이어만 한 단계 진해지고 위치·크기·글자색·기본 그림자는 유지합니다. 버튼 전체에 `filter`를 적용하면 흰 글자까지 어두워지므로 사용하지 않습니다. 독립 CTA와 페이지 우상단의 대표 관리 CTA에만 `app-button-primary-standalone`을 함께 사용해 상승 효과를 추가합니다. 카드 하단, 풀이 하단, 결과 페이지의 버튼 묶음에는 modifier를 사용하지 않습니다.
+- 문제 세션 카드는 `app-problem-card`의 순백색 표면을 사용하고, 완료 카드 하단의 `app-result-link`는 아주 밝은 중립 회색으로 분리합니다. 문제 카드에 미색 CTA 표면을 사용하지 않습니다.
+- 정답은 emerald, 오답과 선택 상태는 red, 정답 안내는 blue, 책갈피는 amber 의미 색상을 유지합니다.
+- 본문과 문제 텍스트는 `word-break: keep-all`을 고려하고, 지나치게 굵은 글자나 좁은 행간을 피합니다.
+- 라이트 모드에서는 미색 배경과 따뜻한 흰색 표면을, 다크 모드에서는 갈색 기운이 아주 옅은 짙은 표면을 사용합니다.
+- 랜딩의 넓은 강조 패널은 갈색이나 마젠타로 치우치지 않는 브랜드 레드→코럴→오렌지 그라디언트를 사용합니다.
+- 모달과 모바일 bottom sheet의 공통 배경 블러는 `app-modal-backdrop`의 2px을 기준으로 하며, 개별 화면에서 더 강한 블러를 중복 적용하지 않습니다.
+- 디자인 전용 작업에서 Zustand store, localStorage 스키마, CSV 파서, 채점 로직을 함께 수정하지 않습니다.
+- 공통 스타일을 추가할 때 기존 `app-*` 클래스나 UI 컴포넌트를 먼저 확장하고 페이지마다 긴 스타일 문자열을 복제하지 않습니다.
+- 활성 문제 풀이 화면은 `app-focus-page`를 사용합니다. 이 범위에서는 그라디언트, hover 이동·축소, 위치/크기 transition, animation, smooth scroll을 추가하지 않습니다. 기본 CTA는 단색 red-600, hover는 red-700을 사용하며 색상·테두리 전환만 90ms로 짧게 허용합니다.
+- 전체 문제·책갈피·오답 복기 화면의 하단 이동 영역에도 `app-focus-page` 범위를 적용해 실제 문제 풀이 화면과 동일한 단색 CTA와 정적인 hover 규칙을 유지합니다.
+- 랜딩의 문제 풀이 미리보기는 실제 CBT의 상단 제어, 문제 카드, 선택지, OMR, 하단 이동 구조와 상태를 기준으로 유지합니다. 장식용 브라우저 프레임이나 실제 풀이에 없는 결과·해설 UI를 임의로 추가하지 않습니다.
+- 랜딩의 핵심 풀이 소개에는 실제 문제 카드 UI를 간략화해 사용하고, 보조 기능 카드는 한눈에 구분되는 아이콘 중심으로 압축합니다. 미리보기는 장식용이며 실제 사용자 흐름과 혼동되지 않도록 비활성 상태로 표시합니다.
+- 사용 설명의 CSV 샘플 다운로드는 `public/samples/`에 둡니다. 루트 `samples/`는 개발·수동 테스트용이며 배포 산출물에 자동 포함되지 않습니다. 박스형 5지선다는 `박스1`, `박스2`… 열과 `선택지1`~`선택지5`를 구분하고, 단답형은 입력값의 정확한 문자열 일치 규칙을 설명합니다.
 
 ## 작업 전 확인해야 할 명령어
 
@@ -159,6 +197,8 @@ npm run lint
 - `src/types/test.ts`: localStorage에 저장되는 세션 구조와 연결됩니다. 필드 변경 시 기존 저장 데이터 호환성을 검토하세요.
 - `src/store/useTestStore.ts`: 세션 생성, 과목 CRUD, 세션-과목 매핑, 답안 저장, 오답노트, 북마크, 백업/복원 동작의 중심입니다.
 - `src/components/cbt/CbtSolveScreen.tsx`: 풀이 UX, 타이머, OMR, 단답형 입력, 정답 보기, 책갈피 기능이 모여 있습니다.
+- `src/index.css`: 랜딩 스타일과 앱 공통 `app-*` 디자인 토큰/컴포넌트 클래스가 함께 있습니다. 공통 색상이나 표면을 바꿀 때 라이트·다크 모드를 함께 확인하세요.
+- `src/components/ui/BrandMark.tsx`: `public/favicon.svg`를 사용하는 공통 로고입니다. 헤더와 푸터에서 동일한 자산을 유지하세요.
 - `src/pages/ResultPage.tsx`: 재풀이, CSV 다운로드, 결과 요약 액션이 많아 회귀 가능성이 큽니다.
 - `src/pages/SubjectListPage.tsx`: `/dashboard` 과목 목록 화면입니다. 과목 관리, 표지 색상 선택, 과목 카드 드래그 순서 변경, 환경설정, 전체 데이터 백업/복원/초기화가 이 페이지에 있습니다. 과목 삭제는 세션 삭제가 아니라 매핑 삭제로 처리해야 합니다.
 - `src/pages/DashboardPage.tsx`: `/dashboard/:subjectId` 과목별 세션 대시보드입니다. 새 문제 등록과 편집 시 세션-과목 매핑이 맞는지 확인하세요. 전체 데이터 백업/복원 UI는 이 페이지에 두지 않습니다.

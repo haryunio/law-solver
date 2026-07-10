@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { IconCloseButton } from "../components/ui/IconCloseButton";
+import { BrandMark } from "../components/ui/BrandMark";
 import { useSettingsStore } from "../store/useSettingsStore";
 
 const steps = [
@@ -54,16 +55,32 @@ const steps = [
   },
 ];
 
-function LogoMark({ small = false }: { small?: boolean }) {
-  return (
-    <img
-      className={`landing-logo-mark${small ? " is-small" : ""}`}
-      src="/favicon.svg"
-      alt=""
-      aria-hidden="true"
-    />
-  );
-}
+const csvGuides = [
+  {
+    title: "OX",
+    description: "정답에는 O 또는 X를 입력합니다.",
+    header: "번호,챕터,문제,정답,해설,출처",
+    example: "1,채권각론,임대차가 끝난 뒤에도 보증금반환채권의 소멸시효는 진행한다.,X,목적물을 점유하는 동안에는 소멸시효가 진행하지 않습니다.,대법원 판례",
+  },
+  {
+    title: "5지선다",
+    description: "선택지 다섯 개를 작성하고 정답에는 1부터 5까지의 번호를 입력합니다.",
+    header: "번호,챕터,문제,선택지1,선택지2,선택지3,선택지4,선택지5,정답,해설,출처",
+    example: "1,민법총칙,통정허위표시에 관한 설명으로 옳은 것은?,항상 유효하다,선의의 제3자에게 대항할 수 없다,취소해야 무효다,착오와 같다,사기와 같다,2,당사자 사이에서는 무효입니다.,민법 제108조",
+  },
+  {
+    title: "5지선다 · 박스형",
+    description: "박스1부터 박스7까지 필요한 만큼 열을 추가하세요. 입력한 순서대로 ㄱ. ㄴ. ㄷ. 보기로 표시되며, 선택지1~5에는 보기의 조합이나 개수를 적습니다.",
+    header: "번호,챕터,문제,박스1,박스2,박스3,선택지1,선택지2,선택지3,선택지4,선택지5,정답,해설,출처",
+    example: "1,형법총론,옳은 것을 모두 고른 것은?,고의가 있어야 한다.,위법성이 조각될 수 있다.,책임능력이 필요하다.,ㄱ,ㄴ,ㄱ·ㄷ,ㄴ·ㄷ,ㄱ·ㄴ·ㄷ,5,세 보기 모두 옳습니다.,형법 기본서",
+  },
+  {
+    title: "단답형",
+    description: "문제의 빈칸에 들어갈 답을 정답 열에 그대로 입력합니다. 현재는 띄어쓰기까지 포함해 입력값이 일치해야 정답으로 처리됩니다.",
+    header: "번호,챕터,문제,정답,해설,출처",
+    example: "1,매매,타인의 권리를 매매한 매도인이 권리를 이전할 수 없을 때 매수인은 계약을 ____할 수 있다.,해제,민법 제570조에 따른 해제권입니다.,민법 제570조",
+  },
+];
 
 export function LandingPage() {
   const [isCsvGuideOpen, setIsCsvGuideOpen] = useState(false);
@@ -90,7 +107,7 @@ export function LandingPage() {
       <header className="landing-nav-wrap">
         <nav className="landing-container flex h-[72px] items-center justify-between" aria-label="주요 메뉴">
           <a href="#top" className="group flex items-center gap-2.5" aria-label="Law Solver 홈">
-            <LogoMark />
+            <BrandMark className="landing-logo-mark" />
             <span className="text-[17px] font-semibold tracking-[-0.015em]">Law Solver</span>
           </a>
 
@@ -122,7 +139,7 @@ export function LandingPage() {
           <div className="landing-glow landing-glow-two" />
           <div className="landing-grid-pattern" />
 
-          <div className="landing-container relative grid items-center gap-14 py-20 lg:grid-cols-[1.08fr_0.92fr] lg:py-24">
+          <div className="landing-container relative grid items-center gap-14 py-20 lg:grid-cols-[0.94fr_1.06fr] lg:py-24">
             <div className="landing-fade-up">
               <div className="landing-eyebrow">
                 <span className="landing-pulse-dot" />
@@ -147,52 +164,71 @@ export function LandingPage() {
                 </a>
               </div>
 
-              <div className="mt-8 flex flex-wrap gap-x-5 gap-y-2 text-xs font-medium text-stone-500 sm:text-sm dark:text-stone-400">
-                <span>✓ 회원가입 없음</span>
-                <span>✓ 무료로 사용</span>
-                <span>✓ 브라우저 자동 저장</span>
-              </div>
+              <p className="mt-8 text-sm text-stone-500 dark:text-stone-400">
+                <span className="font-semibold text-stone-700 dark:text-stone-300">제작자:</span>{" "}
+                경북대 로스쿨 17기 신하륜 {" - "}
+                <a className="font-medium text-red-600 underline underline-offset-4 dark:text-red-400" href="mailto:haryun@knu.ac.kr">
+                  haryun@knu.ac.kr
+                </a>
+              </p>
+              <p className="mt-1 text-sm text-stone-500 dark:text-stone-400">
+                CC BY-NC-ND ⓒ 2026 Haryun
+              </p>
             </div>
 
-            <div className="landing-hero-visual landing-fade-up landing-delay-1" aria-label="Law Solver 문제 풀이 화면 미리보기">
-              <div className="landing-float-chip landing-float-chip-top">
-                <span>✓</span> 자동 채점 완료
-              </div>
-              <div className="landing-float-chip landing-float-chip-bottom">
-                <span>↗</span> 오답만 다시 풀기
-              </div>
-
-              <div className="landing-app-window">
-                <div className="landing-window-bar">
-                  <div className="flex gap-1.5" aria-hidden="true"><i /><i /><i /></div>
-                  <span>민법 (채권각론)</span>
-                  <span className="landing-timer">24:18</span>
+            <div className="landing-hero-visual landing-fade-up landing-delay-1" aria-label="실제 Law Solver 문제 풀이 화면 미리보기">
+              <div className="landing-cbt-shell">
+                <div className="landing-cbt-topbar">
+                  <div>
+                    <span>타이머</span>
+                    <strong>24:18</strong>
+                  </div>
+                  <b>민법 (채권각론)</b>
+                  <div className="landing-cbt-top-actions">
+                    <span>일시 중단</span>
+                    <span>제출 및 종료</span>
+                  </div>
                 </div>
-                <div className="landing-progress-track"><span /></div>
 
-                <div className="p-5 sm:p-7">
-                  <div className="flex items-center justify-between">
-                    <span className="landing-question-tag">OX · QUESTION 08</span>
-                    <span className="text-lg text-stone-400" aria-hidden="true">☆</span>
-                  </div>
-                  <h2 className="landing-preview-question mt-5 font-semibold tracking-[-0.015em]">
-                    주택임대차보호법에 따른 임대차에서 그 기간이 끝난 후 임차인이 보증금을 반환받기 위해 목적물을 점유하고 있는 경우에도 여전히 보증금반환채권에 대한 소멸시효는 진행한다고 보아야 한다.
-                  </h2>
-                  <div className="landing-ox-choices mt-5" aria-label="정답 선택 미리보기">
-                    <div className="landing-ox-choice"><span>O</span><p>그렇다</p></div>
-                    <div className="landing-ox-choice is-selected"><span>X</span><p>아니다</p></div>
-                  </div>
-                  <div className="landing-preview-explanation mt-4">
-                    <div><span>정답 X</span><strong>해설</strong></div>
-                    <p>주택임대차보호법에 따른 임대차에서 그 기간이 끝난 후 임차인이 보증금을 반환받기 위해 목적물을 점유하고 있는 경우 보증금반환채권에 대한 소멸시효는 진행하지 않는다고 보아야 한다.</p>
-                  </div>
-                  <div className="mt-7 flex items-center justify-between border-t border-stone-200 pt-5 dark:border-stone-700">
-                    <button className="landing-preview-button is-muted" type="button">← 이전</button>
-                    <div className="hidden gap-1.5 sm:flex" aria-hidden="true">
-                      {[1, 2, 3, 4, 5].map((item) => <i key={item} className={item === 3 ? "is-current" : ""} />)}
+                <div className="landing-cbt-layout">
+                  <div className="landing-cbt-card">
+                    <div className="landing-cbt-content">
+                      <div className="landing-cbt-meta">
+                        <div>
+                          <span>1번 / 총 50문항</span>
+                          <span>챕터 · 채권각론</span>
+                        </div>
+                        <div className="landing-cbt-icons" aria-hidden="true"><i>?</i><i>★</i></div>
+                      </div>
+                      <h2>
+                        주택임대차보호법에 따른 임대차에서 그 기간이 끝난 후 임차인이 보증금을 반환받기 위해 목적물을 점유하고 있는 경우에도 여전히 보증금반환채권에 대한 소멸시효는 진행한다고 보아야 한다.
+                      </h2>
+                      <div className="landing-cbt-options" aria-label="답안 선택 미리보기">
+                        <div><span>O</span></div>
+                        <div className="is-selected">
+                          <span>X</span>
+                          <b>다음 문제로 <em>›</em></b>
+                        </div>
+                      </div>
                     </div>
-                    <button className="landing-preview-button" type="button">다음 →</button>
+                    <div className="landing-cbt-footer">
+                      <span>‹ 이전 문제</span>
+                      <span>다음 문제 ›</span>
+                    </div>
                   </div>
+
+                  <aside className="landing-cbt-omr">
+                    <div><strong>OMR</strong><span>1/50</span></div>
+                    <div className="landing-cbt-omr-table">
+                      <p><b>번호</b><b>내 답</b></p>
+                      {[1, 2, 3, 4, 5, 6].map((item) => (
+                        <p key={item} className={item === 1 ? "is-current" : ""}>
+                          <span>{item}</span><span>{item === 1 ? "X" : "-"}</span>
+                        </p>
+                      ))}
+                    </div>
+                    <button type="button" tabIndex={-1}>CSV 다운로드</button>
+                  </aside>
                 </div>
               </div>
             </div>
@@ -250,37 +286,44 @@ export function LandingPage() {
             <div className="grid gap-5 lg:grid-cols-[1.15fr_0.85fr]">
               <article className="landing-bento-card landing-bento-main">
                 <div className="relative z-10 max-w-md">
-                  <p className="landing-section-label text-red-200">FOCUS MODE</p>
+                  <p className="landing-focus-label">FOCUS MODE</p>
                   <h2 className="landing-bento-title mt-4 text-3xl text-white sm:text-4xl">공부 흐름을<br />끊지 않는 풀이 화면</h2>
                   <p className="mt-5 leading-7 text-red-50/80">문제, 선택지, OMR, 타이머에만 집중하세요. 답안과 책갈피는 자동으로 저장됩니다.</p>
                 </div>
                 <div className="landing-focus-card" aria-hidden="true">
-                  <div><span>08</span><i>BOOKMARK</i></div>
-                  <p>채무불이행의 요건에 관한 설명으로 옳은 것을 고르시오.</p>
-                  <div className="grid grid-cols-5 gap-2">
-                    {[1, 2, 3, 4, 5].map((item) => <b key={item} className={item === 3 ? "is-active" : ""}>{item}</b>)}
+                  <div className="landing-focus-meta">
+                    <span>8번 / 총 50문항</span>
+                    <span>챕터 · 채권총론</span>
+                    <i>★</i>
+                  </div>
+                  <p>채무불이행 책임은 채무자의 귀책사유가 있어야 성립한다.</p>
+                  <div className="landing-focus-options">
+                    <span>O</span>
+                    <span className="is-selected">X <b>다음 문제로 ›</b></span>
+                  </div>
+                  <div className="landing-focus-footer">
+                    <span>‹ 이전 문제</span>
+                    <strong>다음 문제 ›</strong>
                   </div>
                 </div>
               </article>
 
               <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-1">
-                <article className="landing-bento-card">
-                  <div className="flex items-center gap-4">
-                    <span className="landing-feature-icon">↻</span>
-                    <div>
-                      <h3 className="text-xl font-semibold tracking-tight">틀린 문제는 바로 한 번 더</h3>
-                      <p className="mt-1 text-sm leading-6 text-stone-600 dark:text-stone-400">오답만 모아 확인하고 다시 풀면서 기억을 단단하게 만들어요.</p>
-                    </div>
+                <article className="landing-bento-card landing-feature-card landing-feature-card-compact">
+                  <div>
+                    <p className="landing-feature-eyebrow">RETRY WRONG</p>
+                    <h3 className="mt-2 text-xl font-semibold tracking-tight">틀린 문제는 바로 한 번 더</h3>
+                    <p className="mt-1 text-sm leading-6 text-stone-600 dark:text-stone-400">오답만 모아 확인하고 다시 풀면서 기억을 단단하게 만들어요.</p>
                   </div>
+                  <span className="landing-feature-icon" aria-hidden="true">↻</span>
                 </article>
-                <article className="landing-bento-card">
-                  <div className="flex items-center gap-4">
-                    <span className="landing-feature-icon">⇩</span>
-                    <div>
-                      <h3 className="text-xl font-semibold tracking-tight">학습 기록은 내 방식대로 보관</h3>
-                      <p className="mt-1 text-sm leading-6 text-stone-600 dark:text-stone-400">풀이 결과는 CSV로, 전체 데이터는 JSON으로 간편하게 백업해요.</p>
-                    </div>
+                <article className="landing-bento-card landing-feature-card landing-feature-card-compact">
+                  <div>
+                    <p className="landing-feature-eyebrow">EXPORT &amp; BACKUP</p>
+                    <h3 className="mt-2 text-xl font-semibold tracking-tight">학습 기록은 내 방식대로 보관</h3>
+                    <p className="mt-1 text-sm leading-6 text-stone-600 dark:text-stone-400">풀이 결과는 CSV로, 전체 데이터는 JSON으로 간편하게 백업해요.</p>
                   </div>
+                  <span className="landing-feature-icon is-download" aria-hidden="true">⇩</span>
                 </article>
               </div>
             </div>
@@ -310,39 +353,41 @@ export function LandingPage() {
 
       <footer className="border-t border-stone-200 bg-white/60 dark:border-stone-800 dark:bg-stone-950/50">
         <div className="landing-container flex flex-col gap-4 py-7 text-xs text-stone-500 sm:flex-row sm:items-center sm:justify-between dark:text-stone-500">
-          <div className="flex items-center gap-2 font-semibold text-stone-700 dark:text-stone-300"><LogoMark small /> Law Solver</div>
-          <p>경북대 로스쿨 17기 신하륜 · <a className="transition hover:text-red-600" href="mailto:haryun@knu.ac.kr">haryun@knu.ac.kr</a></p>
+          <div className="flex items-center gap-2 font-semibold text-stone-700 dark:text-stone-300"><BrandMark size="small" className="landing-logo-mark is-small" /> Law Solver</div>
+          <p>제작자: 경북대 로스쿨 17기 신하륜 - <a className="transition hover:text-red-600" href="mailto:haryun@knu.ac.kr">haryun@knu.ac.kr</a></p>
           <p>CC BY-NC-ND ⓒ 2026 Haryun</p>
         </div>
       </footer>
 
       {isCsvGuideOpen ? (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="csv-guide-title">
-          <button onClick={() => setIsCsvGuideOpen(false)} className="absolute inset-0 bg-stone-950/55 backdrop-blur-sm" aria-label="CSV 가이드 바깥 영역 닫기" />
-          <div className="landing-modal relative max-h-[88vh] w-full max-w-2xl overflow-y-auto rounded-3xl border border-stone-200 bg-white p-6 shadow-2xl sm:p-8 dark:border-stone-700 dark:bg-stone-900">
+          <button onClick={() => setIsCsvGuideOpen(false)} className="app-modal-backdrop absolute inset-0" aria-label="CSV 가이드 바깥 영역 닫기" />
+          <div className="landing-modal relative max-h-[88vh] w-full max-w-4xl overflow-y-auto rounded-3xl border border-stone-200 bg-white p-6 shadow-2xl sm:p-8 dark:border-stone-700 dark:bg-stone-900">
             <IconCloseButton onClick={() => setIsCsvGuideOpen(false)} label="CSV 가이드 닫기" className="absolute right-4 top-4" />
             <p className="landing-section-label">CSV STARTER GUIDE</p>
             <h2 id="csv-guide-title" className="mt-2 pr-10 text-2xl font-bold tracking-tight text-stone-950 dark:text-white">문제 파일은 이렇게 만들어요</h2>
             <p className="mt-2 text-sm leading-6 text-stone-600 dark:text-stone-400">첫 줄에 아래 헤더를 넣고, 둘째 줄부터 문제를 한 줄씩 작성해 주세요.</p>
 
-            <div className="mt-6 space-y-3 text-sm">
-              {[
-                ["OX · 단답형", "번호,챕터,문제,정답,해설,출처"],
-                ["5지선다", "번호,챕터,문제,선택지1,선택지2,선택지3,선택지4,선택지5,정답,해설,출처"],
-              ].map(([title, header]) => (
-                <div key={title} className="rounded-2xl border border-stone-200 bg-stone-50 p-4 dark:border-stone-700 dark:bg-stone-800/70">
-                  <p className="font-semibold text-red-600 dark:text-red-400">{title}</p>
-                  <p className="mt-2 overflow-x-auto whitespace-nowrap rounded-lg bg-white px-3 py-2.5 font-mono text-xs text-stone-700 dark:bg-stone-900 dark:text-stone-300">{header}</p>
+            <div className="mt-6 grid gap-3 md:grid-cols-2">
+              {csvGuides.map((guide) => (
+                <div key={guide.title} className="rounded-2xl border border-stone-200 bg-stone-50 p-4 dark:border-stone-700 dark:bg-stone-800/70">
+                  <p className="font-semibold text-red-600 dark:text-red-400">{guide.title}</p>
+                  <p className="mt-2 text-sm leading-6 text-stone-600 dark:text-stone-400">{guide.description}</p>
+                  <p className="mt-3 text-xs font-semibold text-stone-500 dark:text-stone-400">헤더</p>
+                  <code className="mt-1 block overflow-x-auto whitespace-nowrap rounded-lg bg-white px-3 py-2.5 font-mono text-xs text-stone-700 dark:bg-stone-900 dark:text-stone-300">{guide.header}</code>
+                  <p className="mt-3 text-xs font-semibold text-stone-500 dark:text-stone-400">작성 예시</p>
+                  <code className="mt-1 block overflow-x-auto whitespace-nowrap rounded-lg bg-white px-3 py-2.5 font-mono text-xs text-stone-700 dark:bg-stone-900 dark:text-stone-300">{guide.example}</code>
                 </div>
               ))}
             </div>
 
             <div className="mt-6">
               <p className="font-semibold text-stone-900 dark:text-stone-100">바로 써볼 수 있는 샘플</p>
-              <div className="mt-3 grid gap-2 sm:grid-cols-3">
+              <div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
                 {[
                   ["OX 문제", "/samples/OX_sample.csv"],
                   ["5지선다", "/samples/5지선다_sample.csv"],
+                  ["박스형 5지선다", "/samples/5지선다_box_sample.csv"],
                   ["단답형", "/samples/단답형_sample.csv"],
                 ].map(([label, href]) => (
                   <a key={href} className="landing-sample-link" href={href} download>{label} <span>↓</span></a>

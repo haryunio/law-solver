@@ -12,7 +12,7 @@ export function IconCloseButton({ onClick, label = "닫기", className = "" }: I
       aria-label={label}
       title={label}
       className={[
-        "inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-stone-200 bg-white text-stone-500 shadow-sm transition hover:border-red-200 hover:bg-red-50 hover:text-red-600 focus:outline-none focus:ring-2 focus:ring-red-200 dark:border-stone-700 dark:bg-stone-900 dark:text-stone-400 dark:hover:border-red-900/60 dark:hover:bg-red-950/30 dark:hover:text-red-400 dark:focus:ring-red-900/50",
+        "app-icon-button inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full border text-stone-500 shadow-sm transition hover:text-red-600 focus:outline-none focus:ring-2 focus:ring-red-200 dark:text-stone-400 dark:hover:text-red-400 dark:focus:ring-red-900/50",
         className,
       ].join(" ")}
     >
@@ -30,4 +30,3 @@ export function IconCloseButton({ onClick, label = "닫기", className = "" }: I
     </button>
   );
 }
-

@@ -1,6 +1,7 @@
 import { CSSProperties, FormEvent, PointerEvent, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { ConfirmDialog } from "../components/ui/ConfirmDialog";
+import { AppFooter } from "../components/ui/AppFooter";
 import { DashboardHeaderTitle } from "../components/ui/DashboardHeaderTitle";
 import { IconCloseButton } from "../components/ui/IconCloseButton";
 import { getSubjectDashboardPath } from "../lib/subject";
@@ -457,7 +458,7 @@ export function SubjectListPage() {
   };
 
   return (
-    <div className="min-h-screen px-4 py-8 md:px-6 dark:bg-stone-950 transition-colors duration-300">
+    <div className="app-page px-4 py-8 transition-colors duration-300 md:px-6">
       <div className="mx-auto max-w-6xl">
         <header className="mb-6 flex flex-wrap items-end justify-between gap-3">
           <DashboardHeaderTitle
@@ -469,19 +470,19 @@ export function SubjectListPage() {
           <div className="flex flex-wrap gap-2">
             <button
               onClick={() => setIsSettingsOpen(true)}
-              className="rounded-lg border border-stone-300 bg-white px-4 py-2 text-sm font-semibold text-stone-700 transition hover:bg-stone-50 dark:border-stone-700 dark:bg-stone-900 dark:text-stone-300 dark:hover:bg-stone-800"
+              className="app-button-secondary rounded-lg px-4 py-2 text-sm font-semibold"
             >
               환경설정
             </button>
             <button
               onClick={() => setIsDashboardManageOpen(true)}
-              className="rounded-lg border border-stone-300 bg-white px-4 py-2 text-sm font-semibold text-stone-700 transition hover:bg-stone-50 dark:border-stone-700 dark:bg-stone-900 dark:text-stone-300 dark:hover:bg-stone-800"
+              className="app-button-secondary rounded-lg px-4 py-2 text-sm font-semibold"
             >
               데이터 관리
             </button>
             <button
               onClick={() => setIsSubjectManageOpen(true)}
-              className="rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-red-700 dark:bg-red-600 dark:hover:bg-red-700"
+              className="app-button-primary app-button-primary-standalone rounded-lg px-4 py-2 text-sm font-semibold"
             >
               과목 관리
             </button>
@@ -493,7 +494,7 @@ export function SubjectListPage() {
             <Link
               key={subject.id}
               to={getSubjectDashboardPath(subject.id)}
-              className="group overflow-hidden rounded-2xl border border-stone-200 bg-white shadow-sm transition hover:-translate-y-0.5 hover:border-[var(--subject-accent)] hover:shadow-md dark:border-stone-800 dark:bg-stone-900 dark:hover:border-[var(--subject-accent)]"
+              className="app-card app-subject-card group overflow-hidden rounded-2xl border transition hover:-translate-y-0.5 hover:shadow-[var(--app-shadow-hover)]"
               style={
                 {
                   "--subject-accent": getSubjectAccentColor(subject.coverPalette ?? "warm"),
@@ -523,11 +524,11 @@ export function SubjectListPage() {
               </div>
 
               <div className="grid h-[104px] grid-cols-2 gap-2 p-4 text-sm">
-                <div className="flex flex-col justify-center rounded-xl bg-stone-50 p-3 dark:bg-stone-950/50">
+                <div className="app-subtle-surface flex flex-col justify-center rounded-xl border p-3">
                   <p className="text-xs text-stone-500 dark:text-stone-500">풀이 중</p>
                   <p className="mt-1 font-semibold text-red-600 dark:text-red-500">{subject.inProgress}</p>
                 </div>
-                <div className="flex flex-col justify-center rounded-xl bg-stone-50 p-3 dark:bg-stone-950/50">
+                <div className="app-subtle-surface flex flex-col justify-center rounded-xl border p-3">
                   <p className="text-xs text-stone-500 dark:text-stone-500">채점 완료</p>
                   <p className="mt-1 font-semibold text-blue-600 dark:text-blue-400">{subject.completed}</p>
                 </div>
@@ -536,23 +537,14 @@ export function SubjectListPage() {
           ))}
         </div>
 
-        <footer className="mt-12 border-t border-stone-200 pt-6 text-center text-sm text-stone-500 dark:border-stone-800 dark:text-stone-600">
-          <p>제작자: 경북대 로스쿨 17기 신하륜</p>
-          <p className="mt-1">
-            연락처:{" "}
-            <a className="font-medium text-red-600 underline" href="mailto:haryun@knu.ac.kr">
-              haryun@knu.ac.kr
-            </a>
-          </p>
-          <p className="mt-1">CC BY-NC-ND ⓒ 2026 Haryun all rights reserved</p>
-        </footer>
+        <AppFooter />
       </div>
 
       {isSubjectManageOpen ? (
         <div className="fixed inset-0 z-50">
-          <button onClick={() => setIsSubjectManageOpen(false)} className="absolute inset-0 bg-black/35 dark:bg-black/60" />
+          <button onClick={() => setIsSubjectManageOpen(false)} className="app-modal-backdrop absolute inset-0" />
           <div className="absolute left-1/2 top-1/2 w-[92vw] max-w-md -translate-x-1/2 -translate-y-1/2">
-            <div className="rounded-2xl border border-stone-200 bg-white p-6 shadow-2xl dark:border-stone-800 dark:bg-stone-900">
+            <div className="app-modal-surface rounded-2xl border p-6">
               <div className="mb-4 flex items-center justify-between gap-3">
                 <h2 className="text-lg font-semibold text-stone-900 dark:text-stone-100">과목 관리</h2>
                 <IconCloseButton onClick={() => setIsSubjectManageOpen(false)} label="과목 관리 닫기" />
@@ -560,7 +552,7 @@ export function SubjectListPage() {
 
               <button
                 onClick={() => setIsCreateSubjectOpen(true)}
-                className="w-full rounded-xl bg-red-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-red-700"
+                className="app-button-primary app-button-primary-standalone w-full rounded-xl px-4 py-3 text-sm font-semibold"
               >
                 새 과목 추가
               </button>
@@ -613,7 +605,7 @@ export function SubjectListPage() {
                         <div className="flex shrink-0 items-center gap-2">
                           <button
                             onClick={() => openEditSubject(subject)}
-                            className="rounded-lg border border-stone-300 bg-white px-3 py-1.5 text-xs font-semibold text-stone-700 transition hover:bg-stone-50 dark:border-stone-700 dark:bg-stone-800 dark:text-stone-300 dark:hover:bg-stone-700"
+                            className="app-button-secondary rounded-lg px-3 py-1.5 text-xs font-semibold"
                           >
                             편집
                           </button>
@@ -636,11 +628,11 @@ export function SubjectListPage() {
 
       {isCreateSubjectOpen ? (
         <div className="fixed inset-0 z-[55]">
-          <button onClick={closeCreateSubject} className="absolute inset-0 bg-black/35 dark:bg-black/60" />
+          <button onClick={closeCreateSubject} className="app-modal-backdrop absolute inset-0" />
           <div className="absolute left-1/2 top-1/2 w-[92vw] max-w-md -translate-x-1/2 -translate-y-1/2">
             <form
               onSubmit={handleCreateSubject}
-              className="space-y-4 rounded-2xl border border-stone-200 bg-white p-6 shadow-2xl dark:border-stone-800 dark:bg-stone-900"
+              className="app-modal-surface space-y-4 rounded-2xl border p-6"
             >
               <div className="flex items-center justify-between gap-3">
                 <h2 className="text-lg font-semibold text-stone-900 dark:text-stone-100">과목 추가</h2>
@@ -653,7 +645,7 @@ export function SubjectListPage() {
                   autoFocus
                   value={newSubjectName}
                   onChange={(event) => setNewSubjectName(event.target.value)}
-                  className="w-full rounded-lg border border-stone-300 bg-white px-3 py-2 text-sm text-stone-900 outline-none ring-red-200 transition focus:ring-2 dark:border-stone-700 dark:bg-stone-800 dark:text-stone-100 dark:ring-red-900/50"
+                  className="app-control w-full rounded-lg px-3 py-2 text-sm"
                   placeholder="예: 민법"
                 />
               </label>
@@ -667,14 +659,14 @@ export function SubjectListPage() {
                 <button
                   type="button"
                   onClick={closeCreateSubject}
-                  className="rounded-lg border border-stone-300 bg-white px-4 py-2 text-sm font-semibold text-stone-700 transition hover:bg-stone-50 dark:border-stone-700 dark:bg-stone-800 dark:text-stone-300 dark:hover:bg-stone-700"
+                  className="app-button-secondary rounded-lg px-4 py-2 text-sm font-semibold"
                 >
                   취소
                 </button>
                 <button
                   type="submit"
                   disabled={!newSubjectName.trim()}
-                  className="rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="app-button-primary rounded-lg px-4 py-2 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   추가
                 </button>
@@ -686,11 +678,11 @@ export function SubjectListPage() {
 
       {editingSubjectId ? (
         <div className="fixed inset-0 z-[55]">
-          <button onClick={closeEditSubject} className="absolute inset-0 bg-black/35 dark:bg-black/60" />
+          <button onClick={closeEditSubject} className="app-modal-backdrop absolute inset-0" />
           <div className="absolute left-1/2 top-1/2 w-[92vw] max-w-md -translate-x-1/2 -translate-y-1/2">
             <form
               onSubmit={handleEditSubjectSubmit}
-              className="space-y-4 rounded-2xl border border-stone-200 bg-white p-6 shadow-2xl dark:border-stone-800 dark:bg-stone-900"
+              className="app-modal-surface space-y-4 rounded-2xl border p-6"
             >
               <div className="flex items-center justify-between gap-3">
                 <h2 className="text-lg font-semibold text-stone-900 dark:text-stone-100">과목명 편집</h2>
@@ -703,7 +695,7 @@ export function SubjectListPage() {
                   autoFocus
                   value={editingSubjectName}
                   onChange={(event) => setEditingSubjectName(event.target.value)}
-                  className="w-full rounded-lg border border-stone-300 bg-white px-3 py-2 text-sm text-stone-900 outline-none ring-red-200 transition focus:ring-2 dark:border-stone-700 dark:bg-stone-800 dark:text-stone-100 dark:ring-red-900/50"
+                  className="app-control w-full rounded-lg px-3 py-2 text-sm"
                   placeholder="예: 민법"
                 />
               </label>
@@ -717,14 +709,14 @@ export function SubjectListPage() {
                 <button
                   type="button"
                   onClick={closeEditSubject}
-                  className="rounded-lg border border-stone-300 bg-white px-4 py-2 text-sm font-semibold text-stone-700 transition hover:bg-stone-50 dark:border-stone-700 dark:bg-stone-800 dark:text-stone-300 dark:hover:bg-stone-700"
+                  className="app-button-secondary rounded-lg px-4 py-2 text-sm font-semibold"
                 >
                   취소
                 </button>
                 <button
                   type="submit"
                   disabled={!editingSubjectName.trim()}
-                  className="rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="app-button-primary rounded-lg px-4 py-2 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   저장
                 </button>
@@ -736,9 +728,9 @@ export function SubjectListPage() {
 
       {isSettingsOpen ? (
         <div className="fixed inset-0 z-50">
-          <button onClick={() => setIsSettingsOpen(false)} className="absolute inset-0 bg-black/35 dark:bg-black/60" />
+          <button onClick={() => setIsSettingsOpen(false)} className="app-modal-backdrop absolute inset-0" />
           <div className="absolute left-1/2 top-1/2 w-[92vw] max-w-sm -translate-x-1/2 -translate-y-1/2">
-            <div className="rounded-2xl border border-stone-200 bg-white p-6 shadow-2xl dark:border-stone-800 dark:bg-stone-900">
+            <div className="app-modal-surface rounded-2xl border p-6">
               <div className="mb-4 flex items-center justify-between">
                 <h2 className="text-lg font-semibold text-stone-900 dark:text-stone-100">환경설정</h2>
                 <IconCloseButton onClick={() => setIsSettingsOpen(false)} label="환경설정 닫기" />
@@ -795,9 +787,9 @@ export function SubjectListPage() {
 
       {isDashboardManageOpen ? (
         <div className="fixed inset-0 z-50">
-          <button onClick={() => setIsDashboardManageOpen(false)} className="absolute inset-0 bg-black/35 dark:bg-black/60" />
+          <button onClick={() => setIsDashboardManageOpen(false)} className="app-modal-backdrop absolute inset-0" />
           <div className="absolute left-1/2 top-1/2 w-[92vw] max-w-sm -translate-x-1/2 -translate-y-1/2">
-            <div className="rounded-2xl border border-stone-200 bg-white p-6 shadow-2xl dark:border-stone-800 dark:bg-stone-900">
+            <div className="app-modal-surface rounded-2xl border p-6">
               <div className="mb-4 flex items-center justify-between">
                 <h2 className="text-lg font-semibold text-stone-900 dark:text-stone-100">전체 데이터 관리</h2>
                 <IconCloseButton onClick={() => setIsDashboardManageOpen(false)} label="전체 데이터 관리 닫기" />

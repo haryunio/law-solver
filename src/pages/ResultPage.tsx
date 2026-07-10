@@ -25,11 +25,11 @@ const resultTypeLabel = {
 } as const;
 
 const resultTypeStyle = {
-  OX: "border-blue-100 bg-blue-50 text-blue-700 dark:border-blue-900/50 dark:bg-blue-950/30 dark:text-blue-400",
+  OX: "border-red-100 bg-red-50 text-red-700 dark:border-red-900/50 dark:bg-red-950/30 dark:text-red-400",
   "5-choice":
-    "border-emerald-100 bg-emerald-50 text-emerald-700 dark:border-emerald-900/50 dark:bg-emerald-950/30 dark:text-emerald-400",
+    "border-orange-100 bg-orange-50 text-orange-700 dark:border-orange-900/50 dark:bg-orange-950/30 dark:text-orange-400",
   short:
-    "border-purple-100 bg-purple-50 text-purple-700 dark:border-purple-900/50 dark:bg-purple-950/30 dark:text-purple-400",
+    "border-amber-100 bg-amber-50 text-amber-700 dark:border-amber-900/50 dark:bg-amber-950/30 dark:text-amber-400",
 } as const;
 
 const resultOrderModeLabel = {
@@ -55,12 +55,12 @@ export function ResultPage() {
 
   if (!session) {
     return (
-      <div className="mx-auto max-w-2xl p-6">
-        <div className="rounded-2xl border border-stone-200 bg-white p-8 text-center dark:border-stone-800 dark:bg-stone-900">
+      <div className="app-page p-6">
+        <div className="app-card mx-auto max-w-2xl rounded-2xl border p-8 text-center">
           <p className="text-stone-700 dark:text-stone-300">세션을 찾을 수 없습니다.</p>
           <Link
             to="/dashboard"
-            className="mt-4 inline-flex rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white"
+            className="app-button-primary mt-4 inline-flex rounded-lg px-4 py-2 text-sm font-semibold"
           >
             <ReturnLinkLabel variant="solid">메인으로</ReturnLinkLabel>
           </Link>
@@ -139,12 +139,12 @@ export function ResultPage() {
 
   if (session.status !== "completed") {
     return (
-      <div className="mx-auto max-w-2xl p-6">
-        <div className="rounded-2xl border border-stone-200 bg-white p-8 text-center dark:border-stone-800 dark:bg-stone-900">
+      <div className="app-page p-6">
+        <div className="app-card mx-auto max-w-2xl rounded-2xl border p-8 text-center">
           <p className="text-stone-700 dark:text-stone-300">아직 제출되지 않은 세션입니다.</p>
           <button
             onClick={() => navigate(`/solve/${session.id}`)}
-            className="mt-4 rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white"
+            className="app-button-primary mt-4 rounded-lg px-4 py-2 text-sm font-semibold"
           >
             이어서 풀기
           </button>
@@ -198,9 +198,9 @@ export function ResultPage() {
   );
 
   return (
-    <div className="min-h-screen px-4 py-7 transition-colors duration-300 md:px-6 md:py-8 dark:bg-stone-950">
+    <div className="app-page px-4 py-7 transition-colors duration-300 md:px-6 md:py-8">
       <div className="mx-auto max-w-3xl space-y-4">
-        <section className="rounded-2xl border border-stone-200 bg-white p-4 shadow-sm dark:border-stone-800 dark:bg-stone-900">
+        <section className="app-card rounded-2xl border p-4">
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div className="min-w-0 flex-1">
               <div className="flex flex-wrap items-center gap-2">
@@ -227,16 +227,16 @@ export function ResultPage() {
             </div>
             <Link
               to={subjectDashboardPath}
-              className="shrink-0 rounded-lg border border-stone-300 bg-white px-3 py-1.5 text-xs font-semibold text-stone-600 transition hover:bg-stone-50 dark:border-stone-700 dark:bg-stone-800 dark:text-stone-400 dark:hover:bg-stone-700"
+              className="app-button-secondary shrink-0 rounded-lg px-3 py-1.5 text-xs font-semibold"
             >
               <ReturnLinkLabel>메인으로</ReturnLinkLabel>
             </Link>
           </div>
 
           <div className="mt-4 grid gap-2 md:grid-cols-4">
-            <article className="rounded-xl border border-red-100 bg-red-50 px-3 py-2.5 dark:border-red-900/50 dark:bg-red-950/20">
-              <p className="text-[11px] font-medium text-red-700 dark:text-red-400">정답률</p>
-              <p className="mt-0.5 text-2xl font-black tracking-tight text-red-600 dark:text-red-500">
+            <article className="app-score-card rounded-xl border px-3 py-2.5">
+              <p className="text-[11px] font-medium text-red-700 dark:text-red-300">정답률</p>
+              <p className="mt-0.5 text-2xl font-bold tracking-tight text-red-600 dark:text-red-300">
                 {session.score}%
               </p>
             </article>
@@ -276,7 +276,7 @@ export function ResultPage() {
                   className={[
                     "rounded-lg border px-3 py-2 text-sm font-bold transition",
                     wrongCount > 0
-                      ? "border-red-600 bg-red-600 text-white shadow-sm hover:bg-red-700 dark:border-red-600 dark:bg-red-600 dark:hover:bg-red-700"
+                      ? "app-button-primary"
                       : "pointer-events-none border-stone-200 bg-white text-stone-400 dark:border-stone-800 dark:bg-stone-900 dark:text-stone-600",
                   ].join(" ")}
                 >
@@ -349,7 +349,7 @@ export function ResultPage() {
           </div>
         </section>
 
-        <section className="rounded-2xl border border-stone-200 bg-white p-4 shadow-sm md:p-5 dark:border-stone-800 dark:bg-stone-900">
+        <section className="app-card rounded-2xl border p-4 md:p-5">
           <div className="mb-4 flex rounded-xl border border-stone-200 bg-stone-50 p-1 dark:border-stone-800 dark:bg-stone-950">
             {[
               ["omr", "OMR 채점표"],
@@ -459,11 +459,11 @@ export function ResultPage() {
 
       {isRetryModalOpen ? (
         <div className="fixed inset-0 z-50">
-          <button onClick={() => setIsRetryModalOpen(false)} className="absolute inset-0 bg-black/35 dark:bg-black/60" />
+          <button onClick={() => setIsRetryModalOpen(false)} className="app-modal-backdrop absolute inset-0" />
           <div className="absolute left-1/2 top-1/2 w-[92vw] max-w-md -translate-x-1/2 -translate-y-1/2">
             <form
               onSubmit={(e) => handleRetrySubmit(e)}
-              className="space-y-4 rounded-2xl border border-stone-200 bg-white p-6 shadow-2xl dark:border-stone-800 dark:bg-stone-900"
+              className="app-modal-surface space-y-4 rounded-2xl border p-6"
             >
               <div className="flex items-center justify-between">
                 <h2 className="text-lg font-semibold text-stone-900 dark:text-stone-100">새로 풀기 설정</h2>
@@ -476,7 +476,7 @@ export function ResultPage() {
                   autoFocus
                   value={retryTitle}
                   onChange={(e) => setRetryTitle(e.target.value)}
-                  className="w-full rounded-lg border border-stone-300 bg-white px-3 py-2 text-sm text-stone-900 outline-none ring-red-200 transition focus:ring-2 dark:border-stone-700 dark:bg-stone-800 dark:text-stone-100 dark:ring-red-900/50"
+                  className="app-control w-full rounded-lg px-3 py-2 text-sm"
                 />
               </label>
 
@@ -485,7 +485,7 @@ export function ResultPage() {
                 <select
                   value={retryOrderMode}
                   onChange={(e) => setRetryOrderMode(e.target.value as SolveOrder)}
-                  className="w-full rounded-lg border border-stone-300 bg-white px-3 py-2 text-sm text-stone-900 outline-none ring-red-200 transition focus:ring-2 dark:border-stone-700 dark:bg-stone-800 dark:text-stone-100 dark:ring-red-900/50"
+                  className="app-control w-full rounded-lg px-3 py-2 text-sm"
                 >
                   <option value="number">번호 순서대로 풀기</option>
                   <option value="chapter-random">챕터별로 무작위 풀기</option>
@@ -496,7 +496,7 @@ export function ResultPage() {
               <div className="pt-2">
                 <button
                   type="submit"
-                  className="w-full rounded-lg bg-red-600 py-2.5 text-sm font-semibold text-white transition hover:bg-red-700 dark:bg-red-600 dark:hover:bg-red-700"
+                  className="app-button-primary app-button-primary-standalone w-full rounded-lg py-2.5 text-sm font-semibold"
                 >
                   풀이 시작하기
                 </button>
@@ -508,11 +508,11 @@ export function ResultPage() {
 
       {isWrongRetryModalOpen ? (
         <div className="fixed inset-0 z-50">
-          <button onClick={() => setIsWrongRetryModalOpen(false)} className="absolute inset-0 bg-black/35 dark:bg-black/60" />
+          <button onClick={() => setIsWrongRetryModalOpen(false)} className="app-modal-backdrop absolute inset-0" />
           <div className="absolute left-1/2 top-1/2 w-[92vw] max-w-md -translate-x-1/2 -translate-y-1/2">
             <form
               onSubmit={(e) => handleRetrySubmit(e, { onlyWrong: true })}
-              className="space-y-4 rounded-2xl border border-stone-200 bg-white p-6 shadow-2xl dark:border-stone-800 dark:bg-stone-900"
+              className="app-modal-surface space-y-4 rounded-2xl border p-6"
             >
               <div className="flex items-center justify-between">
                 <h2 className="text-lg font-semibold text-stone-900 dark:text-stone-100">오답 풀기 설정</h2>
@@ -530,7 +530,7 @@ export function ResultPage() {
                   autoFocus
                   value={retryTitle}
                   onChange={(e) => setRetryTitle(e.target.value)}
-                  className="w-full rounded-lg border border-stone-300 bg-white px-3 py-2 text-sm text-stone-900 outline-none ring-red-200 transition focus:ring-2 dark:border-stone-700 dark:bg-stone-800 dark:text-stone-100 dark:ring-red-900/50"
+                  className="app-control w-full rounded-lg px-3 py-2 text-sm"
                 />
               </label>
 
@@ -539,7 +539,7 @@ export function ResultPage() {
                 <select
                   value={retryOrderMode}
                   onChange={(e) => setRetryOrderMode(e.target.value as SolveOrder)}
-                  className="w-full rounded-lg border border-stone-300 bg-white px-3 py-2 text-sm text-stone-900 outline-none ring-red-200 transition focus:ring-2 dark:border-stone-700 dark:bg-stone-800 dark:text-stone-100 dark:ring-red-900/50"
+                  className="app-control w-full rounded-lg px-3 py-2 text-sm"
                 >
                   <option value="number">번호 순서대로 풀기</option>
                   <option value="chapter-random">챕터별로 무작위 풀기</option>
@@ -550,7 +550,7 @@ export function ResultPage() {
               <div className="pt-2">
                 <button
                   type="submit"
-                  className="w-full rounded-lg bg-red-600 py-2.5 text-sm font-semibold text-white transition hover:bg-red-700 dark:bg-red-600 dark:hover:bg-red-700"
+                  className="app-button-primary app-button-primary-standalone w-full rounded-lg py-2.5 text-sm font-semibold"
                 >
                   오답 풀기 시작
                 </button>
@@ -562,11 +562,11 @@ export function ResultPage() {
 
       {isBookmarkRetryModalOpen ? (
         <div className="fixed inset-0 z-50">
-          <button onClick={() => setIsBookmarkRetryModalOpen(false)} className="absolute inset-0 bg-black/35 dark:bg-black/60" />
+          <button onClick={() => setIsBookmarkRetryModalOpen(false)} className="app-modal-backdrop absolute inset-0" />
           <div className="absolute left-1/2 top-1/2 w-[92vw] max-w-md -translate-x-1/2 -translate-y-1/2">
             <form
               onSubmit={(e) => handleRetrySubmit(e, { onlyBookmark: true })}
-              className="space-y-4 rounded-2xl border border-stone-200 bg-white p-6 shadow-2xl dark:border-stone-800 dark:bg-stone-900"
+              className="app-modal-surface space-y-4 rounded-2xl border p-6"
             >
               <div className="flex items-center justify-between">
                 <h2 className="text-lg font-semibold text-stone-900 dark:text-stone-100">책갈피 문제 풀기 설정</h2>
@@ -584,7 +584,7 @@ export function ResultPage() {
                   autoFocus
                   value={retryTitle}
                   onChange={(e) => setRetryTitle(e.target.value)}
-                  className="w-full rounded-lg border border-stone-300 bg-white px-3 py-2 text-sm text-stone-900 outline-none ring-red-200 transition focus:ring-2 dark:border-stone-700 dark:bg-stone-800 dark:text-stone-100 dark:ring-red-900/50"
+                  className="app-control w-full rounded-lg px-3 py-2 text-sm"
                 />
               </label>
 
@@ -593,7 +593,7 @@ export function ResultPage() {
                 <select
                   value={retryOrderMode}
                   onChange={(e) => setRetryOrderMode(e.target.value as SolveOrder)}
-                  className="w-full rounded-lg border border-stone-300 bg-white px-3 py-2 text-sm text-stone-900 outline-none ring-red-200 transition focus:ring-2 dark:border-stone-700 dark:bg-stone-800 dark:text-stone-100 dark:ring-red-900/50"
+                  className="app-control w-full rounded-lg px-3 py-2 text-sm"
                 >
                   <option value="number">번호 순서대로 풀기</option>
                   <option value="chapter-random">챕터별로 무작위 풀기</option>
@@ -616,9 +616,9 @@ export function ResultPage() {
 
       {isDownloadModalOpen ? (
         <div className="fixed inset-0 z-50">
-          <button onClick={() => setIsDownloadModalOpen(false)} className="absolute inset-0 bg-black/35 dark:bg-black/60" />
+          <button onClick={() => setIsDownloadModalOpen(false)} className="app-modal-backdrop absolute inset-0" />
           <div className="absolute left-1/2 top-1/2 w-[92vw] max-w-sm -translate-x-1/2 -translate-y-1/2">
-            <div className="rounded-2xl border border-stone-200 bg-white p-6 shadow-2xl dark:border-stone-800 dark:bg-stone-900">
+            <div className="app-modal-surface rounded-2xl border p-6">
               <div className="mb-4 flex items-center justify-between">
                 <h2 className="text-lg font-semibold text-stone-900 dark:text-stone-100">CSV 다운로드 옵션</h2>
                 <IconCloseButton onClick={() => setIsDownloadModalOpen(false)} label="CSV 다운로드 옵션 닫기" />

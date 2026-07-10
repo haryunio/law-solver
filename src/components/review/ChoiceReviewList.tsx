@@ -10,7 +10,7 @@ export function ChoiceReviewList({ question }: ChoiceReviewListProps) {
   if (!question.choices) return null;
 
   return (
-    <section className="mt-5 rounded-xl border border-stone-200 bg-stone-50/70 p-4 dark:border-stone-800 dark:bg-stone-950/30">
+    <section className="app-subtle-surface mt-5 rounded-xl border p-4">
       <div className="mb-3 flex items-center justify-between gap-3">
         <h3 className="text-xs font-semibold text-stone-600 dark:text-stone-500">문제 선지</h3>
       </div>

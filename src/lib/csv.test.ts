@@ -1,4 +1,6 @@
 import { describe, expect, it } from "vitest";
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
 import { buildSessionExportCsv, parseCsvByType, readCsvFileText } from "./csv";
 import { TestSession } from "../types/test";
 
@@ -48,6 +50,24 @@ describe("parseCsvByType", () => {
     if (!first) return;
     expect(first.choices?.[2]).toBe("병");
     expect(first.answer).toBe("3");
+  });
+
+  it("parses the downloadable box-style 5-choice sample", () => {
+    const csv = readFileSync(resolve("public/samples/5지선다_box_sample.csv"), "utf8");
+    const parsed = parseCsvByType(csv, "5-choice");
+    const first = parsed[0];
+    expect(parsed).toHaveLength(2);
+    expect(first?.boxes).toHaveLength(3);
+    expect(first?.choices?.[4]).toBe("ㄱ·ㄴ·ㄷ");
+    expect(first?.answer).toBe("5");
+  });
+
+  it("parses the downloadable short-answer sample", () => {
+    const csv = readFileSync(resolve("public/samples/단답형_sample.csv"), "utf8");
+    const parsed = parseCsvByType(csv, "short");
+    expect(parsed).toHaveLength(2);
+    expect(parsed[0]?.answer).toBe("해제");
+    expect(parsed[1]?.answer).toBe("배상");
   });
 });
 
