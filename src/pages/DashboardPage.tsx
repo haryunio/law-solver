@@ -258,7 +258,7 @@ export function DashboardPage() {
 
                   <div className="flex-1 px-4 pb-3">
                     <div className="grid grid-cols-2 gap-2 text-sm sm:grid-cols-3">
-                      <div className="col-span-2 min-w-0 rounded-xl bg-stone-50 px-3 py-2 dark:bg-stone-950/40 sm:col-span-1">
+                      <div className="app-neutral-box col-span-2 min-w-0 rounded-xl px-3 py-2 sm:col-span-1">
                         <p className="text-[11px] font-medium text-stone-500 dark:text-stone-500">진행률</p>
                         <p className="mt-1 truncate font-bold text-stone-900 dark:text-stone-100">
                           {session.solved_questions}/{session.total_questions}
@@ -273,7 +273,7 @@ export function DashboardPage() {
                           />
                         </div>
                       </div>
-                      <div className="min-w-0 rounded-xl bg-stone-50 px-3 py-2 dark:bg-stone-950/40">
+                      <div className="app-neutral-box min-w-0 rounded-xl px-3 py-2">
                         <p className="text-[11px] font-medium text-stone-500 dark:text-stone-500">시간</p>
                         <p className="mt-1 truncate font-bold text-stone-900 dark:text-stone-100">
                           {formatElapsedTime(session.elapsed_time)}
@@ -282,7 +282,7 @@ export function DashboardPage() {
                           문제당 {formatElapsedTime(averageSecondsPerQuestion)}
                         </p>
                       </div>
-                      <div className="min-w-0 rounded-xl bg-stone-50 px-3 py-2 dark:bg-stone-950/40">
+                      <div className="app-neutral-box min-w-0 rounded-xl px-3 py-2">
                         <p className="text-[11px] font-medium text-stone-500 dark:text-stone-500">점수</p>
                         <p className="mt-1 truncate text-base font-bold leading-tight text-stone-900 dark:text-stone-100">
                           {isCompleted ? `${session.score}%` : "풀이 중"}

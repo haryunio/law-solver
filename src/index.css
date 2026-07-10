@@ -100,6 +100,16 @@ body {
   background: var(--app-surface-muted) !important;
 }
 
+.app-neutral-box {
+  border: 1px solid #e4e4e7 !important;
+  background: #f7f7f8 !important;
+}
+
+.dark .app-neutral-box {
+  border-color: #3f3f46 !important;
+  background: #242426 !important;
+}
+
 .app-topbar {
   border-color: var(--app-border) !important;
   background: color-mix(in srgb, var(--app-surface-solid) 88%, transparent) !important;
