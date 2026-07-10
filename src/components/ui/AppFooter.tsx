@@ -7,8 +7,7 @@ export function AppFooter() {
         <BrandMark size="small" />
         <span>Law Solver</span>
       </div>
-      <p className="mt-3">제작자: 경북대 로스쿨 17기 신하륜</p>
-      <p className="mt-1">
+      <p className="mt-3">제작자: 경북대 로스쿨 17기 신하륜 {" - "}
         <a className="font-medium text-red-600 underline underline-offset-4 dark:text-red-400" href="mailto:haryun@knu.ac.kr">
           haryun@knu.ac.kr
         </a>

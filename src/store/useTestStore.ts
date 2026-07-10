@@ -1,5 +1,6 @@
 import { createId } from "../lib/id";
 import { orderQuestions } from "../lib/order";
+import { reorderSubjects, SubjectDropPlacement } from "../lib/subject";
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import {
@@ -42,7 +43,11 @@ interface TestStore {
     subjectId: string,
     updates: { name?: string; coverPalette?: SubjectCoverPalette },
   ) => void;
-  reorderSubject: (sourceSubjectId: string, targetSubjectId: string) => void;
+  reorderSubject: (
+    sourceSubjectId: string,
+    targetSubjectId: string,
+    placement?: SubjectDropPlacement,
+  ) => void;
   deleteSubject: (subjectId: string) => void;
   assignSessionSubject: (sessionId: string, subjectId: string | null) => void;
   getSessionSubjectId: (sessionId: string) => string | null;
@@ -221,21 +226,15 @@ export const useTestStore = create<TestStore>()(
           }),
         }));
       },
-      reorderSubject: (sourceSubjectId, targetSubjectId) =>
-        set((state) => {
-          if (sourceSubjectId === targetSubjectId) return state;
-
-          const sourceIndex = state.subjects.findIndex((subject) => subject.id === sourceSubjectId);
-          const targetIndex = state.subjects.findIndex((subject) => subject.id === targetSubjectId);
-          if (sourceIndex < 0 || targetIndex < 0) return state;
-
-          const nextSubjects = [...state.subjects];
-          const [sourceSubject] = nextSubjects.splice(sourceIndex, 1);
-          if (!sourceSubject) return state;
-          nextSubjects.splice(targetIndex, 0, sourceSubject);
-
-          return { subjects: nextSubjects };
-        }),
+      reorderSubject: (sourceSubjectId, targetSubjectId, placement = "before") =>
+        set((state) => ({
+          subjects: reorderSubjects(
+            state.subjects,
+            sourceSubjectId,
+            targetSubjectId,
+            placement,
+          ),
+        })),
       deleteSubject: (subjectId) =>
         set((state) => {
           if (subjectId === NO_SUBJECT_ID) return state;

@@ -175,6 +175,45 @@ body {
 
 .app-control::placeholder { color: #a8a29e; }
 
+.app-select-trigger {
+  border: 1px solid var(--app-border-strong);
+  background: var(--app-surface-solid);
+  color: var(--app-text);
+  box-shadow: 0 2px 7px rgba(82, 52, 36, 0.035);
+  outline: none;
+  transition: border-color 150ms ease, box-shadow 150ms ease, background-color 150ms ease;
+}
+
+.app-select-trigger:hover,
+.app-select-trigger[aria-expanded="true"] {
+  border-color: #ef6b5d;
+  background: color-mix(in srgb, var(--app-surface-solid) 94%, #fff1ed);
+}
+
+.app-select-trigger:focus-visible {
+  border-color: #ef6b5d;
+  box-shadow: 0 0 0 3px var(--app-ring);
+}
+
+.app-select-menu {
+  border: 1px solid var(--app-border-strong);
+  background: var(--app-surface-solid);
+  color: var(--app-text);
+  box-shadow: 0 18px 45px rgba(67, 38, 23, 0.16), 0 4px 12px rgba(67, 38, 23, 0.08);
+}
+
+.dark .app-select-menu { box-shadow: 0 20px 48px rgba(0, 0, 0, 0.42); }
+
+.app-select-option {
+  color: var(--app-text);
+  transition: background-color 100ms ease, color 100ms ease;
+}
+
+.app-select-option.is-active { background: #fff1ed; }
+.app-select-option.is-selected { color: var(--app-red-dark); }
+.dark .app-select-option.is-active { background: rgba(127, 29, 29, 0.28); }
+.dark .app-select-option.is-selected { color: #fca5a5; }
+
 .app-modal-backdrop {
   background: rgba(28, 22, 18, 0.42) !important;
   backdrop-filter: blur(2px);
@@ -259,7 +298,7 @@ body {
 
 .app-focus-page .app-inline-next,
 .app-focus-page .app-inline-next:hover {
-  transform: translateY(-50%) !important;
+  transform: none !important;
 }
 
 .app-focus-page .app-button-secondary:hover {
