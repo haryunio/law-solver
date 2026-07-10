@@ -13,6 +13,7 @@ import { ConfirmDialog } from "../components/ui/ConfirmDialog";
 import { AppFooter } from "../components/ui/AppFooter";
 import { DashboardHeaderTitle } from "../components/ui/DashboardHeaderTitle";
 import { IconCloseButton } from "../components/ui/IconCloseButton";
+import { ReturnLinkLabel } from "../components/ui/ReturnLinkLabel";
 import { getSubjectDashboardPath, SubjectDropPlacement } from "../lib/subject";
 import { NO_SUBJECT_ID, Subject, SubjectCoverPalette } from "../types/test";
 import { useTestStore } from "../store/useTestStore";
@@ -566,34 +567,39 @@ export function SubjectListPage() {
   return (
     <div className="app-page px-4 py-8 transition-colors duration-300 md:px-6">
       <div className="mx-auto max-w-6xl">
-        <header className="mb-6 flex flex-wrap items-end justify-between gap-3">
-          <DashboardHeaderTitle
-            title="과목 대시보드"
-            description="과목을 선택해 문제 풀이 대시보드로 이동하세요."
-            logoTo="/"
-            logoLabel="메인으로 이동"
-          />
-          <div className="flex flex-wrap gap-2">
-            <button
-              onClick={() => setIsSettingsOpen(true)}
-              className="app-button-secondary rounded-lg px-4 py-2 text-sm font-semibold"
-            >
-              환경설정
-            </button>
-            <button
-              onClick={() => setIsDashboardManageOpen(true)}
-              className="app-button-secondary rounded-lg px-4 py-2 text-sm font-semibold"
-            >
-              데이터 관리
-            </button>
-            <button
-              onClick={() => setIsSubjectManageOpen(true)}
-              className="app-button-primary app-button-primary-standalone rounded-lg px-4 py-2 text-sm font-semibold"
-            >
-              과목 관리
-            </button>
-          </div>
-        </header>
+        <DashboardHeaderTitle
+          title="과목 대시보드"
+          logoTo="/"
+          logoLabel="메인으로 이동"
+        >
+          <button
+            type="button"
+            onClick={() => setIsSettingsOpen(true)}
+            className="app-button-secondary rounded-xl px-3 py-2 text-sm font-semibold sm:px-4"
+          >
+            환경설정
+          </button>
+          <button
+            type="button"
+            onClick={() => setIsDashboardManageOpen(true)}
+            className="app-button-secondary rounded-xl px-3 py-2 text-sm font-semibold sm:px-4"
+          >
+            데이터 관리
+          </button>
+          <button
+            type="button"
+            onClick={() => setIsSubjectManageOpen(true)}
+            className="app-button-primary app-button-primary-standalone rounded-xl px-3 py-2 text-sm font-semibold sm:px-4"
+          >
+            과목 관리
+          </button>
+          <Link
+            to="/"
+            className="app-button-secondary rounded-xl px-3 py-2 text-center text-sm font-semibold sm:px-4"
+          >
+            <ReturnLinkLabel>메인으로</ReturnLinkLabel>
+          </Link>
+        </DashboardHeaderTitle>
 
         <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
           {subjectCards.map((subject) => (

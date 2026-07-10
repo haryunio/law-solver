@@ -147,27 +147,27 @@ export function WrongAnswersPage() {
   };
 
   return (
-    <div className="app-page text-stone-900 transition-colors duration-300 dark:text-stone-100">
+    <div className="app-focus-page app-page text-stone-900 transition-colors duration-300 dark:text-stone-100">
       <header className="app-topbar sticky top-0 z-20 border-b">
-        <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-3 md:px-6">
+        <div className="mx-auto flex max-w-6xl items-center justify-between gap-2 px-4 py-2 md:px-6">
           <div className="min-w-0 flex-1">
             <OverflowTooltipTitle
               text={`${session.title} · 오답 확인하기`}
-              className="text-sm font-semibold md:text-base dark:text-stone-100"
+              className="text-xs font-semibold sm:text-sm dark:text-stone-100"
             />
           </div>
           <button
             onClick={goToResult}
-            className="app-button-secondary shrink-0 rounded-lg px-3 py-2 text-sm font-semibold"
+            className="app-button-secondary shrink-0 rounded-lg px-2.5 py-1.5 text-xs font-semibold sm:px-3 sm:text-sm"
           >
             <ReturnLinkLabel>결과로</ReturnLinkLabel>
           </button>
         </div>
       </header>
 
-      <div className="mx-auto grid max-w-6xl grid-cols-1 gap-4 px-4 py-4 md:grid-cols-[1fr_220px] md:px-6">
-        <main className="app-card flex max-h-[calc(100vh-100px)] flex-col overflow-hidden rounded-2xl border">
-          <div className="shrink-0 p-5 pb-3 md:px-8 md:pt-8">
+      <div className="mx-auto grid max-w-6xl grid-cols-1 gap-4 px-4 py-3 md:grid-cols-[1fr_220px] md:px-6">
+        <main className="app-card flex w-full max-h-[calc(100vh-112px)] flex-col overflow-hidden rounded-2xl border">
+          <div className="shrink-0 p-5 pb-4 md:px-8 md:pt-8">
           <div className="flex min-w-0 flex-wrap items-center gap-2">
             <span className="inline-flex rounded-full border border-stone-200 bg-stone-100 px-3 py-1 text-xs font-semibold text-stone-600 dark:border-stone-800 dark:bg-stone-800 dark:text-stone-400">
               오답 {index + 1} / {wrongQuestions.length} · 풀이순번 {solveNo}번

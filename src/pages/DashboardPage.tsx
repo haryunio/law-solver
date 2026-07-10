@@ -140,28 +140,26 @@ export function DashboardPage() {
   return (
     <div className="app-page px-4 py-8 transition-colors duration-300 md:px-6">
       <div className="mx-auto max-w-6xl">
-        <header className="mb-6 flex flex-wrap items-end justify-between gap-3">
-          <DashboardHeaderTitle
-            title={currentSubjectName}
-            description="문제 풀이 대시보드"
-            logoTo="/dashboard"
-            logoLabel="과목 대시보드로 이동"
-          />
-          <div className="flex flex-wrap gap-2">
-            <Link
-              to="/dashboard"
-              className="app-button-secondary rounded-lg px-4 py-2 text-sm font-semibold"
-            >
-              <ReturnLinkLabel>과목 목록으로</ReturnLinkLabel>
-            </Link>
-            <button
-              onClick={() => setOpenUpload(true)}
-              className="app-button-primary app-button-primary-standalone rounded-lg px-4 py-2 text-sm font-semibold"
-            >
-              새 문제 등록
-            </button>
-          </div>
-        </header>
+        <DashboardHeaderTitle
+          title={currentSubjectName}
+          sectionTitle="문제 풀이 대시보드"
+          logoTo="/dashboard"
+          logoLabel="과목 대시보드로 이동"
+        >
+          <button
+            type="button"
+            onClick={() => setOpenUpload(true)}
+            className="app-button-primary app-button-primary-standalone rounded-xl px-3 py-2 text-sm font-semibold sm:px-4"
+          >
+            새 문제 등록
+          </button>
+          <Link
+            to="/dashboard"
+            className="app-button-secondary rounded-xl px-3 py-2 text-center text-sm font-semibold sm:px-4"
+          >
+            <ReturnLinkLabel>과목 목록으로</ReturnLinkLabel>
+          </Link>
+        </DashboardHeaderTitle>
 
         {sortedSessions.length === 0 ? (
           <div className="app-card rounded-2xl border border-dashed p-10 text-center">
