@@ -2,6 +2,19 @@ import { FormEvent, useState } from "react";
 import { parseCsvByType, readCsvFileText } from "../../lib/csv";
 import { useTestStore } from "../../store/useTestStore";
 import { SolveOrder, TestType } from "../../types/test";
+import { ThemeSelect } from "../ui/ThemeSelect";
+
+const testTypeOptions = [
+  { value: "OX", label: "OX" },
+  { value: "5-choice", label: "5지선다" },
+  { value: "short", label: "단답형" },
+];
+
+const solveOrderOptions = [
+  { value: "number", label: "번호 순서대로 풀기" },
+  { value: "chapter-random", label: "챕터별로 무작위 풀기" },
+  { value: "random", label: "전체 무작위 풀기" },
+];
 
 interface CsvUploadPanelProps {
   subjectId?: string | null;
@@ -66,31 +79,25 @@ export function CsvUploadPanel({ subjectId, onCreated }: CsvUploadPanelProps) {
         />
       </label>
 
-      <label className="block space-y-2">
+      <div className="space-y-2">
         <span className="text-sm font-medium text-stone-700 dark:text-stone-300">문제 타입</span>
-        <select
+        <ThemeSelect
           value={type}
-          onChange={(e) => setType(e.target.value as TestType)}
-          className="app-control w-full rounded-lg px-3 py-2 text-sm"
-        >
-          <option value="OX">OX</option>
-          <option value="5-choice">5지선다</option>
-          <option value="short">단답형</option>
-        </select>
-      </label>
+          onChange={(value) => setType(value as TestType)}
+          options={testTypeOptions}
+          ariaLabel="문제 타입 선택"
+        />
+      </div>
 
-      <label className="block space-y-2">
+      <div className="space-y-2">
         <span className="text-sm font-medium text-stone-700 dark:text-stone-300">풀이 순서</span>
-        <select
+        <ThemeSelect
           value={orderMode}
-          onChange={(e) => setOrderMode(e.target.value as SolveOrder)}
-          className="app-control w-full rounded-lg px-3 py-2 text-sm"
-        >
-          <option value="number">번호 순서대로 풀기</option>
-          <option value="chapter-random">챕터별로 무작위 풀기</option>
-          <option value="random">전체 무작위 풀기</option>
-        </select>
-      </label>
+          onChange={(value) => setOrderMode(value as SolveOrder)}
+          options={solveOrderOptions}
+          ariaLabel="풀이 순서 선택"
+        />
+      </div>
 
       <label className="block space-y-2">
         <span className="text-sm font-medium text-stone-700 dark:text-stone-300">CSV 파일</span>
@@ -106,13 +113,15 @@ export function CsvUploadPanel({ subjectId, onCreated }: CsvUploadPanelProps) {
         <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700 dark:border-red-900/50 dark:bg-red-950/30 dark:text-red-400">{error}</p>
       ) : null}
 
-      <button
-        type="submit"
-        disabled={isLoading}
-        className="app-button-primary app-button-primary-standalone inline-flex items-center rounded-lg px-4 py-2 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60"
-      >
-        {isLoading ? "파싱 중..." : "등록 후 풀이 시작"}
-      </button>
+      <div className="pt-3">
+        <button
+          type="submit"
+          disabled={isLoading}
+          className="app-button-primary app-button-primary-standalone flex w-full items-center justify-center rounded-xl px-4 py-3 text-center text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60"
+        >
+          {isLoading ? "파싱 중..." : "등록 후 풀이 시작"}
+        </button>
+      </div>
     </form>
   );
 }

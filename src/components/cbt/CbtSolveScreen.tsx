@@ -29,6 +29,7 @@ export function CbtSolveScreen({ sessionId, onSubmitted }: CbtSolveScreenProps) 
   const [showAnswer, setShowAnswer] = useState(false);
   const [isOmrOpen, setIsOmrOpen] = useState(false);
   const [isPauseDialogOpen, setIsPauseDialogOpen] = useState(false);
+  const [isSubmitDialogOpen, setIsSubmitDialogOpen] = useState(false);
   const contentRef = useRef<HTMLDivElement | null>(null);
   const omrRefs = useMemo(() => new Map<number, HTMLButtonElement | null>(), []);
 
@@ -93,7 +94,14 @@ export function CbtSolveScreen({ sessionId, onSubmitted }: CbtSolveScreenProps) 
         }));
 
   const answeredCount = session.questions.filter((q) => q.my_answer !== "").length;
+  const unansweredCount = session.questions.length - answeredCount;
   const subjectDashboardPath = getSubjectDashboardPath(sessionSubjectMap[session.id]);
+  const questionPanelMinHeight =
+    session.type === "OX"
+      ? "md:min-h-[min(420px,calc(100vh-112px))]"
+      : session.type === "short"
+        ? "md:min-h-[min(360px,calc(100vh-112px))]"
+        : "md:min-h-[min(560px,calc(100vh-112px))]";
 
   const handleAnswer = (answer: string) => {
     updateAnswer(session.id, current.id, answer as AnswerValue);
@@ -110,36 +118,45 @@ export function CbtSolveScreen({ sessionId, onSubmitted }: CbtSolveScreenProps) 
     }
   };
 
-  const handleSubmit = () => {
+  const submitImmediately = () => {
+    setIsSubmitDialogOpen(false);
     submitSession(session.id);
     onSubmitted?.(session.id);
+  };
+
+  const handleSubmit = () => {
+    if (unansweredCount > 0) {
+      setIsSubmitDialogOpen(true);
+      return;
+    }
+    submitImmediately();
   };
 
   return (
     <div className="app-focus-page app-page text-stone-900 dark:text-stone-100">
       <header className="app-topbar sticky top-0 z-20 border-b">
-        <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-3 md:px-6">
+        <div className="mx-auto flex max-w-6xl items-center justify-between gap-2 px-4 py-2 md:px-6">
           <div className="min-w-0">
-            <p className="text-xs font-medium text-stone-500 dark:text-stone-500">타이머</p>
-            <p className="text-lg font-semibold tabular-nums text-red-600 dark:text-red-500">{formatElapsedTime(session.elapsed_time)}</p>
+            <p className="text-[10px] font-medium leading-none text-stone-500 dark:text-stone-500">타이머</p>
+            <p className="mt-0.5 text-base font-semibold leading-tight tabular-nums text-red-600 dark:text-red-500">{formatElapsedTime(session.elapsed_time)}</p>
           </div>
           <div className="min-w-0 flex-1 px-2">
             <OverflowTooltipTitle
               text={session.title}
-              className="text-center text-sm font-semibold md:text-base dark:text-stone-100"
+              className="text-center text-xs font-semibold sm:text-sm dark:text-stone-100"
               tooltipClassName="left-1/2 max-w-sm -translate-x-1/2"
             />
           </div>
-          <div className="flex shrink-0 items-center gap-2">
+          <div className="flex w-auto shrink-0 items-center gap-2 md:w-[220px]">
             <button
               onClick={() => setIsPauseDialogOpen(true)}
-              className="app-button-secondary rounded-lg px-3 py-2 text-sm font-semibold"
+              className="app-button-secondary whitespace-nowrap rounded-lg px-2.5 py-1.5 text-xs font-semibold sm:px-3 sm:text-sm md:flex-1"
             >
               일시 중단
             </button>
             <button
               onClick={handleSubmit}
-              className="app-button-primary rounded-lg px-3 py-2 text-sm font-semibold"
+              className="app-button-primary whitespace-nowrap rounded-lg px-2.5 py-1.5 text-xs font-semibold sm:px-3 sm:text-sm md:flex-1"
             >
               제출 및 종료
             </button>
@@ -147,8 +164,13 @@ export function CbtSolveScreen({ sessionId, onSubmitted }: CbtSolveScreenProps) 
         </div>
       </header>
 
-      <div className="mx-auto grid max-w-6xl grid-cols-1 gap-4 px-4 py-4 md:grid-cols-[1fr_220px] md:px-6">
-        <main className="app-card flex max-h-[calc(100vh-140px)] flex-col overflow-hidden rounded-2xl border">
+      <div className="mx-auto grid max-w-6xl grid-cols-1 gap-4 px-4 py-3 md:grid-cols-[1fr_220px] md:items-start md:px-6">
+        <main
+          className={[
+            "app-card flex w-full max-h-[calc(100vh-112px)] flex-col overflow-hidden rounded-2xl border",
+            questionPanelMinHeight,
+          ].join(" ")}
+        >
           <div className="shrink-0 p-5 pb-4 md:px-8 md:pt-8">
           <div className="flex items-start justify-between gap-3">
             <div className="flex min-w-0 flex-wrap items-center gap-2">
@@ -274,7 +296,7 @@ export function CbtSolveScreen({ sessionId, onSubmitted }: CbtSolveScreenProps) 
                       <button
                         type="button"
                         onClick={goToNext}
-                        className="app-button-primary app-inline-next absolute right-2 top-1/2 -translate-y-1/2 rounded-lg px-3 py-1.5 text-xs font-bold"
+                        className="app-button-primary app-inline-next absolute bottom-2 right-2 top-2 inline-flex items-center rounded-lg px-3 text-xs font-bold"
                       >
                         다음 문제로
                         <span className="ml-1 text-red-200">›</span>
@@ -334,7 +356,7 @@ export function CbtSolveScreen({ sessionId, onSubmitted }: CbtSolveScreenProps) 
           </div>
         </main>
 
-        <aside className="app-card hidden max-h-[calc(100vh-140px)] flex-col rounded-2xl border p-4 md:flex">
+        <aside className="app-card hidden h-[calc(100vh-112px)] max-h-[calc(100vh-112px)] flex-col rounded-2xl border p-4 md:flex">
           <div className="mb-3 flex items-center justify-between">
             <h3 className="text-sm font-semibold dark:text-stone-100">OMR</h3>
             <p className="text-xs text-stone-500 dark:text-stone-500">
@@ -438,6 +460,18 @@ export function CbtSolveScreen({ sessionId, onSubmitted }: CbtSolveScreenProps) 
           cancelLabel="계속 풀기"
           onCancel={() => setIsPauseDialogOpen(false)}
           onConfirm={() => navigate(subjectDashboardPath)}
+        />
+      ) : null}
+
+      {isSubmitDialogOpen ? (
+        <ConfirmDialog
+          title="아직 풀지 않은 문제가 있습니다"
+          description={`미응답 문항이 ${unansweredCount}개 남아 있습니다.\n그래도 제출하면 현재 답안 기준으로 채점됩니다.`}
+          confirmLabel="제출 및 종료"
+          cancelLabel="계속 풀기"
+          variant="danger"
+          onCancel={() => setIsSubmitDialogOpen(false)}
+          onConfirm={submitImmediately}
         />
       ) : null}
     </div>

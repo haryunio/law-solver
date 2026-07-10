@@ -7,6 +7,7 @@ import { DashboardHeaderTitle } from "../components/ui/DashboardHeaderTitle";
 import { IconCloseButton } from "../components/ui/IconCloseButton";
 import { OverflowTooltipTitle } from "../components/ui/OverflowTooltipTitle";
 import { ReturnLinkLabel } from "../components/ui/ReturnLinkLabel";
+import { ThemeSelect } from "../components/ui/ThemeSelect";
 import { formatElapsedTime } from "../lib/time";
 import { useTestStore } from "../store/useTestStore";
 import { NO_SUBJECT_ID } from "../types/test";
@@ -359,21 +360,18 @@ export function DashboardPage() {
                 />
               </label>
 
-              <label className="block space-y-2">
+              <div className="space-y-2">
                 <span className="text-sm font-medium text-stone-700 dark:text-stone-300">과목</span>
-                <select
+                <ThemeSelect
                   value={editingSubjectId}
-                  onChange={(event) => setEditingSubjectId(event.target.value)}
-                  className="app-control w-full rounded-lg px-3 py-2 text-sm"
-                >
-                  <option value={NO_SUBJECT_ID}>과목 없음</option>
-                  {subjects.map((subject) => (
-                    <option key={subject.id} value={subject.id}>
-                      {subject.name}
-                    </option>
-                  ))}
-                </select>
-              </label>
+                  onChange={setEditingSubjectId}
+                  ariaLabel="과목 선택"
+                  options={[
+                    { value: NO_SUBJECT_ID, label: "과목 없음" },
+                    ...subjects.map((subject) => ({ value: subject.id, label: subject.name })),
+                  ]}
+                />
+              </div>
 
               <div className="flex justify-end gap-2 pt-2">
                 <button

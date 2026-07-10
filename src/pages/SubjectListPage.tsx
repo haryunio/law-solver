@@ -1,10 +1,19 @@
-import { CSSProperties, FormEvent, PointerEvent, useMemo, useRef, useState } from "react";
+import {
+  CSSProperties,
+  FormEvent,
+  KeyboardEvent,
+  PointerEvent,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { Link } from "react-router-dom";
 import { ConfirmDialog } from "../components/ui/ConfirmDialog";
 import { AppFooter } from "../components/ui/AppFooter";
 import { DashboardHeaderTitle } from "../components/ui/DashboardHeaderTitle";
 import { IconCloseButton } from "../components/ui/IconCloseButton";
-import { getSubjectDashboardPath } from "../lib/subject";
+import { getSubjectDashboardPath, SubjectDropPlacement } from "../lib/subject";
 import { NO_SUBJECT_ID, Subject, SubjectCoverPalette } from "../types/test";
 import { useTestStore } from "../store/useTestStore";
 import { FontFamily, useSettingsStore } from "../store/useSettingsStore";
@@ -108,20 +117,33 @@ export function SubjectListPage() {
   const [editingSubjectName, setEditingSubjectName] = useState("");
   const [editingSubjectPalette, setEditingSubjectPalette] = useState<SubjectCoverPalette>("warm");
   const [draggingSubjectId, setDraggingSubjectId] = useState<string | null>(null);
+  const [subjectDragOffsetY, setSubjectDragOffsetY] = useState(0);
+  const [subjectDropTarget, setSubjectDropTarget] = useState<{
+    subjectId: string;
+    placement: SubjectDropPlacement;
+  } | null>(null);
+  const subjectDropTargetRef = useRef<{
+    subjectId: string;
+    placement: SubjectDropPlacement;
+  } | null>(null);
   const [dialog, setDialog] = useState<DialogState | null>(null);
-  const touchDragTimerRef = useRef<number | null>(null);
-  const touchDragRef = useRef<{
+  const subjectListRef = useRef<HTMLDivElement | null>(null);
+  const subjectDragRef = useRef<{
     pointerId: number | null;
     subjectId: string | null;
-    lastTargetId: string | null;
-    activated: boolean;
-    capturedElement: HTMLElement | null;
+    startY: number;
+    startScrollTop: number;
+    handleElement: HTMLButtonElement | null;
+    previousUserSelect: string;
+    previousCursor: string;
   }>({
     pointerId: null,
     subjectId: null,
-    lastTargetId: null,
-    activated: false,
-    capturedElement: null,
+    startY: 0,
+    startScrollTop: 0,
+    handleElement: null,
+    previousUserSelect: "",
+    previousCursor: "",
   });
 
   const subjectCards = useMemo<SubjectCardData[]>(() => {
@@ -214,103 +236,187 @@ export function SubjectListPage() {
     closeEditSubject();
   };
 
-  const handleDropSubject = (targetSubjectId: string) => {
-    if (!draggingSubjectId) return;
-    reorderSubject(draggingSubjectId, targetSubjectId);
-    setDraggingSubjectId(null);
-  };
+  const resetSubjectDrag = () => {
+    const {
+      handleElement,
+      pointerId,
+      previousUserSelect,
+      previousCursor,
+    } = subjectDragRef.current;
 
-  const clearTouchDragTimer = () => {
-    if (touchDragTimerRef.current === null) return;
-    window.clearTimeout(touchDragTimerRef.current);
-    touchDragTimerRef.current = null;
-  };
-
-  const resetTouchDrag = () => {
-    const { capturedElement, pointerId } = touchDragRef.current;
-    clearTouchDragTimer();
-
-    if (capturedElement && pointerId !== null && capturedElement.hasPointerCapture(pointerId)) {
-      capturedElement.releasePointerCapture(pointerId);
-    }
-
-    touchDragRef.current = {
+    const wasDragging = pointerId !== null;
+    subjectDragRef.current = {
       pointerId: null,
       subjectId: null,
-      lastTargetId: null,
-      activated: false,
-      capturedElement: null,
+      startY: 0,
+      startScrollTop: 0,
+      handleElement: null,
+      previousUserSelect: "",
+      previousCursor: "",
     };
+
+    if (wasDragging) {
+      document.body.style.userSelect = previousUserSelect;
+      document.body.style.cursor = previousCursor;
+    }
     setDraggingSubjectId(null);
+    setSubjectDragOffsetY(0);
+    setSubjectDropTarget(null);
+    subjectDropTargetRef.current = null;
+
+    if (handleElement && pointerId !== null && handleElement.hasPointerCapture(pointerId)) {
+      handleElement.releasePointerCapture(pointerId);
+    }
   };
 
   const handleSubjectPointerDown = (
-    event: PointerEvent<HTMLDivElement>,
+    event: PointerEvent<HTMLButtonElement>,
     subjectId: string,
   ) => {
-    if (event.pointerType === "mouse") return;
-
-    const target = event.target as HTMLElement;
-    if (target.closest("button, a, input, select, textarea")) return;
-
-    const currentTarget = event.currentTarget;
-    clearTouchDragTimer();
-    touchDragRef.current = {
-      pointerId: event.pointerId,
-      subjectId,
-      lastTargetId: subjectId,
-      activated: false,
-      capturedElement: null,
-    };
-
-    touchDragTimerRef.current = window.setTimeout(() => {
-      const dragState = touchDragRef.current;
-      if (dragState.pointerId !== event.pointerId || dragState.subjectId !== subjectId) return;
-
-      dragState.activated = true;
-      dragState.capturedElement = currentTarget;
-      setDraggingSubjectId(subjectId);
-
-      if (!currentTarget.hasPointerCapture(event.pointerId)) {
-        currentTarget.setPointerCapture(event.pointerId);
-      }
-    }, 180);
-  };
-
-  const handleSubjectPointerMove = (event: PointerEvent<HTMLDivElement>) => {
-    const dragState = touchDragRef.current;
-    if (
-      event.pointerType === "mouse" ||
-      dragState.pointerId !== event.pointerId ||
-      !dragState.activated ||
-      !dragState.subjectId
-    ) {
-      return;
-    }
+    if (event.pointerType === "mouse" && event.button !== 0) return;
 
     event.preventDefault();
+    event.stopPropagation();
 
-    const targetElement = document
-      .elementFromPoint(event.clientX, event.clientY)
-      ?.closest<HTMLElement>("[data-subject-drop-id]");
-    const targetSubjectId = targetElement?.dataset.subjectDropId;
+    const handleElement = event.currentTarget;
+    handleElement.focus({ preventScroll: true });
+    handleElement.setPointerCapture(event.pointerId);
+    subjectDragRef.current = {
+      pointerId: event.pointerId,
+      subjectId,
+      startY: event.clientY,
+      startScrollTop: subjectListRef.current?.scrollTop ?? 0,
+      handleElement,
+      previousUserSelect: document.body.style.userSelect,
+      previousCursor: document.body.style.cursor,
+    };
+    document.body.style.userSelect = "none";
+    document.body.style.cursor = "grabbing";
+    setDraggingSubjectId(subjectId);
+    setSubjectDragOffsetY(0);
+    setSubjectDropTarget(null);
+    subjectDropTargetRef.current = null;
+  };
 
-    if (
-      !targetSubjectId ||
-      targetSubjectId === dragState.subjectId ||
-      targetSubjectId === dragState.lastTargetId
-    ) {
+  const handleSubjectPointerMove = (event: PointerEvent<HTMLButtonElement>) => {
+    const dragState = subjectDragRef.current;
+    if (dragState.pointerId !== event.pointerId || !dragState.subjectId) return;
+
+    event.preventDefault();
+    const listElement = subjectListRef.current;
+    if (!listElement) return;
+
+    const listRect = listElement.getBoundingClientRect();
+    const edgeSize = 36;
+    if (event.clientY < listRect.top + edgeSize) {
+      listElement.scrollTop -= 12;
+    } else if (event.clientY > listRect.bottom - edgeSize) {
+      listElement.scrollTop += 12;
+    }
+    setSubjectDragOffsetY(
+      event.clientY - dragState.startY + (listElement.scrollTop - dragState.startScrollTop),
+    );
+
+    if (event.clientY < listRect.top - 24 || event.clientY > listRect.bottom + 24) {
+      setSubjectDropTarget(null);
+      subjectDropTargetRef.current = null;
       return;
     }
 
-    reorderSubject(dragState.subjectId, targetSubjectId);
-    dragState.lastTargetId = targetSubjectId;
+    const targetElements = Array.from(
+      listElement.querySelectorAll<HTMLElement>("[data-subject-drop-id]"),
+    ).filter((element) => element.dataset.subjectDropId !== dragState.subjectId);
+
+    const targetElement =
+      targetElements.find((element) => {
+        const rect = element.getBoundingClientRect();
+        return event.clientY >= rect.top && event.clientY <= rect.bottom;
+      }) ??
+      targetElements.reduce<HTMLElement | null>((nearest, element) => {
+        if (!nearest) return element;
+        const elementRect = element.getBoundingClientRect();
+        const nearestRect = nearest.getBoundingClientRect();
+        const elementDistance = Math.abs(event.clientY - (elementRect.top + elementRect.height / 2));
+        const nearestDistance = Math.abs(event.clientY - (nearestRect.top + nearestRect.height / 2));
+        return elementDistance < nearestDistance ? element : nearest;
+      }, null);
+
+    const targetSubjectId = targetElement?.dataset.subjectDropId;
+    if (!targetElement || !targetSubjectId) {
+      setSubjectDropTarget(null);
+      subjectDropTargetRef.current = null;
+      return;
+    }
+
+    const targetRect = targetElement.getBoundingClientRect();
+    const nextDropTarget = {
+      subjectId: targetSubjectId,
+      placement: (event.clientY < targetRect.top + targetRect.height / 2
+        ? "before"
+        : "after") as SubjectDropPlacement,
+    };
+    subjectDropTargetRef.current = nextDropTarget;
+    setSubjectDropTarget(nextDropTarget);
   };
 
-  const handleSubjectPointerEnd = (event: PointerEvent<HTMLDivElement>) => {
-    if (event.pointerType === "mouse") return;
-    resetTouchDrag();
+  const handleSubjectPointerEnd = (event: PointerEvent<HTMLButtonElement>, commit: boolean) => {
+    const dragState = subjectDragRef.current;
+    if (dragState.pointerId !== event.pointerId || !dragState.subjectId) return;
+
+    const dropTarget = subjectDropTargetRef.current;
+    if (commit && dropTarget) {
+      reorderSubject(
+        dragState.subjectId,
+        dropTarget.subjectId,
+        dropTarget.placement,
+      );
+    }
+    resetSubjectDrag();
   };
+
+  const handleSubjectLostPointerCapture = (event: PointerEvent<HTMLButtonElement>) => {
+    if (subjectDragRef.current.pointerId === event.pointerId) {
+      resetSubjectDrag();
+    }
+  };
+
+  const handleSubjectDragKeyDown = (
+    event: KeyboardEvent<HTMLButtonElement>,
+    subjectId: string,
+  ) => {
+    if (event.key === "Escape" && subjectDragRef.current.subjectId) {
+      event.preventDefault();
+      resetSubjectDrag();
+      return;
+    }
+
+    const sourceIndex = subjects.findIndex((subject) => subject.id === subjectId);
+    if (sourceIndex < 0) return;
+
+    if (event.key === "ArrowUp" && sourceIndex > 0) {
+      event.preventDefault();
+      reorderSubject(subjectId, subjects[sourceIndex - 1]!.id, "before");
+    } else if (event.key === "ArrowDown" && sourceIndex < subjects.length - 1) {
+      event.preventDefault();
+      reorderSubject(subjectId, subjects[sourceIndex + 1]!.id, "after");
+    }
+  };
+
+  const closeSubjectManage = () => {
+    resetSubjectDrag();
+    setIsSubjectManageOpen(false);
+  };
+
+  useEffect(
+    () => () => {
+      const { pointerId, previousUserSelect, previousCursor } = subjectDragRef.current;
+      if (pointerId !== null) {
+        document.body.style.userSelect = previousUserSelect;
+        document.body.style.cursor = previousCursor;
+      }
+    },
+    [],
+  );
 
   const renderPaletteOptions = (
     selectedPalette: SubjectCoverPalette,
@@ -542,12 +648,12 @@ export function SubjectListPage() {
 
       {isSubjectManageOpen ? (
         <div className="fixed inset-0 z-50">
-          <button onClick={() => setIsSubjectManageOpen(false)} className="app-modal-backdrop absolute inset-0" />
+          <button onClick={closeSubjectManage} className="app-modal-backdrop absolute inset-0" />
           <div className="absolute left-1/2 top-1/2 w-[92vw] max-w-md -translate-x-1/2 -translate-y-1/2">
             <div className="app-modal-surface rounded-2xl border p-6">
               <div className="mb-4 flex items-center justify-between gap-3">
                 <h2 className="text-lg font-semibold text-stone-900 dark:text-stone-100">과목 관리</h2>
-                <IconCloseButton onClick={() => setIsSubjectManageOpen(false)} label="과목 관리 닫기" />
+                <IconCloseButton onClick={closeSubjectManage} label="과목 관리 닫기" />
               </div>
 
               <button
@@ -557,7 +663,10 @@ export function SubjectListPage() {
                 새 과목 추가
               </button>
 
-              <div className="mt-5 max-h-[42vh] space-y-2 overflow-y-auto">
+              <div
+                ref={subjectListRef}
+                className="mt-5 max-h-[42vh] space-y-2 overflow-y-auto overscroll-contain px-1"
+              >
                 {subjects.length === 0 ? (
                   <p className="rounded-xl border border-dashed border-stone-200 bg-stone-50 p-4 text-center text-sm text-stone-500 dark:border-stone-800 dark:bg-stone-950/50 dark:text-stone-500">
                     아직 추가한 과목이 없습니다.
@@ -565,36 +674,55 @@ export function SubjectListPage() {
                 ) : (
                   <>
                     <p className="px-1 pb-1 text-xs font-medium text-stone-500 dark:text-stone-500">
-                      과목 카드를 잡고 드래그해서 순서를 바꿀 수 있습니다. 모바일에서는 카드를 잠깐 누른 뒤 움직이세요.
+                      왼쪽 손잡이를 끌어 순서를 바꿔 보세요. 키보드에서는 손잡이에 초점을 둔 뒤 ↑↓ 키를 사용할 수 있습니다.
                     </p>
                     {subjects.map((subject) => (
                       <div
                         key={subject.id}
                         data-subject-drop-id={subject.id}
-                        draggable
-                        onDragStart={(event) => {
-                          event.dataTransfer.effectAllowed = "move";
-                          setDraggingSubjectId(subject.id);
-                        }}
-                        onDragEnd={() => setDraggingSubjectId(null)}
-                        onPointerDown={(event) => handleSubjectPointerDown(event, subject.id)}
-                        onPointerMove={handleSubjectPointerMove}
-                        onPointerUp={handleSubjectPointerEnd}
-                        onPointerCancel={handleSubjectPointerEnd}
-                        onDragOver={(event) => {
-                          event.preventDefault();
-                          event.dataTransfer.dropEffect = "move";
-                        }}
-                        onDrop={() => handleDropSubject(subject.id)}
                         className={[
-                          "flex cursor-grab touch-pan-y items-center justify-between gap-3 rounded-xl border border-stone-200 bg-white p-3 transition hover:border-red-200 hover:bg-red-50/30 active:cursor-grabbing dark:border-stone-800 dark:bg-stone-900 dark:hover:border-red-900/60 dark:hover:bg-red-950/10",
+                          "relative flex select-none items-center gap-3 rounded-xl border border-stone-200 bg-white p-3 transition-[border-color,background-color,box-shadow] duration-100 hover:border-red-200 hover:bg-red-50/30 dark:border-stone-800 dark:bg-stone-900 dark:hover:border-red-900/60 dark:hover:bg-red-950/10",
                           draggingSubjectId === subject.id
-                            ? "touch-none opacity-60 ring-2 ring-red-100 dark:ring-red-900/40"
+                            ? "z-20 border-red-300 bg-white shadow-xl ring-2 ring-red-100 will-change-transform dark:border-red-800 dark:bg-stone-900 dark:ring-red-900/40"
                             : "",
                         ].join(" ")}
-                        title="과목 카드를 드래그해서 순서 변경"
+                        style={
+                          draggingSubjectId === subject.id
+                            ? { transform: `translate3d(0, ${subjectDragOffsetY}px, 0)` }
+                            : undefined
+                        }
                       >
-                        <div className="min-w-0">
+                        {subjectDropTarget?.subjectId === subject.id &&
+                        draggingSubjectId !== subject.id ? (
+                          <span
+                            aria-hidden="true"
+                            className={[
+                              "pointer-events-none absolute left-2 right-2 z-30 h-0.5 rounded-full bg-red-500 shadow-[0_0_0_2px_rgba(255,255,255,0.9)] dark:shadow-[0_0_0_2px_rgba(28,25,23,0.9)]",
+                              subjectDropTarget.placement === "before" ? "-top-[5px]" : "-bottom-[5px]",
+                            ].join(" ")}
+                          />
+                        ) : null}
+
+                        <button
+                          type="button"
+                          aria-label={`${subject.name} 과목 순서 변경`}
+                          title="드래그하거나 위·아래 화살표 키로 순서 변경"
+                          onPointerDown={(event) => handleSubjectPointerDown(event, subject.id)}
+                          onPointerMove={handleSubjectPointerMove}
+                          onPointerUp={(event) => handleSubjectPointerEnd(event, true)}
+                          onPointerCancel={(event) => handleSubjectPointerEnd(event, false)}
+                          onLostPointerCapture={handleSubjectLostPointerCapture}
+                          onKeyDown={(event) => handleSubjectDragKeyDown(event, subject.id)}
+                          className="grid h-10 w-8 shrink-0 touch-none cursor-grab select-none place-content-center rounded-md border border-transparent text-stone-400 outline-none transition-colors duration-100 hover:border-stone-200 hover:bg-stone-100 hover:text-stone-600 focus-visible:border-red-300 focus-visible:ring-2 focus-visible:ring-red-100 active:cursor-grabbing dark:text-stone-500 dark:hover:border-stone-700 dark:hover:bg-stone-800 dark:hover:text-stone-300 dark:focus-visible:border-red-800 dark:focus-visible:ring-red-900/50"
+                        >
+                          <span aria-hidden="true" className="flex flex-col items-center gap-[3px]">
+                            <span className="h-[2px] w-3.5 rounded-full bg-current" />
+                            <span className="h-[2px] w-2.5 rounded-full bg-current" />
+                            <span className="h-[2px] w-3.5 rounded-full bg-current" />
+                          </span>
+                        </button>
+
+                        <div className="min-w-0 flex-1">
                           <p className="truncate text-sm font-semibold text-stone-800 dark:text-stone-200">
                             {subject.name}
                           </p>

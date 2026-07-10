@@ -3,6 +3,7 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 import { IconCloseButton } from "../components/ui/IconCloseButton";
 import { OverflowTooltipTitle } from "../components/ui/OverflowTooltipTitle";
 import { ReturnLinkLabel } from "../components/ui/ReturnLinkLabel";
+import { ThemeSelect } from "../components/ui/ThemeSelect";
 import { getAnswerToken } from "../lib/answer";
 import {
   buildSessionExportCsv,
@@ -37,6 +38,12 @@ const resultOrderModeLabel = {
   "chapter-random": "챕터별 랜덤",
   random: "전체 랜덤",
 } as const;
+
+const solveOrderOptions = [
+  { value: "number", label: "번호 순서대로 풀기" },
+  { value: "chapter-random", label: "챕터별로 무작위 풀기" },
+  { value: "random", label: "전체 무작위 풀기" },
+];
 
 export function ResultPage() {
   const { sessionId = "" } = useParams();
@@ -480,18 +487,15 @@ export function ResultPage() {
                 />
               </label>
 
-              <label className="block space-y-2">
+              <div className="space-y-2">
                 <span className="text-sm font-medium text-stone-700 dark:text-stone-300">풀이 순서</span>
-                <select
+                <ThemeSelect
                   value={retryOrderMode}
-                  onChange={(e) => setRetryOrderMode(e.target.value as SolveOrder)}
-                  className="app-control w-full rounded-lg px-3 py-2 text-sm"
-                >
-                  <option value="number">번호 순서대로 풀기</option>
-                  <option value="chapter-random">챕터별로 무작위 풀기</option>
-                  <option value="random">전체 무작위 풀기</option>
-                </select>
-              </label>
+                  onChange={(value) => setRetryOrderMode(value as SolveOrder)}
+                  options={solveOrderOptions}
+                  ariaLabel="풀이 순서 선택"
+                />
+              </div>
 
               <div className="pt-2">
                 <button
@@ -534,18 +538,15 @@ export function ResultPage() {
                 />
               </label>
 
-              <label className="block space-y-2">
+              <div className="space-y-2">
                 <span className="text-sm font-medium text-stone-700 dark:text-stone-300">풀이 순서</span>
-                <select
+                <ThemeSelect
                   value={retryOrderMode}
-                  onChange={(e) => setRetryOrderMode(e.target.value as SolveOrder)}
-                  className="app-control w-full rounded-lg px-3 py-2 text-sm"
-                >
-                  <option value="number">번호 순서대로 풀기</option>
-                  <option value="chapter-random">챕터별로 무작위 풀기</option>
-                  <option value="random">전체 무작위 풀기</option>
-                </select>
-              </label>
+                  onChange={(value) => setRetryOrderMode(value as SolveOrder)}
+                  options={solveOrderOptions}
+                  ariaLabel="풀이 순서 선택"
+                />
+              </div>
 
               <div className="pt-2">
                 <button
@@ -588,18 +589,15 @@ export function ResultPage() {
                 />
               </label>
 
-              <label className="block space-y-2">
+              <div className="space-y-2">
                 <span className="text-sm font-medium text-stone-700 dark:text-stone-300">풀이 순서</span>
-                <select
+                <ThemeSelect
                   value={retryOrderMode}
-                  onChange={(e) => setRetryOrderMode(e.target.value as SolveOrder)}
-                  className="app-control w-full rounded-lg px-3 py-2 text-sm"
-                >
-                  <option value="number">번호 순서대로 풀기</option>
-                  <option value="chapter-random">챕터별로 무작위 풀기</option>
-                  <option value="random">전체 무작위 풀기</option>
-                </select>
-              </label>
+                  onChange={(value) => setRetryOrderMode(value as SolveOrder)}
+                  options={solveOrderOptions}
+                  ariaLabel="풀이 순서 선택"
+                />
+              </div>
 
               <div className="pt-2">
                 <button
