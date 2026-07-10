@@ -147,16 +147,16 @@ export function CbtSolveScreen({ sessionId, onSubmitted }: CbtSolveScreenProps) 
               tooltipClassName="left-1/2 max-w-sm -translate-x-1/2"
             />
           </div>
-          <div className="flex w-auto shrink-0 items-center gap-2 md:w-[220px]">
+          <div className="flex w-auto shrink-0 items-center justify-end gap-2">
             <button
               onClick={() => setIsPauseDialogOpen(true)}
-              className="app-button-secondary whitespace-nowrap rounded-lg px-2.5 py-1.5 text-xs font-semibold sm:px-3 sm:text-sm md:flex-1"
+              className="app-button-secondary whitespace-nowrap rounded-lg px-2.5 py-1.5 text-xs font-semibold sm:px-3 sm:text-sm"
             >
               일시 중단
             </button>
             <button
               onClick={handleSubmit}
-              className="app-button-primary whitespace-nowrap rounded-lg px-2.5 py-1.5 text-xs font-semibold sm:px-3 sm:text-sm md:flex-1"
+              className="app-button-primary whitespace-nowrap rounded-lg px-2.5 py-1.5 text-xs font-semibold sm:px-3 sm:text-sm"
             >
               제출 및 종료
             </button>
