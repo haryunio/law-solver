@@ -40,7 +40,7 @@ export function CbtSolveScreen({ sessionId, onSubmitted }: CbtSolveScreenProps) 
   useEffect(() => {
     const activeBtn = omrRefs.get(index);
     if (activeBtn) {
-      activeBtn.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      activeBtn.scrollIntoView({ behavior: "auto", block: "nearest" });
     }
   }, [index, omrRefs]);
 
@@ -58,12 +58,24 @@ export function CbtSolveScreen({ sessionId, onSubmitted }: CbtSolveScreenProps) 
   }, [index, session]);
 
   if (!session) {
-    return <div className="rounded-xl border border-stone-200 bg-white p-6 text-stone-700">세션을 찾을 수 없습니다.</div>;
+    return (
+      <div className="app-page p-6">
+        <div className="app-card mx-auto max-w-2xl rounded-2xl border p-8 text-center text-stone-700 dark:text-stone-300">
+          세션을 찾을 수 없습니다.
+        </div>
+      </div>
+    );
   }
 
   const current = session.questions[index];
   if (!current) {
-    return <div className="rounded-xl border border-stone-200 bg-white p-6 text-stone-700">문항 데이터가 없습니다.</div>;
+    return (
+      <div className="app-page p-6">
+        <div className="app-card mx-auto max-w-2xl rounded-2xl border p-8 text-center text-stone-700 dark:text-stone-300">
+          문항 데이터가 없습니다.
+        </div>
+      </div>
+    );
   }
 
   const CIRCLED_NUMBERS = ["①", "②", "③", "④", "⑤"];
@@ -104,8 +116,8 @@ export function CbtSolveScreen({ sessionId, onSubmitted }: CbtSolveScreenProps) 
   };
 
   return (
-    <div className="min-h-screen bg-stone-50 text-stone-900 dark:bg-stone-950 dark:text-stone-100 transition-colors duration-300">
-      <header className="sticky top-0 z-20 border-b border-stone-200 bg-white/95 backdrop-blur dark:border-stone-800 dark:bg-stone-900/90">
+    <div className="app-focus-page app-page text-stone-900 dark:text-stone-100">
+      <header className="app-topbar sticky top-0 z-20 border-b">
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-3 md:px-6">
           <div className="min-w-0">
             <p className="text-xs font-medium text-stone-500 dark:text-stone-500">타이머</p>
@@ -121,13 +133,13 @@ export function CbtSolveScreen({ sessionId, onSubmitted }: CbtSolveScreenProps) 
           <div className="flex shrink-0 items-center gap-2">
             <button
               onClick={() => setIsPauseDialogOpen(true)}
-              className="rounded-lg border border-stone-300 bg-white px-3 py-2 text-sm font-semibold text-stone-700 transition hover:bg-stone-50 dark:border-stone-700 dark:bg-stone-800 dark:text-stone-300 dark:hover:bg-stone-700"
+              className="app-button-secondary rounded-lg px-3 py-2 text-sm font-semibold"
             >
               일시 중단
             </button>
             <button
               onClick={handleSubmit}
-              className="rounded-lg bg-red-600 px-3 py-2 text-sm font-semibold text-white transition hover:bg-red-700 dark:bg-red-600 dark:hover:bg-red-700"
+              className="app-button-primary rounded-lg px-3 py-2 text-sm font-semibold"
             >
               제출 및 종료
             </button>
@@ -136,7 +148,7 @@ export function CbtSolveScreen({ sessionId, onSubmitted }: CbtSolveScreenProps) 
       </header>
 
       <div className="mx-auto grid max-w-6xl grid-cols-1 gap-4 px-4 py-4 md:grid-cols-[1fr_220px] md:px-6">
-        <main className="flex max-h-[calc(100vh-140px)] flex-col overflow-hidden rounded-2xl border border-stone-200 bg-white dark:border-stone-800 dark:bg-stone-900">
+        <main className="app-card flex max-h-[calc(100vh-140px)] flex-col overflow-hidden rounded-2xl border">
           <div className="shrink-0 p-5 pb-4 md:px-8 md:pt-8">
           <div className="flex items-start justify-between gap-3">
             <div className="flex min-w-0 flex-wrap items-center gap-2">
@@ -154,7 +166,7 @@ export function CbtSolveScreen({ sessionId, onSubmitted }: CbtSolveScreenProps) 
                 onClick={() => setShowAnswer((prev) => !prev)}
                 title={showAnswer ? "정답 숨기기" : "정답/해설 보기"}
                 className={[
-                  "flex h-8 w-8 items-center justify-center rounded-full border text-sm transition",
+                  "flex h-8 w-8 items-center justify-center rounded-full border text-sm",
                   showAnswer
                     ? "border-blue-600 bg-blue-600 text-white"
                     : "border-stone-300 bg-white text-stone-500 hover:border-blue-500 hover:text-blue-500 dark:border-stone-700 dark:bg-stone-800 dark:text-stone-400 dark:hover:border-blue-500 dark:hover:text-blue-500",
@@ -166,7 +178,7 @@ export function CbtSolveScreen({ sessionId, onSubmitted }: CbtSolveScreenProps) 
                 onClick={() => toggleBookmark(session.id, current.id)}
                 title={current.bookmark ? "책갈피 해제" : "책갈피 추가"}
                 className={[
-                  "flex h-8 w-8 items-center justify-center rounded-full border text-sm transition",
+                  "flex h-8 w-8 items-center justify-center rounded-full border text-sm",
                   current.bookmark
                     ? "border-amber-400 bg-amber-400 text-white"
                     : "border-stone-300 bg-white text-stone-500 hover:border-amber-500 hover:text-amber-500 dark:border-stone-700 dark:bg-stone-800 dark:text-stone-400 dark:hover:border-amber-500 dark:hover:text-amber-500",
@@ -224,7 +236,7 @@ export function CbtSolveScreen({ sessionId, onSubmitted }: CbtSolveScreenProps) 
                   onChange={(e) => handleAnswer(e.target.value)}
                   onKeyDown={handleShortSubmit}
                   placeholder="정답을 입력하세요. (Enter를 누르면 다음 문항으로)"
-                  className="w-full rounded-xl border border-stone-300 bg-white px-4 py-3 text-base outline-none ring-red-200 transition focus:border-red-600 focus:ring-2 dark:border-stone-700 dark:bg-stone-800 dark:text-stone-100 dark:ring-red-900/50 dark:focus:border-red-600"
+                  className="app-control w-full rounded-xl px-4 py-3 text-base"
                   autoFocus
                 />
               </div>
@@ -240,14 +252,14 @@ export function CbtSolveScreen({ sessionId, onSubmitted }: CbtSolveScreenProps) 
                     <button
                       onClick={() => handleAnswer(option.key)}
                       className={[
-                        "flex w-full items-start gap-2 rounded-xl border px-4 py-3 text-left transition",
+                        "flex w-full items-start gap-2 rounded-xl border px-4 py-3 text-left",
                         showInlineNext ? "pr-32 md:pr-36" : "",
                         session.type === "5-choice" ? "text-sm md:text-sm" : "text-base",
                         isCorrect
                           ? "border-blue-600 bg-blue-50 text-blue-700 dark:border-blue-600 dark:bg-blue-950/30 dark:text-blue-400"
                           : selected
                             ? "border-red-600 bg-red-50 text-red-700 dark:border-red-600 dark:bg-red-950/30 dark:text-red-400"
-                            : "border-stone-300 bg-white text-stone-800 hover:border-red-300 dark:border-stone-700 dark:bg-stone-800 dark:text-stone-300 dark:hover:border-stone-600",
+                            : "border-stone-300 bg-white text-stone-800 hover:border-red-300 hover:bg-red-50/40 dark:border-stone-700 dark:bg-stone-800 dark:text-stone-300 dark:hover:border-red-900/70 dark:hover:bg-red-950/15",
                       ].join(" ")}
                     >
                       {option.circle && (
@@ -262,7 +274,7 @@ export function CbtSolveScreen({ sessionId, onSubmitted }: CbtSolveScreenProps) 
                       <button
                         type="button"
                         onClick={goToNext}
-                        className="absolute right-2 top-1/2 -translate-y-1/2 rounded-lg bg-red-600 px-3 py-1.5 text-xs font-bold text-white shadow-sm transition hover:bg-red-700 dark:bg-red-600 dark:hover:bg-red-700"
+                        className="app-button-primary app-inline-next absolute right-2 top-1/2 -translate-y-1/2 rounded-lg px-3 py-1.5 text-xs font-bold"
                       >
                         다음 문제로
                         <span className="ml-1 text-red-200">›</span>
@@ -299,7 +311,7 @@ export function CbtSolveScreen({ sessionId, onSubmitted }: CbtSolveScreenProps) 
             <button
               onClick={() => setIndex((prev) => Math.max(0, prev - 1))}
               disabled={index === 0}
-              className="border-r border-stone-200 bg-stone-50 px-4 py-3 text-sm font-bold text-stone-800 shadow-[0_-1px_0_rgba(0,0,0,0.02)] transition hover:bg-stone-100 disabled:cursor-not-allowed disabled:opacity-40 dark:border-stone-800 dark:bg-stone-950/40 dark:text-stone-200 dark:hover:bg-stone-800"
+              className="border-r border-stone-200 bg-stone-50 px-4 py-3 text-sm font-bold text-stone-800 shadow-[0_-1px_0_rgba(0,0,0,0.02)] hover:bg-stone-100 disabled:cursor-not-allowed disabled:opacity-40 dark:border-stone-800 dark:bg-stone-950/40 dark:text-stone-200 dark:hover:bg-stone-800"
             >
               <span className="mr-1 text-stone-400 dark:text-stone-500">‹</span>
               이전 문제
@@ -307,14 +319,14 @@ export function CbtSolveScreen({ sessionId, onSubmitted }: CbtSolveScreenProps) 
             <button
               type="button"
               onClick={() => setIsOmrOpen(true)}
-              className="border-r border-stone-200 bg-white px-2 py-3 text-xs font-bold text-stone-600 shadow-[0_-1px_0_rgba(0,0,0,0.02)] transition hover:bg-stone-50 dark:border-stone-800 dark:bg-stone-900 dark:text-stone-300 dark:hover:bg-stone-800 md:hidden"
+              className="border-r border-stone-200 bg-white px-2 py-3 text-xs font-bold text-stone-600 shadow-[0_-1px_0_rgba(0,0,0,0.02)] hover:bg-stone-50 dark:border-stone-800 dark:bg-stone-900 dark:text-stone-300 dark:hover:bg-stone-800 md:hidden"
             >
               OMR
             </button>
             <button
               onClick={goToNext}
               disabled={index >= session.total_questions - 1}
-              className="bg-red-600 px-4 py-3 text-sm font-bold text-white shadow-[0_-1px_0_rgba(255,255,255,0.18),0_-8px_18px_rgba(185,28,28,0.06)] transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-40 md:border-l md:border-red-700/20 dark:border-red-500/20 dark:bg-red-600 dark:hover:bg-red-700"
+              className="app-button-primary px-4 py-3 text-sm font-bold disabled:cursor-not-allowed disabled:opacity-40 md:border-l"
             >
               다음 문제
               <span className="ml-1 text-red-200">›</span>
@@ -322,7 +334,7 @@ export function CbtSolveScreen({ sessionId, onSubmitted }: CbtSolveScreenProps) 
           </div>
         </main>
 
-        <aside className="hidden max-h-[calc(100vh-140px)] flex-col rounded-2xl border border-stone-200 bg-white p-4 md:flex dark:border-stone-800 dark:bg-stone-900">
+        <aside className="app-card hidden max-h-[calc(100vh-140px)] flex-col rounded-2xl border p-4 md:flex">
           <div className="mb-3 flex items-center justify-between">
             <h3 className="text-sm font-semibold dark:text-stone-100">OMR</h3>
             <p className="text-xs text-stone-500 dark:text-stone-500">
@@ -363,7 +375,7 @@ export function CbtSolveScreen({ sessionId, onSubmitted }: CbtSolveScreenProps) 
           </div>
           <button
             onClick={() => downloadSessionCsv(session)}
-            className="mt-4 w-full rounded-lg border border-stone-300 bg-white px-3 py-2 text-xs font-semibold text-stone-700 dark:border-stone-700 dark:bg-stone-800 dark:text-stone-300"
+            className="app-button-secondary mt-4 w-full rounded-lg px-3 py-2 text-xs font-semibold"
           >
             CSV 다운로드
           </button>
@@ -372,8 +384,8 @@ export function CbtSolveScreen({ sessionId, onSubmitted }: CbtSolveScreenProps) 
 
       {isOmrOpen ? (
         <div className="fixed inset-0 z-30 md:hidden">
-          <button onClick={() => setIsOmrOpen(false)} className="absolute inset-0 bg-black/35 dark:bg-black/60" />
-          <div className="absolute bottom-0 left-0 right-0 rounded-t-2xl bg-white p-4 shadow-2xl dark:bg-stone-900">
+          <button onClick={() => setIsOmrOpen(false)} className="app-modal-backdrop absolute inset-0" />
+          <div className="app-modal-surface absolute bottom-0 left-0 right-0 rounded-t-2xl border-t p-4 shadow-2xl">
             <div className="mb-3 flex items-center justify-between">
               <h3 className="text-sm font-semibold dark:text-stone-100">OMR 빠른 이동</h3>
               <button onClick={() => setIsOmrOpen(false)} className="text-sm text-stone-500 dark:text-stone-400">

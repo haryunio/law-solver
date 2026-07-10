@@ -52,7 +52,7 @@ export function CsvUploadPanel({ subjectId, onCreated }: CsvUploadPanelProps) {
   return (
     <form
       onSubmit={handleSubmit}
-      className="space-y-4 rounded-2xl border border-stone-200 bg-stone-50 p-5 shadow-sm dark:border-stone-800 dark:bg-stone-900"
+      className="app-modal-surface space-y-4 rounded-2xl border p-5 shadow-xl"
     >
       <h2 className="text-lg font-semibold text-stone-900 dark:text-stone-100">새 문제 등록</h2>
 
@@ -61,7 +61,7 @@ export function CsvUploadPanel({ subjectId, onCreated }: CsvUploadPanelProps) {
         <input
           value={title}
           onChange={(e) => setTitle(e.target.value)}
-          className="w-full rounded-lg border border-stone-300 bg-white px-3 py-2 text-sm text-stone-900 outline-none ring-red-200 transition focus:ring-2 dark:border-stone-700 dark:bg-stone-800 dark:text-stone-100 dark:ring-red-900/50"
+          className="app-control w-full rounded-lg px-3 py-2 text-sm"
           placeholder="예: 민법 기출 2025"
         />
       </label>
@@ -71,7 +71,7 @@ export function CsvUploadPanel({ subjectId, onCreated }: CsvUploadPanelProps) {
         <select
           value={type}
           onChange={(e) => setType(e.target.value as TestType)}
-          className="w-full rounded-lg border border-stone-300 bg-white px-3 py-2 text-sm text-stone-900 outline-none ring-red-200 transition focus:ring-2 dark:border-stone-700 dark:bg-stone-800 dark:text-stone-100 dark:ring-red-900/50"
+          className="app-control w-full rounded-lg px-3 py-2 text-sm"
         >
           <option value="OX">OX</option>
           <option value="5-choice">5지선다</option>
@@ -84,7 +84,7 @@ export function CsvUploadPanel({ subjectId, onCreated }: CsvUploadPanelProps) {
         <select
           value={orderMode}
           onChange={(e) => setOrderMode(e.target.value as SolveOrder)}
-          className="w-full rounded-lg border border-stone-300 bg-white px-3 py-2 text-sm text-stone-900 outline-none ring-red-200 transition focus:ring-2 dark:border-stone-700 dark:bg-stone-800 dark:text-stone-100 dark:ring-red-900/50"
+          className="app-control w-full rounded-lg px-3 py-2 text-sm"
         >
           <option value="number">번호 순서대로 풀기</option>
           <option value="chapter-random">챕터별로 무작위 풀기</option>
@@ -98,7 +98,7 @@ export function CsvUploadPanel({ subjectId, onCreated }: CsvUploadPanelProps) {
           type="file"
           accept=".csv,text/csv"
           onChange={(e) => setFile(e.target.files?.[0] ?? null)}
-          className="block w-full rounded-lg border border-stone-300 bg-white px-3 py-2 text-sm text-stone-900 file:mr-4 file:rounded file:border-0 file:bg-red-600 file:px-3 file:py-1.5 file:text-sm file:font-semibold file:text-white dark:border-stone-700 dark:bg-stone-800 dark:text-stone-400 dark:file:bg-red-600"
+          className="app-control block w-full rounded-lg px-3 py-2 text-sm file:mr-4 file:rounded-lg file:border-0 file:bg-red-600 file:px-3 file:py-1.5 file:text-sm file:font-semibold file:text-white"
         />
       </label>
 
@@ -109,7 +109,7 @@ export function CsvUploadPanel({ subjectId, onCreated }: CsvUploadPanelProps) {
       <button
         type="submit"
         disabled={isLoading}
-        className="inline-flex items-center rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-60"
+        className="app-button-primary app-button-primary-standalone inline-flex items-center rounded-lg px-4 py-2 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60"
       >
         {isLoading ? "파싱 중..." : "등록 후 풀이 시작"}
       </button>
