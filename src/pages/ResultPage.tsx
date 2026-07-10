@@ -240,7 +240,7 @@ export function ResultPage() {
                 {session.score}%
               </p>
             </article>
-            <article className="rounded-xl bg-stone-50 px-3 py-2.5 dark:bg-stone-950/40">
+            <article className="app-neutral-box rounded-xl px-3 py-2.5">
               <p className="text-[11px] font-medium text-stone-500 dark:text-stone-500">시간</p>
               <p className="mt-0.5 text-sm font-bold text-stone-900 dark:text-stone-100">
                 {formatElapsedTime(session.elapsed_time)}
@@ -249,14 +249,14 @@ export function ResultPage() {
                 문제당 {formatElapsedTime(averageSecondsPerQuestion)}
               </p>
             </article>
-            <article className="rounded-xl bg-stone-50 px-3 py-2.5 dark:bg-stone-950/40">
+            <article className="app-neutral-box rounded-xl px-3 py-2.5">
               <p className="text-[11px] font-medium text-stone-500 dark:text-stone-500">정답 / 전체</p>
               <p className="mt-0.5 text-sm font-bold text-stone-900 dark:text-stone-100">
                 {correctCount} / {session.total_questions}
               </p>
               <p className="mt-0.5 text-[10px] text-stone-400 dark:text-stone-500">오답 {wrongCount}개</p>
             </article>
-            <article className="rounded-xl bg-stone-50 px-3 py-2.5 dark:bg-stone-950/40">
+            <article className="app-neutral-box rounded-xl px-3 py-2.5">
               <p className="text-[11px] font-medium text-stone-500 dark:text-stone-500">미응답 / 책갈피</p>
               <p className="mt-0.5 text-sm font-bold text-stone-900 dark:text-stone-100">
                 {unansweredCount} / {bookmarkCount}
