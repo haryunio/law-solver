@@ -102,6 +102,10 @@ export function CbtSolveScreen({ sessionId, onSubmitted }: CbtSolveScreenProps) 
       : session.type === "short"
         ? "md:min-h-[min(360px,calc(100vh-112px))]"
         : "md:min-h-[min(560px,calc(100vh-112px))]";
+  const omrPanelHeightClass =
+    session.type === "5-choice"
+      ? "md:h-auto md:max-h-[calc(100vh-112px)] md:self-start"
+      : "md:h-[calc(100vh-112px)] md:max-h-[calc(100vh-112px)]";
 
   const handleAnswer = (answer: string) => {
     updateAnswer(session.id, current.id, answer as AnswerValue);
@@ -356,14 +360,19 @@ export function CbtSolveScreen({ sessionId, onSubmitted }: CbtSolveScreenProps) 
           </div>
         </main>
 
-        <aside className="app-card hidden h-[calc(100vh-112px)] max-h-[calc(100vh-112px)] flex-col rounded-2xl border p-4 md:flex">
+        <aside
+          className={[
+            "app-card hidden flex-col rounded-2xl border p-4 md:flex",
+            omrPanelHeightClass,
+          ].join(" ")}
+        >
           <div className="mb-3 flex items-center justify-between">
             <h3 className="text-sm font-semibold dark:text-stone-100">OMR</h3>
             <p className="text-xs text-stone-500 dark:text-stone-500">
               {answeredCount}/{session.total_questions}
             </p>
           </div>
-          <div className="flex-1 overflow-y-auto rounded-lg border border-stone-200 dark:border-stone-800">
+          <div className="min-h-0 flex-1 overflow-y-auto rounded-lg border border-stone-200 dark:border-stone-800">
             <div className="sticky top-0 z-10 grid grid-cols-[32px_1fr_1fr_16px] border-b border-stone-200 bg-stone-50 px-2 py-1.5 text-[11px] font-semibold text-stone-600 dark:border-stone-800 dark:bg-stone-950 dark:text-stone-400">
               <span>번호</span>
               <span>내 답</span>
