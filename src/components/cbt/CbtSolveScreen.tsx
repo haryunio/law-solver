@@ -3,6 +3,12 @@ import { useNavigate } from "react-router-dom";
 import { ConfirmDialog } from "../ui/ConfirmDialog";
 import { OverflowTooltipTitle } from "../ui/OverflowTooltipTitle";
 import { getAnswerToken } from "../../lib/answer";
+import {
+  QuestionNavigationMethod,
+  SolveEntry,
+  toAnalyticsQuestionType,
+  trackEvent,
+} from "../../lib/analytics";
 import { downloadSessionCsv } from "../../lib/csv";
 import { getSubjectDashboardPath } from "../../lib/subject";
 import { formatElapsedTime } from "../../lib/time";
@@ -11,10 +17,15 @@ import { AnswerValue } from "../../types/test";
 
 interface CbtSolveScreenProps {
   sessionId: string;
+  solveEntry?: SolveEntry;
   onSubmitted?: (sessionId: string) => void;
 }
 
-export function CbtSolveScreen({ sessionId, onSubmitted }: CbtSolveScreenProps) {
+export function CbtSolveScreen({
+  sessionId,
+  solveEntry = "direct",
+  onSubmitted,
+}: CbtSolveScreenProps) {
   const navigate = useNavigate();
   const sessions = useTestStore((state) => state.sessions);
   const sessionSubjectMap = useTestStore((state) => state.sessionSubjectMap);
@@ -31,7 +42,28 @@ export function CbtSolveScreen({ sessionId, onSubmitted }: CbtSolveScreenProps) 
   const [isPauseDialogOpen, setIsPauseDialogOpen] = useState(false);
   const [isSubmitDialogOpen, setIsSubmitDialogOpen] = useState(false);
   const contentRef = useRef<HTMLDivElement | null>(null);
+  const trackedSolveSessionRef = useRef<string | null>(null);
+  const trackedQuestionIdsRef = useRef(new Set<string>());
   const omrRefs = useMemo(() => new Map<number, HTMLButtonElement | null>(), []);
+
+  useEffect(() => {
+    if (
+      !session ||
+      session.status === "completed" ||
+      trackedSolveSessionRef.current === session.id
+    ) {
+      return;
+    }
+
+    trackedSolveSessionRef.current = session.id;
+    trackedQuestionIdsRef.current.clear();
+    const effectiveSolveEntry =
+      solveEntry === "direct" && session.solved_questions > 0 ? "resume" : solveEntry;
+    trackEvent("solve_started", {
+      question_type: toAnalyticsQuestionType(session.type),
+      solve_entry: effectiveSolveEntry,
+    });
+  }, [session, solveEntry]);
 
   useEffect(() => {
     setShowAnswer(false);
@@ -111,19 +143,40 @@ export function CbtSolveScreen({ sessionId, onSubmitted }: CbtSolveScreenProps) 
     updateAnswer(session.id, current.id, answer as AnswerValue);
   };
 
-  const goToNext = () => {
-    setIndex((prev) => Math.min(session.total_questions - 1, prev + 1));
+  const trackCurrentQuestion = (navigationMethod: QuestionNavigationMethod) => {
+    if (current.my_answer === "" || trackedQuestionIdsRef.current.has(current.id)) return;
+
+    trackedQuestionIdsRef.current.add(current.id);
+    trackEvent("question_completed", {
+      question_type: toAnalyticsQuestionType(session.type),
+      navigation_method: navigationMethod,
+    });
+  };
+
+  const goToQuestion = (nextIndex: number, navigationMethod: QuestionNavigationMethod) => {
+    const boundedIndex = Math.max(0, Math.min(session.total_questions - 1, nextIndex));
+    if (boundedIndex === index) return;
+    trackCurrentQuestion(navigationMethod);
+    setIndex(boundedIndex);
+  };
+
+  const goToNext = (navigationMethod: QuestionNavigationMethod = "next_button") => {
+    goToQuestion(index + 1, navigationMethod);
   };
 
   const handleShortSubmit = (e: React.KeyboardEvent) => {
     if (e.nativeEvent.isComposing) return; // 한글 조합 중일 때는 동작 방지
     if (e.key === "Enter") {
-      goToNext();
+      goToNext("enter");
     }
   };
 
   const submitImmediately = () => {
     setIsSubmitDialogOpen(false);
+    trackCurrentQuestion("submit");
+    trackEvent("solve_completed", {
+      question_type: toAnalyticsQuestionType(session.type),
+    });
     submitSession(session.id);
     onSubmitted?.(session.id);
   };
@@ -134,6 +187,14 @@ export function CbtSolveScreen({ sessionId, onSubmitted }: CbtSolveScreenProps) 
       return;
     }
     submitImmediately();
+  };
+
+  const pauseAndReturnToDashboard = () => {
+    trackCurrentQuestion("pause");
+    trackEvent("solve_paused", {
+      question_type: toAnalyticsQuestionType(session.type),
+    });
+    navigate(subjectDashboardPath);
   };
 
   return (
@@ -299,7 +360,7 @@ export function CbtSolveScreen({ sessionId, onSubmitted }: CbtSolveScreenProps) 
                     {showInlineNext ? (
                       <button
                         type="button"
-                        onClick={goToNext}
+                        onClick={() => goToNext("inline_next")}
                         className="app-button-primary app-inline-next absolute bottom-2 right-2 top-2 inline-flex items-center rounded-lg px-3 text-xs font-bold"
                       >
                         다음 문제로
@@ -335,7 +396,7 @@ export function CbtSolveScreen({ sessionId, onSubmitted }: CbtSolveScreenProps) 
 
           <div className="grid shrink-0 grid-cols-[2fr_1fr_2fr] overflow-hidden border-t border-stone-200 md:grid-cols-2 dark:border-stone-800">
             <button
-              onClick={() => setIndex((prev) => Math.max(0, prev - 1))}
+              onClick={() => goToQuestion(index - 1, "previous_button")}
               disabled={index === 0}
               className="border-r border-stone-200 bg-stone-50 px-4 py-3 text-sm font-bold text-stone-800 shadow-[0_-1px_0_rgba(0,0,0,0.02)] hover:bg-stone-100 disabled:cursor-not-allowed disabled:opacity-40 dark:border-stone-800 dark:bg-stone-950/40 dark:text-stone-200 dark:hover:bg-stone-800"
             >
@@ -350,7 +411,7 @@ export function CbtSolveScreen({ sessionId, onSubmitted }: CbtSolveScreenProps) 
               OMR
             </button>
             <button
-              onClick={goToNext}
+              onClick={() => goToNext("next_button")}
               disabled={index >= session.total_questions - 1}
               className="app-button-primary px-4 py-3 text-sm font-bold disabled:cursor-not-allowed disabled:opacity-40 md:border-l"
             >
@@ -385,7 +446,7 @@ export function CbtSolveScreen({ sessionId, onSubmitted }: CbtSolveScreenProps) 
                 <button
                   key={question.id}
                   ref={(el) => omrRefs.set(qIndex, el)}
-                  onClick={() => setIndex(qIndex)}
+                  onClick={() => goToQuestion(qIndex, "omr")}
                   className={[
                     "grid w-full grid-cols-[32px_1fr_1fr_16px] border-b border-stone-200 px-2 py-1.5 text-left text-xs font-semibold last:border-b-0 dark:border-stone-800",
                     isCurrent
@@ -436,7 +497,7 @@ export function CbtSolveScreen({ sessionId, onSubmitted }: CbtSolveScreenProps) 
                   <button
                     key={question.id}
                     onClick={() => {
-                      setIndex(qIndex);
+                      goToQuestion(qIndex, "omr");
                       setIsOmrOpen(false);
                     }}
                     className={[
@@ -468,7 +529,7 @@ export function CbtSolveScreen({ sessionId, onSubmitted }: CbtSolveScreenProps) 
           confirmLabel="대시보드로 이동"
           cancelLabel="계속 풀기"
           onCancel={() => setIsPauseDialogOpen(false)}
-          onConfirm={() => navigate(subjectDashboardPath)}
+          onConfirm={pauseAndReturnToDashboard}
         />
       ) : null}
 

@@ -1,5 +1,6 @@
 import { FormEvent, useState } from "react";
 import { parseCsvByType, readCsvFileText } from "../../lib/csv";
+import { toAnalyticsQuestionType, trackEvent } from "../../lib/analytics";
 import { useTestStore } from "../../store/useTestStore";
 import { SolveOrder, TestType } from "../../types/test";
 import { ThemeSelect } from "../ui/ThemeSelect";
@@ -53,8 +54,15 @@ export function CsvUploadPanel({ subjectId, onCreated }: CsvUploadPanelProps) {
         questions,
         subjectId,
       });
+      trackEvent("problem_upload_completed", {
+        question_type: toAnalyticsQuestionType(type),
+      });
       onCreated?.(sessionId);
     } catch (e) {
+      trackEvent("problem_upload_failed", {
+        question_type: toAnalyticsQuestionType(type),
+        failure_type: "read_or_parse",
+      });
       const message = e instanceof Error ? e.message : "CSV 파싱 중 오류가 발생했습니다.";
       setError(message);
     } finally {

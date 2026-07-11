@@ -20,6 +20,7 @@
 - React Router
 - Zustand + persist middleware
 - Papa Parse
+- Google Analytics 4 (`gtag.js`)
 - Vitest
 
 ## 주요 디렉터리별 역할
@@ -40,7 +41,7 @@ src/pages/
 src/components/
 ```
 
-재사용 UI 컴포넌트입니다. CBT 풀이 화면, CSV 업로드 패널, 리뷰용 선택지 표시 컴포넌트, 공통 모달/버튼 UI가 들어 있습니다.
+재사용 UI 컴포넌트입니다. CBT 풀이 화면, CSV 업로드 패널, 리뷰용 선택지 표시 컴포넌트, 공통 모달/버튼 UI가 들어 있습니다. `src/components/analytics/PageViewTracker.tsx`는 React Router 이동에 따른 정규화 페이지뷰를 전송합니다.
 
 ```txt
 src/store/
@@ -52,7 +53,7 @@ Zustand store입니다. 문제 세션, 과목, 세션-과목 매핑 상태는 `u
 src/lib/
 ```
 
-CSV 파싱/다운로드, 채점, 정렬, 답안 표시, ID 생성, 시간 포맷 등 도메인 유틸입니다. 관련 단위 테스트도 이 디렉터리에 있습니다.
+CSV 파싱/다운로드, GA4 이벤트, 채점, 정렬, 답안 표시, ID 생성, 시간 포맷 등 도메인 유틸입니다. 관련 단위 테스트도 이 디렉터리에 있습니다. GA4 이벤트와 허용 파라미터는 `src/lib/analytics.ts`에서 중앙 관리합니다.
 
 ```txt
 src/types/
@@ -87,6 +88,8 @@ GitHub Pages용 정적 파일입니다. `404.html`은 SPA 새로고침 대응용
 - CSV 헤더 호환성은 `src/lib/csv.ts`의 `normalize`, `getValue` 흐름을 기준으로 확장합니다.
 - localStorage 데이터 구조를 바꿀 때는 기존 사용자 데이터와 마이그레이션 영향을 고려합니다.
 - `과목 없음`은 저장되는 subject가 아니라 세션-과목 매핑이 없는 상태입니다. `NO_SUBJECT_ID`는 라우팅/UI용 sentinel로만 사용하세요.
+- GA4 이벤트는 페이지 컴포넌트에서 `window.gtag`를 직접 호출하지 말고 `src/lib/analytics.ts`의 `trackEvent`, `trackPageView`를 사용하세요.
+- 새 GA4 이벤트나 파라미터를 추가할 때는 `AnalyticsEventMap`에 타입을 먼저 정의하고 README, AGENTS, 개인정보처리방침을 함께 갱신하세요.
 
 ## 디자인 시스템
 
@@ -209,6 +212,8 @@ npm run lint
 - `src/types/test.ts`: localStorage에 저장되는 세션 구조와 연결됩니다. 필드 변경 시 기존 저장 데이터 호환성을 검토하세요.
 - `src/store/useTestStore.ts`: 세션 생성, 과목 CRUD, 세션-과목 매핑, 답안 저장, 오답노트, 북마크, 백업/복원 동작의 중심입니다.
 - `src/components/cbt/CbtSolveScreen.tsx`: 풀이 UX, 타이머, OMR, 단답형 입력, 정답 보기, 책갈피 기능이 모여 있습니다.
+- `src/lib/analytics.ts`: GA4 측정 ID, 이벤트 타입, 운영 도메인 제한, 페이지 경로 정규화가 들어 있습니다. 동적 ID나 학습 성과 데이터가 전송되지 않도록 주의하세요.
+- `src/components/analytics/PageViewTracker.tsx`: React Router 경로가 바뀔 때 수동 `page_view`를 전송합니다. 자동 History 페이지뷰와 함께 사용하지 마세요.
 - `src/index.css`: 랜딩 스타일과 앱 공통 `app-*` 디자인 토큰/컴포넌트 클래스가 함께 있습니다. 공통 색상이나 표면을 바꿀 때 라이트·다크 모드를 함께 확인하세요.
 - `src/components/ui/BrandMark.tsx`: `public/favicon.svg`를 사용하는 공통 로고입니다. 헤더와 푸터에서 동일한 자산을 유지하세요.
 - `src/pages/ResultPage.tsx`: 재풀이, CSV 다운로드, 결과 요약 액션이 많아 회귀 가능성이 큽니다.
@@ -223,6 +228,50 @@ npm run lint
 현재 필수 환경변수는 없습니다.
 
 이 프로젝트는 프론트엔드 전용 앱이므로 빌드된 JS가 사용자에게 그대로 전달됩니다. API 키, 토큰, 개인정보, 서버용 시크릿을 코드나 `.env`에 넣지 마세요. Vite 환경변수를 추가해야 한다면 클라이언트에 공개되어도 되는 값만 `VITE_` 접두사로 사용하세요.
+
+GA4 측정 ID `G-DRXS2G7E5F`는 공개 식별자이며 `index.html`과 `src/lib/analytics.ts`에 명시되어 있습니다. 비밀키처럼 `.env`로 숨기지 않으며, 실제 이벤트는 호스트명이 `lawsolver.haryun.io`일 때만 전송합니다.
+
+## Google Analytics 4
+
+GA4는 Google 태그 직접 설치 방식을 사용합니다. `index.html`에서 `send_page_view: false`로 자동 페이지뷰를 끄고 `PageViewTracker`가 다음 여섯 유형으로 수동 페이지뷰를 보냅니다.
+
+- `main`: `/`
+- `subject_dashboard`: `/dashboard`
+- `problem_dashboard`: `/dashboard/subject`
+- `solve`: `/solve`
+- `result`: `/result`
+- `review`: `/review`
+
+실제 `/dashboard/:subjectId`, `/solve/:sessionId`, `/result/:sessionId`, `/wrong/:sessionId`, `/review/:sessionId` 값과 쿼리 문자열은 GA4에 보내지 않습니다. 페이지뷰 설정을 바꿀 때 이 정규화를 유지하세요.
+
+허용된 행동 이벤트는 다음과 같습니다.
+
+- `problem_upload_completed`, `problem_upload_failed`
+- `solve_started`, `question_completed`, `solve_paused`, `solve_completed`
+- `review_started`, `review_question_viewed`
+- `retry_created`
+
+허용된 맞춤 파라미터는 다음 범위로 제한합니다.
+
+- `page_type`
+- `question_type`: `ox`, `multiple_choice`, `short_answer`
+- `solve_entry`
+- `navigation_method`
+- `review_type`
+- `retry_type`
+- `failure_type`
+
+다음 데이터는 이벤트 파라미터, 페이지 URL, 페이지 제목 어느 곳에도 넣지 마세요.
+
+- 문제 본문, 선택지, 해설, 출처, 선택·입력 답안
+- 문제 정오 여부, 점수, 진행률, 문항 수, 풀이 시간
+- 과목명, 세션명, CSV 파일명
+- subject/session/question ID 또는 이를 유추할 수 있는 값
+- localStorage 원본 데이터
+
+`question_completed`는 답변한 문항을 떠날 때 기록하며 동일한 풀이 방문에서 문항당 한 번만 전송합니다. 답변한 현재 문항은 다른 문항으로 이동하거나 제출·일시 중단할 때 기록합니다. 이 중복 방지 규칙을 유지하세요.
+
+GA4 관리 화면의 향상된 측정에서 `브라우저 방문 기록 이벤트에 따른 페이지 변경`은 꺼야 합니다. 활성화하면 수동 페이지뷰와 중복될 수 있습니다. 배포 후 Realtime/DebugView에서 각 이벤트가 한 번만 발생하는지 확인하고, 세부 파라미터를 보고서에서 사용하려면 이벤트 범위 맞춤 측정기준으로 등록합니다.
 
 ## 배포
 

@@ -4,6 +4,11 @@ import { ChoiceReviewList } from "../components/review/ChoiceReviewList";
 import { OverflowTooltipTitle } from "../components/ui/OverflowTooltipTitle";
 import { ReturnLinkLabel } from "../components/ui/ReturnLinkLabel";
 import { getAnswerParts, getAnswerToken } from "../lib/answer";
+import {
+  ReviewType,
+  toAnalyticsQuestionType,
+  trackEvent,
+} from "../lib/analytics";
 import { useTestStore } from "../store/useTestStore";
 
 export function ReviewAllPage() {
@@ -34,7 +39,33 @@ export function ReviewAllPage() {
   const [index, setIndex] = useState(0);
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const contentRef = useRef<HTMLDivElement | null>(null);
+  const trackedReviewSessionRef = useRef<string | null>(null);
+  const trackedReviewQuestionIdsRef = useRef(new Set<string>());
   const omrRefs = useMemo(() => new Map<number, HTMLButtonElement | null>(), []);
+
+  const current = questions[index];
+  const reviewType: ReviewType = onlyBookmarks ? "bookmarked" : "all";
+
+  useEffect(() => {
+    if (!session || session.status !== "completed" || !current) return;
+
+    const reviewSessionKey = `${session.id}:${reviewType}`;
+    if (trackedReviewSessionRef.current !== reviewSessionKey) {
+      trackedReviewSessionRef.current = reviewSessionKey;
+      trackedReviewQuestionIdsRef.current.clear();
+      trackEvent("review_started", {
+        review_type: reviewType,
+        question_type: toAnalyticsQuestionType(session.type),
+      });
+    }
+
+    if (trackedReviewQuestionIdsRef.current.has(current.id)) return;
+    trackedReviewQuestionIdsRef.current.add(current.id);
+    trackEvent("review_question_viewed", {
+      review_type: reviewType,
+      question_type: toAnalyticsQuestionType(session.type),
+    });
+  }, [current, index, questions.length, reviewType, session]);
 
   useEffect(() => {
     contentRef.current?.scrollTo({ top: 0 });
@@ -69,7 +100,7 @@ export function ReviewAllPage() {
         <div className="app-card mx-auto max-w-2xl rounded-2xl border p-8 text-center">
           <p className="text-stone-700 dark:text-stone-300">채점 완료 후 확인할 수 있습니다.</p>
           <button
-            onClick={() => navigate(`/solve/${session.id}`)}
+            onClick={() => navigate(`/solve/${session.id}`, { state: { solveEntry: "resume" } })}
             className="app-button-primary mt-4 rounded-lg px-4 py-2 text-sm font-semibold"
           >
             풀이 화면으로
@@ -79,7 +110,6 @@ export function ReviewAllPage() {
     );
   }
 
-  const current = questions[index];
   if (!current) {
     return (
       <div className="app-page p-6">

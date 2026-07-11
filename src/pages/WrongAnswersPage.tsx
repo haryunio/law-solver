@@ -4,6 +4,10 @@ import { ChoiceReviewList } from "../components/review/ChoiceReviewList";
 import { OverflowTooltipTitle } from "../components/ui/OverflowTooltipTitle";
 import { ReturnLinkLabel } from "../components/ui/ReturnLinkLabel";
 import { getAnswerParts, getAnswerToken } from "../lib/answer";
+import {
+  toAnalyticsQuestionType,
+  trackEvent,
+} from "../lib/analytics";
 import { getWrongQuestions } from "../lib/session";
 import { useTestStore } from "../store/useTestStore";
 
@@ -26,9 +30,31 @@ export function WrongAnswersPage() {
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [note, setNote] = useState("");
   const contentRef = useRef<HTMLDivElement | null>(null);
+  const trackedReviewSessionRef = useRef<string | null>(null);
+  const trackedReviewQuestionIdsRef = useRef(new Set<string>());
   const omrRefs = useMemo(() => new Map<number, HTMLButtonElement | null>(), []);
 
   const current = wrongQuestions[index];
+
+  useEffect(() => {
+    if (!session || session.status !== "completed" || !current) return;
+
+    if (trackedReviewSessionRef.current !== session.id) {
+      trackedReviewSessionRef.current = session.id;
+      trackedReviewQuestionIdsRef.current.clear();
+      trackEvent("review_started", {
+        review_type: "wrong",
+        question_type: toAnalyticsQuestionType(session.type),
+      });
+    }
+
+    if (trackedReviewQuestionIdsRef.current.has(current.id)) return;
+    trackedReviewQuestionIdsRef.current.add(current.id);
+    trackEvent("review_question_viewed", {
+      review_type: "wrong",
+      question_type: toAnalyticsQuestionType(session.type),
+    });
+  }, [current, index, session, wrongQuestions.length]);
 
   // 문제 변경 시 노트 상태 불러오기
   useEffect(() => {
@@ -76,7 +102,7 @@ export function WrongAnswersPage() {
         <div className="app-card mx-auto max-w-2xl rounded-2xl border p-8 text-center">
           <p className="text-stone-700">채점 완료 후 확인할 수 있습니다.</p>
           <button
-            onClick={() => navigate(`/solve/${session.id}`)}
+            onClick={() => navigate(`/solve/${session.id}`, { state: { solveEntry: "resume" } })}
             className="app-button-primary mt-4 rounded-lg px-4 py-2 text-sm font-semibold"
           >
             풀이 화면으로

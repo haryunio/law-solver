@@ -8,6 +8,7 @@ import { ReviewAllPage } from "./pages/ReviewAllPage";
 import { SolvePage } from "./pages/SolvePage";
 import { SubjectListPage } from "./pages/SubjectListPage";
 import { WrongAnswersPage } from "./pages/WrongAnswersPage";
+import { PageViewTracker } from "./components/analytics/PageViewTracker";
 
 function ThemeWatcher() {
   const darkMode = useSettingsStore((state) => state.darkMode);
@@ -34,6 +35,7 @@ export default function App() {
   return (
     <>
       <ThemeWatcher />
+      <PageViewTracker />
       <Routes>
         <Route path="/" element={<LandingPage />} />
         <Route path="/dashboard" element={<SubjectListPage />} />

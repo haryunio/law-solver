@@ -7,6 +7,11 @@ import { ReturnLinkLabel } from "../components/ui/ReturnLinkLabel";
 import { ThemeSelect } from "../components/ui/ThemeSelect";
 import { getAnswerToken } from "../lib/answer";
 import {
+  RetryType,
+  toAnalyticsQuestionType,
+  trackEvent,
+} from "../lib/analytics";
+import {
   buildSessionExportCsv,
   buildWrongNoteCsv,
   buildWrongQuestionsOnlyCsv,
@@ -108,6 +113,11 @@ export function ResultPage() {
     } else if (options.onlyBookmark) {
       sourceQuestions = session.questions.filter((q) => q.bookmark);
     }
+    const retryType: RetryType = options.onlyWrong
+      ? "wrong"
+      : options.onlyBookmark
+        ? "bookmarked"
+        : "all";
 
     const resetQuestions: ParsedQuestion[] = sourceQuestions.map((q) => ({
       ...q,
@@ -124,7 +134,21 @@ export function ResultPage() {
       subjectId: sessionSubjectMap[session.id] ?? null,
     });
 
-    navigate(`/solve/${newSessionId}`);
+    trackEvent("retry_created", {
+      retry_type: retryType,
+      question_type: toAnalyticsQuestionType(session.type),
+    });
+
+    navigate(`/solve/${newSessionId}`, {
+      state: {
+        solveEntry:
+          retryType === "wrong"
+            ? "retry_wrong"
+            : retryType === "bookmarked"
+              ? "retry_bookmarked"
+              : "retry_all",
+      },
+    });
   };
 
   const handleDownloadAll = () => {
@@ -151,7 +175,7 @@ export function ResultPage() {
         <div className="app-card mx-auto max-w-2xl rounded-2xl border p-8 text-center">
           <p className="text-stone-700 dark:text-stone-300">아직 제출되지 않은 세션입니다.</p>
           <button
-            onClick={() => navigate(`/solve/${session.id}`)}
+            onClick={() => navigate(`/solve/${session.id}`, { state: { solveEntry: "resume" } })}
             className="app-button-primary mt-4 rounded-lg px-4 py-2 text-sm font-semibold"
           >
             이어서 풀기

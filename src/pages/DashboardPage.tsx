@@ -300,6 +300,7 @@ export function DashboardPage() {
                   ) : (
                     <Link
                       to={`/solve/${session.id}`}
+                      state={{ solveEntry: "resume" }}
                       className="app-button-primary block rounded-b-[calc(1rem-1px)] border-t px-4 py-3 text-center text-sm font-bold"
                     >
                       이어서 풀기
@@ -327,7 +328,7 @@ export function DashboardPage() {
               subjectId={isNoSubject ? null : subjectId}
               onCreated={(sessionId) => {
                 setOpenUpload(false);
-                navigate(`/solve/${sessionId}`);
+                navigate(`/solve/${sessionId}`, { state: { solveEntry: "upload" } });
               }}
             />
           </div>
