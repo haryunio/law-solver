@@ -31,6 +31,7 @@ License: CC BY-NC-ND
 - 전체 결과 CSV, 오답 결과 CSV, 오답노트 CSV 다운로드
 - 과목/문제/풀이 기록을 포함한 대시보드 JSON 백업, 복원, 초기화
 - 다크 모드와 글꼴 설정
+- GA4 기반 정규화 페이지뷰와 비식별 주요 행동 이벤트 수집
 - GitHub Pages 배포 설정과 SPA 새로고침 대응
 
 ## 기술 스택
@@ -42,6 +43,7 @@ License: CC BY-NC-ND
 - React Router
 - Zustand + localStorage persist
 - Papa Parse
+- Google Analytics 4 (`gtag.js`)
 - Vitest
 
 ## 디렉터리 구조
@@ -56,17 +58,18 @@ License: CC BY-NC-ND
 ├── samples/                            # 업로드 테스트용 샘플 CSV
 ├── src/
 │   ├── components/
+│   │   ├── analytics/                  # React Router 페이지뷰 추적
 │   │   ├── cbt/                        # CBT 풀이 UI
 │   │   ├── review/                     # 리뷰 화면용 재사용 UI
 │   │   ├── ui/                         # 브랜드, 모달, 공통 헤더/푸터 UI
 │   │   └── upload/                     # CSV 업로드 UI
-│   ├── lib/                            # CSV, 정렬, 채점, ID, 시간 유틸 및 테스트
+│   ├── lib/                            # CSV, 분석, 정렬, 채점, ID, 시간 유틸 및 테스트
 │   ├── pages/                          # 라우트 단위 화면
 │   ├── store/                          # Zustand stores
 │   ├── types/                          # 공유 타입
 │   ├── App.tsx                         # 라우팅 및 테마 watcher
 │   └── main.tsx                        # React entry
-├── index.html                          # Vite HTML entry, OG meta, SPA redirect restore
+├── index.html                          # Vite HTML entry, GA4 태그, OG meta, SPA redirect restore
 ├── tailwind.config.ts
 ├── vite.config.ts
 └── package.json
@@ -107,6 +110,53 @@ Law Solver는 랜딩부터 문제 풀이, 결과, 오답 복기 화면까지 하
 
 `과목 없음`은 실제 과목 객체로 저장하지 않습니다. 세션-과목 매핑이 없는 세션을 `과목 없음`으로 표시합니다.
 
+## Google Analytics 4
+
+운영 사이트 `lawsolver.haryun.io`는 GA4 Google 태그를 직접 사용합니다.
+
+- 측정 ID: `G-DRXS2G7E5F`
+- 태그 설치: `index.html`
+- 공통 분석 유틸: `src/lib/analytics.ts`
+- SPA 페이지뷰 추적: `src/components/analytics/PageViewTracker.tsx`
+- 전송 환경: 호스트명이 `lawsolver.haryun.io`인 경우에만 이벤트 전송
+
+자동 페이지뷰는 `send_page_view: false`로 비활성화하고 React Router 이동에 맞춰 수동으로 전송합니다. 동적 과목·세션 식별자와 쿼리 문자열은 보내지 않으며 다음 화면 유형과 경로로 정규화합니다.
+
+| `page_type` | 정규화 경로 | 화면 |
+| --- | --- | --- |
+| `main` | `/` | 랜딩 |
+| `subject_dashboard` | `/dashboard` | 과목 대시보드 |
+| `problem_dashboard` | `/dashboard/subject` | 문제 대시보드 |
+| `solve` | `/solve` | 문제 풀이 |
+| `result` | `/result` | 풀이 결과 |
+| `review` | `/review` | 전체·오답·책갈피 리뷰 |
+
+수집하는 주요 행동 이벤트는 다음과 같습니다.
+
+| 이벤트 | 발생 시점 | 추가 구분값 |
+| --- | --- | --- |
+| `problem_upload_completed` | CSV 업로드와 세션 생성 성공 | `question_type` |
+| `problem_upload_failed` | CSV 읽기 또는 파싱 실패 | `question_type`, `failure_type` |
+| `solve_started` | 문제 풀이 진입 | `question_type`, `solve_entry` |
+| `question_completed` | 답변한 문항을 떠날 때 문항당 1회 | `question_type`, `navigation_method` |
+| `solve_paused` | 풀이 일시 중단 | `question_type` |
+| `solve_completed` | 제출과 채점 완료 | `question_type` |
+| `review_started` | 전체·오답·책갈피 리뷰 진입 | `question_type`, `review_type` |
+| `review_question_viewed` | 리뷰에서 새 문항 확인 | `question_type`, `review_type` |
+| `retry_created` | 전체·오답·책갈피 재풀이 세션 생성 | `question_type`, `retry_type` |
+
+`question_type`은 `ox`, `multiple_choice`, `short_answer` 중 하나입니다. `question_completed`는 같은 풀이 방문에서 같은 문항을 앞뒤로 반복 이동해도 한 번만 보냅니다. 답변한 현재 문항은 다른 문항으로 이동하거나 제출·일시 중단할 때 기록합니다.
+
+다음 데이터는 GA4로 전송하지 않습니다.
+
+- 문제 본문, 선택지, 해설, 출처와 사용자가 선택하거나 입력한 답안
+- 문제 정오 여부, 점수, 진행률, 문항 수와 풀이 시간
+- 과목명, 세션명, CSV 파일명
+- `subjectId`, `sessionId`, 문항 ID를 포함한 식별자
+- localStorage에 저장된 학습 데이터 원본
+
+GA4 데이터 스트림의 향상된 측정에서 `브라우저 방문 기록 이벤트에 따른 페이지 변경`은 꺼야 합니다. 이 설정이 켜져 있으면 수동 `page_view`와 중복 집계될 수 있습니다. 배포 후 DebugView에서 이벤트가 한 번씩 발생하는지 확인하고, 보고서에서 세부 구분값을 사용하려면 `page_type`, `question_type`, `solve_entry`, `navigation_method`, `review_type`, `retry_type`, `failure_type`을 이벤트 범위 맞춤 측정기준으로 등록합니다. `solve_completed`는 주요 이벤트로 지정할 수 있습니다.
+
 ## 설치 방법
 
 ```bash
@@ -121,7 +171,7 @@ npm ci
 
 ## 환경변수 설정
 
-현재 코드베이스에는 필수 환경변수가 없습니다. `.env` 파일도 확인되지 않았습니다.
+현재 코드베이스에는 필수 환경변수가 없습니다. `.env` 파일도 확인되지 않았습니다. GA4 측정 ID는 공개 가능한 식별자이므로 현재 `index.html`과 분석 유틸에 명시되어 있으며 비밀키로 취급하지 않습니다.
 
 환경변수를 추가해야 하는 기능을 만들 때는 Vite 관례에 따라 클라이언트에 노출 가능한 값만 `VITE_` 접두사를 사용하세요. 비밀키나 서버 전용 시크릿은 이 프로젝트의 프론트엔드 번들에 넣으면 안 됩니다.
 
@@ -244,5 +294,5 @@ npm run lint
 
 ## 확인한 명령어
 
-- `npm test`: 통과, 3개 테스트 파일 / 9개 테스트
+- `npm test`: 통과, 5개 테스트 파일 / 16개 테스트
 - `npm run build`: 통과
