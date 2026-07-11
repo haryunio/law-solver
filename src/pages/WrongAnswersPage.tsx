@@ -165,7 +165,7 @@ export function WrongAnswersPage() {
         </div>
       </header>
 
-      <div className="mx-auto grid max-w-6xl grid-cols-1 gap-4 px-4 py-3 md:grid-cols-[1fr_220px] md:px-6">
+      <div className="mx-auto grid max-w-6xl grid-cols-1 gap-4 px-4 py-3 md:grid-cols-[1fr_220px] md:items-start md:px-6">
         <main className="app-card flex w-full max-h-[calc(100vh-112px)] flex-col overflow-hidden rounded-2xl border">
           <div className="shrink-0 p-5 pb-4 md:px-8 md:pt-8">
           <div className="flex min-w-0 flex-wrap items-center gap-2">
@@ -301,9 +301,9 @@ export function WrongAnswersPage() {
           </div>
         </main>
 
-        <aside className="app-card hidden max-h-[calc(100vh-100px)] flex-col rounded-2xl border p-4 md:flex">
+        <aside className="app-card hidden max-h-[calc(100vh-112px)] flex-col rounded-2xl border p-4 md:flex md:self-start">
           <h3 className="mb-3 text-sm font-semibold dark:text-stone-100">오답 OMR</h3>
-          <div className="flex-1 overflow-y-auto rounded-lg border border-stone-200 dark:border-stone-800">
+          <div className="min-h-0 flex-1 overflow-y-auto rounded-lg border border-stone-200 dark:border-stone-800">
             <div className="sticky top-0 z-10 grid grid-cols-[32px_1fr_1fr_8px] border-b border-stone-200 bg-stone-50 px-2 py-1.5 text-[11px] font-semibold text-stone-600 dark:border-stone-800 dark:bg-stone-950 dark:text-stone-400">
               <span>번호</span>
               <span className="text-center">내 답</span>
