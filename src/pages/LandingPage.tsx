@@ -1,9 +1,8 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { IconCloseButton } from "../components/ui/IconCloseButton";
-import { BrandMark } from "../components/ui/BrandMark";
-import { PrivacyPolicyLink } from "../components/ui/PrivacyPolicyLink";
-import { useSettingsStore } from "../store/useSettingsStore";
+import { LandingFooter } from "../components/ui/LandingFooter";
+import { LandingHeader } from "../components/ui/LandingHeader";
 
 const steps = [
   {
@@ -85,7 +84,13 @@ const csvGuides = [
 
 export function LandingPage() {
   const [isCsvGuideOpen, setIsCsvGuideOpen] = useState(false);
-  const { darkMode, toggleDarkMode } = useSettingsStore();
+  const location = useLocation();
+
+  useEffect(() => {
+    if (new URLSearchParams(location.search).get("guide") === "csv") {
+      setIsCsvGuideOpen(true);
+    }
+  }, [location.search]);
 
   useEffect(() => {
     if (!isCsvGuideOpen) return;
@@ -105,34 +110,7 @@ export function LandingPage() {
 
   return (
     <div className="landing-page min-h-screen overflow-hidden text-stone-950 transition-colors duration-300 dark:text-stone-50">
-      <header className="landing-nav-wrap">
-        <nav className="landing-container flex h-[72px] items-center justify-between" aria-label="주요 메뉴">
-          <a href="#top" className="group flex items-center gap-2.5" aria-label="Law Solver 홈">
-            <BrandMark className="landing-logo-mark" />
-            <span className="text-[17px] font-semibold tracking-[-0.015em]">Law Solver</span>
-          </a>
-
-          <div className="hidden items-center gap-7 text-sm font-medium text-stone-600 md:flex dark:text-stone-300">
-            <a className="landing-nav-link" href="#how-it-works">사용 방법</a>
-            <a className="landing-nav-link" href="#features">주요 기능</a>
-            <button className="landing-nav-link" type="button" onClick={() => setIsCsvGuideOpen(true)}>CSV 가이드</button>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={toggleDarkMode}
-              className="landing-theme-button"
-              aria-label={darkMode ? "라이트 모드로 전환" : "다크 모드로 전환"}
-            >
-              <span aria-hidden="true">{darkMode ? "☀" : "☾"}</span>
-            </button>
-            <Link to="/dashboard" className="landing-nav-cta">
-              시작하기 <span aria-hidden="true">→</span>
-            </Link>
-          </div>
-        </nav>
-      </header>
+      <LandingHeader onOpenCsvGuide={() => setIsCsvGuideOpen(true)} />
 
       <main id="top">
         <section className="landing-hero relative">
@@ -156,13 +134,16 @@ export function LandingPage() {
                 OX, 5지선다, 단답형 문제를 직접 만들고 실제 시험처럼 풀어 보세요. 채점부터 오답 복습까지 한곳에서 이어집니다.
               </p>
 
-              <div className="mt-9 flex flex-col gap-3 sm:flex-row">
+              <div className="mt-9 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
                 <Link to="/dashboard" className="landing-primary-cta">
                   문제 풀러 가요! <span className="landing-arrow" aria-hidden="true">→</span>
                 </Link>
                 <a href="#how-it-works" className="landing-secondary-cta">
                   사용법 먼저 보기 <span aria-hidden="true">↓</span>
                 </a>
+                <Link to="/apps" className="landing-secondary-cta">
+                  더 많은 미니 앱 보기 <span aria-hidden="true">→</span>
+                </Link>
               </div>
 
               <p className="mt-8 text-sm text-stone-500 dark:text-stone-400">
@@ -352,20 +333,7 @@ export function LandingPage() {
         </section>
       </main>
 
-      <footer className="border-t border-stone-200 bg-white/60 dark:border-stone-800 dark:bg-stone-950/50">
-        <div className="landing-container flex flex-col gap-4 py-7 text-xs text-stone-500 lg:flex-row lg:items-center lg:justify-between dark:text-stone-500">
-          <div className="flex items-center gap-2 font-semibold text-stone-700 dark:text-stone-300"><BrandMark size="small" className="landing-logo-mark is-small" /> Law Solver</div>
-          <div className="flex flex-col gap-2 lg:flex-row lg:items-center lg:justify-end lg:gap-5 lg:text-right">
-            <p>제작자: 경북대 로스쿨 17기 신하륜 - <a className="transition hover:text-red-600" href="mailto:haryun@knu.ac.kr">haryun@knu.ac.kr</a></p>
-            <div className="flex items-center gap-2 lg:border-l lg:border-stone-300 lg:pl-5 lg:justify-end dark:lg:border-stone-700">
-              <span>CC BY-NC-ND ⓒ 2026 Haryun</span>
-              <div className="border-l border-stone-300 pl-2 dark:border-stone-700">
-                <PrivacyPolicyLink />
-              </div>
-            </div>
-          </div>
-        </div>
-      </footer>
+      <LandingFooter />
 
       {isCsvGuideOpen ? (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="csv-guide-title">

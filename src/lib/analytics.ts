@@ -4,6 +4,8 @@ export const GA_MEASUREMENT_ID = "G-DRXS2G7E5F";
 
 export type AnalyticsPageType =
   | "main"
+  | "mini_apps"
+  | "mini_app"
   | "subject_dashboard"
   | "problem_dashboard"
   | "solve"
@@ -86,6 +88,18 @@ const pageDefinitions: Array<{
     pageType: "main",
     pagePath: "/",
     pageTitle: "메인",
+  },
+  {
+    matches: (pathname) => pathname === "/apps",
+    pageType: "mini_apps",
+    pagePath: "/apps",
+    pageTitle: "미니 앱",
+  },
+  {
+    matches: (pathname) => pathname.startsWith("/apps/"),
+    pageType: "mini_app",
+    pagePath: "/apps/mini-app",
+    pageTitle: "미니 앱 실행",
   },
   {
     matches: (pathname) => pathname === "/dashboard",

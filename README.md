@@ -17,7 +17,8 @@ License: CC BY-NC-ND
 
 ## 주요 기능
 
-- 랜딩 페이지, 과목 목록, 과목별 문제 풀이 대시보드
+- 랜딩 페이지, 미니 앱 목록, 과목 목록, 과목별 문제 풀이 대시보드
+- LBTI 30문항 테스트, 유형 계산, 공유 가능한 16개 결과 페이지와 전체 유형 탐색
 - 과목 추가/편집/삭제, 5종 표지 색상 선택, 드래그 순서 변경, 문제별 과목 배정, `과목 없음` 기본 폴더
 - OX, 5지선다, 단답형 CSV 업로드
 - 번호 순서, 챕터별 랜덤, 전체 랜덤 풀이 순서 선택
@@ -63,6 +64,12 @@ License: CC BY-NC-ND
 │   │   ├── review/                     # 리뷰 화면용 재사용 UI
 │   │   ├── ui/                         # 브랜드, 모달, 공통 헤더/푸터 UI
 │   │   └── upload/                     # CSV 업로드 UI
+│   ├── mini-apps/                       # 앱별 독립 기능, manifest, 개발 문서
+│   │   ├── catalog.ts                   # /apps 노출 목록과 순서
+│   │   ├── lbti/                        # LBTI: 로스쿨생 MBTI 테스트
+│   │   ├── statute-recall/              # 조문 리콜
+│   │   ├── study-planner/               # 스터디 플래너
+│   │   └── focus-timer/                 # 집중 타이머
 │   ├── lib/                            # CSV, 분석, 정렬, 채점, ID, 시간 유틸 및 테스트
 │   ├── pages/                          # 라우트 단위 화면
 │   ├── store/                          # Zustand stores
@@ -96,9 +103,35 @@ Law Solver는 랜딩부터 문제 풀이, 결과, 오답 복기 화면까지 하
 
 디자인 리팩터링은 기존 라우트, 화면 배치, 사용자 흐름과 localStorage 데이터 구조를 변경하지 않는 것을 원칙으로 합니다.
 
+## 미니 앱 구조
+
+미니 앱은 `src/mini-apps/<app-id>/` 아래에서 서로 독립적으로 개발합니다. `/apps` 목록은 각 폴더의 `manifest.ts`를 모은 `src/mini-apps/catalog.ts`를 사용하므로, 이름·설명·상태·출시 경로의 단일 출처가 유지됩니다.
+
+| 앱 | 폴더 | 현재 상태 |
+| --- | --- | --- |
+| LBTI: 로스쿨생 MBTI 테스트 | `lbti/` | Available |
+| 조문 리콜 | `statute-recall/` | Coming Soon |
+| 스터디 플래너 | `study-planner/` | Coming Soon |
+| 집중 타이머 | `focus-timer/` | Coming Soon |
+
+각 폴더의 README에는 목표, 첫 번째 버전 범위, 제외 범위, 데이터 저장 방향과 출시 조건이 정리되어 있습니다. 전체 생성 순서와 의존성 규칙은 [`src/mini-apps/README.md`](src/mini-apps/README.md)를 기준으로 합니다.
+
+LBTI의 네 지표와 16개 유형은 [`lbti-framework.json`](src/mini-apps/lbti/data/lbti-framework.json), 28개 기본 채점 문항·1개 가점 문항·1개 보조 문항은 [`questions.ko.json`](src/mini-apps/lbti/data/questions.ko.json), 제품 범위와 출시 단계는 [`PRODUCT_PLAN.md`](src/mini-apps/lbti/docs/PRODUCT_PLAN.md), 문항·결과문 작성 기준은 [`CONTENT_GUIDE.md`](src/mini-apps/lbti/docs/CONTENT_GUIDE.md)에 정리되어 있습니다.
+
+- 앱 ID와 폴더명은 영문 kebab-case로 고정하고 URL과 저장 key에 같은 값을 사용합니다.
+- 앱 전용 구현은 해당 폴더에 두고, 두 앱 이상이 실제로 공유하는 코드만 루트 공통 영역으로 이동합니다.
+- 앱 저장 key는 `law-solver-mini-app:<app-id>:v1` 형식을 사용하며 기존 `law-solver-storage`와 분리합니다.
+- 출시 전에는 `coming-soon` 상태와 route 없는 manifest를 사용합니다. 출시 시 `/apps/<app-id>` 라우트와 분석·개인정보 문서를 함께 갱신합니다.
+- 현재 미니 앱 데이터는 Law Solver 전체 JSON 백업에 포함되지 않습니다. 백업 통합은 별도 migration 작업으로 다룹니다.
+
 ## 앱 실행 흐름
 
 - `/`: 랜딩 페이지
+- `/apps`: 미니 앱 목록
+- `/apps/lbti`: LBTI 소개
+- `/apps/lbti/test`: 30문항 LBTI 테스트
+- `/apps/lbti/types`: 16개 전체 유형
+- `/apps/lbti/result/:typeCode`: 공유 가능한 유형별 결과
 - `/dashboard`: 과목 목록, 과목 관리, 환경설정, 전체 데이터 백업/복원/초기화
 - `/dashboard/:subjectId`: 과목별 세션 목록, CSV 업로드, 문제 제목/과목 편집
 - `/solve/:sessionId`: CBT 풀이
@@ -125,6 +158,8 @@ Law Solver는 랜딩부터 문제 풀이, 결과, 오답 복기 화면까지 하
 | `page_type` | 정규화 경로 | 화면 |
 | --- | --- | --- |
 | `main` | `/` | 랜딩 |
+| `mini_apps` | `/apps` | 미니 앱 목록 |
+| `mini_app` | `/apps/mini-app` | 개별 미니 앱 화면 |
 | `subject_dashboard` | `/dashboard` | 과목 대시보드 |
 | `problem_dashboard` | `/dashboard/subject` | 문제 대시보드 |
 | `solve` | `/solve` | 문제 풀이 |
