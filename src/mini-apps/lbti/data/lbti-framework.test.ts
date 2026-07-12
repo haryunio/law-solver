@@ -14,7 +14,7 @@ describe("LBTI content framework", () => {
     expect(framework.test.code_order).toEqual(["source", "coverage", "recall", "pace"]);
     expect(framework.axes.map((axis) => axis.id)).toEqual(framework.test.code_order);
     expect(framework.test.questions_per_axis).toBe(7);
-    expect(framework.test.recommended_question_count).toBe(28);
+    expect(framework.test.recommended_question_count).toBe(30);
   });
 
   it("contains every four-axis result exactly once", () => {

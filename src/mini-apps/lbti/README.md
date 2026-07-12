@@ -19,9 +19,19 @@ lbti/
 ## 현재 문서
 
 - `data/lbti-framework.json`: 네 지표, 16개 유형, 문항 예시, 결과 구성, 안전 문구와 출처
-- `data/questions.ko.json`: 축당 7개, 총 28개의 4단계 척도 운영 문항과 채점 설정
+- `data/questions.ko.json`: 축당 7개의 기본 문항, S 가점 문항 1개와 보조 문항 1개, 총 30개 문항
 - `data/README.md`: JSON 필드와 편집·검증 규칙
 - `docs/PRODUCT_PLAN.md`: 제품 정의, 사용자 흐름, 1차 채점안, 화면 범위, 개인정보와 출시 단계
 - `docs/CONTENT_GUIDE.md`: 문항·결과문·밈 작성 및 검수 기준
 
-현재 manifest는 `coming-soon` 상태입니다. 28개 운영 문항과 채점 방식은 정리되었으며, 16개 상세 결과문과 임시저장·공유 정책을 확정한 뒤 화면 구현을 시작합니다.
+현재 manifest는 `available` 상태입니다. `/apps/lbti` 소개, `/test` 설문, `/types` 전체 유형, `/result/:typeCode` 공유 결과 화면이 모두 이 폴더 안에서 동작합니다. 답변은 서버나 localStorage에 저장하지 않으며 결과 링크에는 유형 코드만 포함합니다.
+
+## 구현 파일
+
+- `LbtiHomePage.tsx`: 소개와 테스트 진입
+- `LbtiTestPage.tsx`: 30문항 응답 흐름
+- `LbtiResultPage.tsx`: 유형 해석과 링크 공유
+- `LbtiTypesPage.tsx`: 16개 유형 탐색
+- `components/`: LBTI 전용 레이아웃과 유형 코드 UI
+- `lib/lbti.ts`: 채점, 유형 조회, 유사·정반대 유형 계산
+- `content.ts`: 유형별 대표 문구와 pole별 결과 콘텐츠

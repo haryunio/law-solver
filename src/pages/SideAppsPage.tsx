@@ -75,7 +75,7 @@ export function SideAppsPage() {
             <div>
               <p className="landing-section-label">MINI APPS</p>
               <h2 id="upcoming-apps-title" className="mt-2 text-xl font-bold tracking-tight sm:text-2xl">
-                준비 중인 미니 앱
+                Law Solver 미니 앱
               </h2>
             </div>
             <span className="shrink-0 text-sm text-stone-400 dark:text-stone-500">{miniApps.length}개</span>
@@ -88,7 +88,7 @@ export function SideAppsPage() {
           </div>
           <div className="mt-10 rounded-2xl border border-stone-200 bg-white/55 px-5 py-5 text-center sm:mt-12 sm:px-8 sm:py-6 dark:border-stone-800 dark:bg-stone-900/40">
             <p className="text-sm leading-6 text-stone-600 dark:text-stone-300">
-              새로운 미니 앱은 준비되는 대로 이곳에서 가장 먼저 소개할게요.
+              새로운 미니 앱과 업데이트는 이곳에서 가장 먼저 소개할게요.
             </p>
           </div>
         </section>

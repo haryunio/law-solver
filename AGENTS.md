@@ -29,7 +29,7 @@
 src/App.tsx
 ```
 
-라우팅과 테마/폰트 watcher를 담당합니다. 라우트는 `/`, `/apps`, `/dashboard`, `/dashboard/:subjectId`, `/solve/:sessionId`, `/result/:sessionId`, `/wrong/:sessionId`, `/review/:sessionId`입니다. 출시된 미니 앱은 `/apps/:appId` 아래에 추가합니다.
+라우팅과 테마/폰트 watcher를 담당합니다. 라우트는 `/`, `/apps`, `/apps/lbti`, `/apps/lbti/test`, `/apps/lbti/types`, `/apps/lbti/result/:typeCode`, `/dashboard`, `/dashboard/:subjectId`, `/solve/:sessionId`, `/result/:sessionId`, `/wrong/:sessionId`, `/review/:sessionId`입니다. 출시된 미니 앱은 `/apps/:appId` 아래에 추가합니다.
 
 ```txt
 src/pages/
@@ -110,7 +110,8 @@ GitHub Pages용 정적 파일입니다. `404.html`은 SPA 새로고침 대응용
 - 기획 단계에는 `status: "coming-soon"`과 route 없는 manifest를 사용합니다. 출시 시 `App.tsx`에 `/apps/<app-id>`를 등록하고 manifest의 `route` 및 상태를 함께 변경하세요.
 - 새 앱 화면도 `app-page`, `app-card`, `app-topbar`, `BrandMark`, `AppFooter`, `ThemeSelect` 등 공통 디자인 시스템과 모바일·다크 모드·키보드 접근성 규칙을 유지하세요.
 - `/apps` 미니 앱 목록은 랜딩과 동일한 `LandingHeader`, `LandingFooter`, `landing-page`, `landing-container` 구조를 사용합니다. 별도 GNB를 다시 만들거나 랜딩과 다른 브랜드 내비게이션을 사용하지 마세요.
-- 첫 번째 미니 앱은 `src/mini-apps/lbti/`의 `LBTI: 로스쿨생 MBTI 테스트`입니다. 지표·유형은 `data/lbti-framework.json`, 28개 운영 문항과 채점 설정은 `data/questions.ko.json`, 제품 범위는 `docs/PRODUCT_PLAN.md`, 작성 기준은 `docs/CONTENT_GUIDE.md`를 단일 원본으로 사용합니다. 상세 결과문과 저장·공유 정책이 확정되기 전에는 화면이나 스키마를 추정해 구현하지 마세요.
+- 첫 번째 미니 앱은 `src/mini-apps/lbti/`의 `LBTI: 로스쿨생 MBTI 테스트`입니다. 지표·유형은 `data/lbti-framework.json`, 28개 기본 채점 문항·1개 가점 문항·1개 보조 문항은 `data/questions.ko.json`, 제품 범위는 `docs/PRODUCT_PLAN.md`, 작성 기준은 `docs/CONTENT_GUIDE.md`를 단일 원본으로 사용합니다.
+- LBTI 소개·테스트·결과·전체 유형 화면과 채점 로직은 모두 `src/mini-apps/lbti/` 안에 둡니다. 결과 공유 URL에는 유형 코드만 사용하고 답변, 축 점수, 진행률이나 내부 ID를 넣지 마세요.
 - 앱 페이지뷰와 행동 이벤트는 `src/lib/analytics.ts`의 정적 허용값으로만 추가합니다. 사용자가 작성한 내용, 학습 기록, 시간·점수·진행률, 앱 내부 ID를 GA4에 보내지 마세요.
 - 출시 전 앱별 로직/migration 테스트, `npm test`, `npm run build`, SPA 새로고침을 확인하세요.
 
@@ -262,6 +263,7 @@ GA4는 Google 태그 직접 설치 방식을 사용합니다. `index.html`에서
 
 - `main`: `/`
 - `mini_apps`: `/apps`
+- `mini_app`: `/apps/mini-app`
 - `subject_dashboard`: `/dashboard`
 - `problem_dashboard`: `/dashboard/subject`
 - `solve`: `/solve`

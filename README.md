@@ -18,6 +18,7 @@ License: CC BY-NC-ND
 ## 주요 기능
 
 - 랜딩 페이지, 미니 앱 목록, 과목 목록, 과목별 문제 풀이 대시보드
+- LBTI 30문항 테스트, 유형 계산, 공유 가능한 16개 결과 페이지와 전체 유형 탐색
 - 과목 추가/편집/삭제, 5종 표지 색상 선택, 드래그 순서 변경, 문제별 과목 배정, `과목 없음` 기본 폴더
 - OX, 5지선다, 단답형 CSV 업로드
 - 번호 순서, 챕터별 랜덤, 전체 랜덤 풀이 순서 선택
@@ -108,14 +109,14 @@ Law Solver는 랜딩부터 문제 풀이, 결과, 오답 복기 화면까지 하
 
 | 앱 | 폴더 | 현재 상태 |
 | --- | --- | --- |
-| LBTI: 로스쿨생 MBTI 테스트 | `lbti/` | Coming Soon · 콘텐츠 기획 구축 |
+| LBTI: 로스쿨생 MBTI 테스트 | `lbti/` | Available |
 | 조문 리콜 | `statute-recall/` | Coming Soon |
 | 스터디 플래너 | `study-planner/` | Coming Soon |
 | 집중 타이머 | `focus-timer/` | Coming Soon |
 
 각 폴더의 README에는 목표, 첫 번째 버전 범위, 제외 범위, 데이터 저장 방향과 출시 조건이 정리되어 있습니다. 전체 생성 순서와 의존성 규칙은 [`src/mini-apps/README.md`](src/mini-apps/README.md)를 기준으로 합니다.
 
-LBTI의 네 지표와 16개 유형은 [`lbti-framework.json`](src/mini-apps/lbti/data/lbti-framework.json), 28개 운영 문항과 4단계 채점 설정은 [`questions.ko.json`](src/mini-apps/lbti/data/questions.ko.json), 제품 범위와 출시 단계는 [`PRODUCT_PLAN.md`](src/mini-apps/lbti/docs/PRODUCT_PLAN.md), 문항·결과문 작성 기준은 [`CONTENT_GUIDE.md`](src/mini-apps/lbti/docs/CONTENT_GUIDE.md)에 정리되어 있습니다.
+LBTI의 네 지표와 16개 유형은 [`lbti-framework.json`](src/mini-apps/lbti/data/lbti-framework.json), 28개 기본 채점 문항·1개 가점 문항·1개 보조 문항은 [`questions.ko.json`](src/mini-apps/lbti/data/questions.ko.json), 제품 범위와 출시 단계는 [`PRODUCT_PLAN.md`](src/mini-apps/lbti/docs/PRODUCT_PLAN.md), 문항·결과문 작성 기준은 [`CONTENT_GUIDE.md`](src/mini-apps/lbti/docs/CONTENT_GUIDE.md)에 정리되어 있습니다.
 
 - 앱 ID와 폴더명은 영문 kebab-case로 고정하고 URL과 저장 key에 같은 값을 사용합니다.
 - 앱 전용 구현은 해당 폴더에 두고, 두 앱 이상이 실제로 공유하는 코드만 루트 공통 영역으로 이동합니다.
@@ -126,7 +127,11 @@ LBTI의 네 지표와 16개 유형은 [`lbti-framework.json`](src/mini-apps/lbti
 ## 앱 실행 흐름
 
 - `/`: 랜딩 페이지
-- `/apps`: 출시 예정 미니 앱 목록
+- `/apps`: 미니 앱 목록
+- `/apps/lbti`: LBTI 소개
+- `/apps/lbti/test`: 30문항 LBTI 테스트
+- `/apps/lbti/types`: 16개 전체 유형
+- `/apps/lbti/result/:typeCode`: 공유 가능한 유형별 결과
 - `/dashboard`: 과목 목록, 과목 관리, 환경설정, 전체 데이터 백업/복원/초기화
 - `/dashboard/:subjectId`: 과목별 세션 목록, CSV 업로드, 문제 제목/과목 편집
 - `/solve/:sessionId`: CBT 풀이
@@ -154,6 +159,7 @@ LBTI의 네 지표와 16개 유형은 [`lbti-framework.json`](src/mini-apps/lbti
 | --- | --- | --- |
 | `main` | `/` | 랜딩 |
 | `mini_apps` | `/apps` | 미니 앱 목록 |
+| `mini_app` | `/apps/mini-app` | 개별 미니 앱 화면 |
 | `subject_dashboard` | `/dashboard` | 과목 대시보드 |
 | `problem_dashboard` | `/dashboard/subject` | 문제 대시보드 |
 | `solve` | `/solve` | 문제 풀이 |

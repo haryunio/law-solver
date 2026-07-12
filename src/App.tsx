@@ -10,6 +10,10 @@ import { SideAppsPage } from "./pages/SideAppsPage";
 import { SubjectListPage } from "./pages/SubjectListPage";
 import { WrongAnswersPage } from "./pages/WrongAnswersPage";
 import { PageViewTracker } from "./components/analytics/PageViewTracker";
+import { LbtiHomePage } from "./mini-apps/lbti/LbtiHomePage";
+import { LbtiResultPage } from "./mini-apps/lbti/LbtiResultPage";
+import { LbtiTestPage } from "./mini-apps/lbti/LbtiTestPage";
+import { LbtiTypesPage } from "./mini-apps/lbti/LbtiTypesPage";
 
 function ThemeWatcher() {
   const darkMode = useSettingsStore((state) => state.darkMode);
@@ -40,6 +44,10 @@ export default function App() {
       <Routes>
         <Route path="/" element={<LandingPage />} />
         <Route path="/apps" element={<SideAppsPage />} />
+        <Route path="/apps/lbti" element={<LbtiHomePage />} />
+        <Route path="/apps/lbti/test" element={<LbtiTestPage />} />
+        <Route path="/apps/lbti/types" element={<LbtiTypesPage />} />
+        <Route path="/apps/lbti/result/:typeCode" element={<LbtiResultPage />} />
         <Route path="/dashboard" element={<SubjectListPage />} />
         <Route path="/dashboard/:subjectId" element={<DashboardPage />} />
         <Route path="/solve/:sessionId" element={<SolvePage />} />
