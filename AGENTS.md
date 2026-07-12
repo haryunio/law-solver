@@ -29,19 +29,25 @@
 src/App.tsx
 ```
 
-라우팅과 테마/폰트 watcher를 담당합니다. 라우트는 `/`, `/dashboard`, `/dashboard/:subjectId`, `/solve/:sessionId`, `/result/:sessionId`, `/wrong/:sessionId`, `/review/:sessionId`입니다.
+라우팅과 테마/폰트 watcher를 담당합니다. 라우트는 `/`, `/apps`, `/dashboard`, `/dashboard/:subjectId`, `/solve/:sessionId`, `/result/:sessionId`, `/wrong/:sessionId`, `/review/:sessionId`입니다. 출시된 미니 앱은 `/apps/:appId` 아래에 추가합니다.
 
 ```txt
 src/pages/
 ```
 
-라우트 단위 화면입니다. 랜딩, 과목 목록, 과목별 대시보드, 풀이 결과, 오답 확인, 전체 리뷰 페이지가 들어 있습니다.
+라우트 단위 화면입니다. 랜딩, 미니 앱 목록, 과목 목록, 과목별 대시보드, 풀이 결과, 오답 확인, 전체 리뷰 페이지가 들어 있습니다.
 
 ```txt
 src/components/
 ```
 
 재사용 UI 컴포넌트입니다. CBT 풀이 화면, CSV 업로드 패널, 리뷰용 선택지 표시 컴포넌트, 공통 모달/버튼 UI가 들어 있습니다. `src/components/analytics/PageViewTracker.tsx`는 React Router 이동에 따른 정규화 페이지뷰를 전송합니다.
+
+```txt
+src/mini-apps/
+```
+
+Law Solver 안에서 독립적으로 실행되는 미니 앱 영역입니다. `catalog.ts`는 `/apps` 목록의 단일 출처이고, 각 `<app-id>/` 폴더는 manifest, 기능 코드, 테스트, 개발 문서를 소유합니다. 자세한 생성 순서와 경계 규칙은 `src/mini-apps/README.md`를 따릅니다.
 
 ```txt
 src/store/
@@ -90,6 +96,23 @@ GitHub Pages용 정적 파일입니다. `404.html`은 SPA 새로고침 대응용
 - `과목 없음`은 저장되는 subject가 아니라 세션-과목 매핑이 없는 상태입니다. `NO_SUBJECT_ID`는 라우팅/UI용 sentinel로만 사용하세요.
 - GA4 이벤트는 페이지 컴포넌트에서 `window.gtag`를 직접 호출하지 말고 `src/lib/analytics.ts`의 `trackEvent`, `trackPageView`를 사용하세요.
 - 새 GA4 이벤트나 파라미터를 추가할 때는 `AnalyticsEventMap`에 타입을 먼저 정의하고 README, AGENTS, 개인정보처리방침을 함께 갱신하세요.
+
+## 미니 앱 개발 규칙
+
+- 앱 폴더는 `src/mini-apps/<app-id>/`에 만들고 영문 kebab-case를 사용합니다. 폴더명, manifest `id`, URL slug, 저장 namespace를 일치시키세요.
+- 모든 앱은 `manifest.ts`와 앱별 `README.md`에서 시작합니다. README에 목표, MVP, 제외 범위, 데이터 구조, 출시 조건을 구현 전에 기록하세요.
+- `/apps` 카드의 이름, 설명, 아이콘, 상태, route는 페이지에 하드코딩하지 말고 앱의 manifest와 `catalog.ts`에서 관리하세요.
+- 앱 전용 component, lib, store, type은 앱 폴더 안에 둡니다. 두 앱 이상이 실제로 공유하는 UI만 `src/components/ui/`, 도메인과 무관한 순수 유틸만 `src/lib/`로 이동하세요.
+- 앱끼리 서로의 내부 파일을 직접 import하지 마세요. 공통 계약이 필요하면 루트 공통 영역에 작은 타입 또는 API를 정의합니다.
+- 전역 테마·글꼴은 `useSettingsStore`를 재사용할 수 있지만, 미니 앱이 `useTestStore`의 문제 세션을 직접 수정해서는 안 됩니다. 기존 데이터를 사용할 때는 읽기 전용 selector나 명시적인 공유 API를 먼저 설계하세요.
+- 기기 로컬 저장 key는 `law-solver-mini-app:<app-id>:v1`을 사용합니다. 버전 변경 시 migration과 테스트를 추가하고 기존 `law-solver-storage`에 앱 데이터를 섞지 마세요.
+- 미니 앱 데이터는 현재 전체 JSON 백업 범위 밖입니다. 백업/복원에 포함하려면 구형 백업 호환성, 손상 데이터 검증, 앱별 migration을 함께 구현하세요.
+- 기획 단계에는 `status: "coming-soon"`과 route 없는 manifest를 사용합니다. 출시 시 `App.tsx`에 `/apps/<app-id>`를 등록하고 manifest의 `route` 및 상태를 함께 변경하세요.
+- 새 앱 화면도 `app-page`, `app-card`, `app-topbar`, `BrandMark`, `AppFooter`, `ThemeSelect` 등 공통 디자인 시스템과 모바일·다크 모드·키보드 접근성 규칙을 유지하세요.
+- `/apps` 미니 앱 목록은 랜딩과 동일한 `LandingHeader`, `LandingFooter`, `landing-page`, `landing-container` 구조를 사용합니다. 별도 GNB를 다시 만들거나 랜딩과 다른 브랜드 내비게이션을 사용하지 마세요.
+- 첫 번째 미니 앱은 `src/mini-apps/lbti/`의 `LBTI: 로스쿨생 MBTI 테스트`입니다. 지표·유형의 단일 콘텐츠 원본은 `data/lbti-framework.json`, 제품 범위는 `docs/PRODUCT_PLAN.md`, 작성·안전 기준은 `docs/CONTENT_GUIDE.md`를 따릅니다. 운영 문항, 상세 결과문, 저장·공유 정책이 확정되기 전에는 화면이나 스키마를 추정해 구현하지 마세요.
+- 앱 페이지뷰와 행동 이벤트는 `src/lib/analytics.ts`의 정적 허용값으로만 추가합니다. 사용자가 작성한 내용, 학습 기록, 시간·점수·진행률, 앱 내부 ID를 GA4에 보내지 마세요.
+- 출시 전 앱별 로직/migration 테스트, `npm test`, `npm run build`, SPA 새로고침을 확인하세요.
 
 ## 디자인 시스템
 
@@ -219,6 +242,8 @@ npm run lint
 - `src/pages/ResultPage.tsx`: 재풀이, CSV 다운로드, 결과 요약 액션이 많아 회귀 가능성이 큽니다.
 - `src/pages/SubjectListPage.tsx`: `/dashboard` 과목 목록 화면입니다. 과목 관리, 표지 색상 선택, 과목 카드 드래그 순서 변경, 환경설정, 전체 데이터 백업/복원/초기화가 이 페이지에 있습니다. 과목 삭제는 세션 삭제가 아니라 매핑 삭제로 처리해야 합니다.
 - `src/pages/DashboardPage.tsx`: `/dashboard/:subjectId` 과목별 세션 대시보드입니다. 새 문제 등록과 편집 시 세션-과목 매핑이 맞는지 확인하세요. 전체 데이터 백업/복원 UI는 이 페이지에 두지 않습니다.
+- `src/mini-apps/catalog.ts`: `/apps`에 노출되는 앱과 순서의 단일 출처입니다. 앱 카드 내용을 `SideAppsPage.tsx`에 다시 하드코딩하지 마세요.
+- `src/mini-apps/*/manifest.ts`: 앱 ID, 상태와 출시 route를 관리합니다. `coming-soon` 앱에는 route를 넣지 마세요.
 - `public/404.html` 및 `index.html`: GitHub Pages SPA 새로고침 대응 스크립트가 들어 있습니다. 라우팅/배포 변경 시 함께 확인하세요.
 - `vite.config.ts`: GitHub Pages 기본 도메인과 커스텀 도메인 운영 방식에 따라 `base` 설정 영향이 큽니다.
 - `public/CNAME`: 현재 커스텀 도메인 `lawsolver.haryun.io`가 설정되어 있습니다. 기본 GitHub Pages URL로 운영할 때는 이 파일과 DNS 상태를 확인하세요.
@@ -233,9 +258,10 @@ GA4 측정 ID `G-DRXS2G7E5F`는 공개 식별자이며 `index.html`과 `src/lib/
 
 ## Google Analytics 4
 
-GA4는 Google 태그 직접 설치 방식을 사용합니다. `index.html`에서 `send_page_view: false`로 자동 페이지뷰를 끄고 `PageViewTracker`가 다음 여섯 유형으로 수동 페이지뷰를 보냅니다.
+GA4는 Google 태그 직접 설치 방식을 사용합니다. `index.html`에서 `send_page_view: false`로 자동 페이지뷰를 끄고 `PageViewTracker`가 다음 일곱 유형으로 수동 페이지뷰를 보냅니다.
 
 - `main`: `/`
+- `mini_apps`: `/apps`
 - `subject_dashboard`: `/dashboard`
 - `problem_dashboard`: `/dashboard/subject`
 - `solve`: `/solve`

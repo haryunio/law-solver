@@ -6,6 +6,7 @@ import { LandingPage } from "./pages/LandingPage";
 import { ResultPage } from "./pages/ResultPage";
 import { ReviewAllPage } from "./pages/ReviewAllPage";
 import { SolvePage } from "./pages/SolvePage";
+import { SideAppsPage } from "./pages/SideAppsPage";
 import { SubjectListPage } from "./pages/SubjectListPage";
 import { WrongAnswersPage } from "./pages/WrongAnswersPage";
 import { PageViewTracker } from "./components/analytics/PageViewTracker";
@@ -38,6 +39,7 @@ export default function App() {
       <PageViewTracker />
       <Routes>
         <Route path="/" element={<LandingPage />} />
+        <Route path="/apps" element={<SideAppsPage />} />
         <Route path="/dashboard" element={<SubjectListPage />} />
         <Route path="/dashboard/:subjectId" element={<DashboardPage />} />
         <Route path="/solve/:sessionId" element={<SolvePage />} />
