@@ -115,7 +115,7 @@ Law Solver는 랜딩부터 문제 풀이, 결과, 오답 복기 화면까지 하
 
 각 폴더의 README에는 목표, 첫 번째 버전 범위, 제외 범위, 데이터 저장 방향과 출시 조건이 정리되어 있습니다. 전체 생성 순서와 의존성 규칙은 [`src/mini-apps/README.md`](src/mini-apps/README.md)를 기준으로 합니다.
 
-LBTI의 네 지표와 16개 유형은 [`lbti-framework.json`](src/mini-apps/lbti/data/lbti-framework.json), 제품 범위와 출시 단계는 [`PRODUCT_PLAN.md`](src/mini-apps/lbti/docs/PRODUCT_PLAN.md), 문항·결과문 작성 기준은 [`CONTENT_GUIDE.md`](src/mini-apps/lbti/docs/CONTENT_GUIDE.md)에 정리되어 있습니다.
+LBTI의 네 지표와 16개 유형은 [`lbti-framework.json`](src/mini-apps/lbti/data/lbti-framework.json), 28개 운영 문항과 4단계 채점 설정은 [`questions.ko.json`](src/mini-apps/lbti/data/questions.ko.json), 제품 범위와 출시 단계는 [`PRODUCT_PLAN.md`](src/mini-apps/lbti/docs/PRODUCT_PLAN.md), 문항·결과문 작성 기준은 [`CONTENT_GUIDE.md`](src/mini-apps/lbti/docs/CONTENT_GUIDE.md)에 정리되어 있습니다.
 
 - 앱 ID와 폴더명은 영문 kebab-case로 고정하고 URL과 저장 key에 같은 값을 사용합니다.
 - 앱 전용 구현은 해당 폴더에 두고, 두 앱 이상이 실제로 공유하는 코드만 루트 공통 영역으로 이동합니다.

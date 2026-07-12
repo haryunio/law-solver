@@ -13,8 +13,8 @@ describe("LBTI content framework", () => {
   it("defines the four axes in result-code order", () => {
     expect(framework.test.code_order).toEqual(["source", "coverage", "recall", "pace"]);
     expect(framework.axes.map((axis) => axis.id)).toEqual(framework.test.code_order);
-    expect(framework.test.questions_per_axis).toBe(5);
-    expect(framework.test.recommended_question_count).toBe(20);
+    expect(framework.test.questions_per_axis).toBe(7);
+    expect(framework.test.recommended_question_count).toBe(28);
   });
 
   it("contains every four-axis result exactly once", () => {
@@ -24,10 +24,10 @@ describe("LBTI content framework", () => {
     expect(actualTypeCodes).toEqual(expect.arrayContaining(expectedTypeCodes));
   });
 
-  it("keeps the PWOS safety notice with its result", () => {
+  it("keeps the updated PWOS identity without a type-specific disclaimer", () => {
     const pwos = framework.types.find((type) => type.code === "PWOS");
 
-    expect(pwos).toHaveProperty("required_disclaimer");
-    expect(pwos?.required_disclaimer).toBe(framework.safety.pwos_required_disclaimer);
+    expect(pwos?.name).toBe("대법관 꿈나무");
+    expect(pwos).not.toHaveProperty("required_disclaimer");
   });
 });

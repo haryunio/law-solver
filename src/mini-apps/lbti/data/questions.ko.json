@@ -1,0 +1,249 @@
+{
+  "schema_version": 1,
+  "locale": "ko-KR",
+  "questionnaire": {
+    "id": "lbti-ko-v1",
+    "title": "LBTI 질문",
+    "question_count": 28,
+    "questions_per_axis": 7,
+    "instruction": "평소의 이상적인 모습보다, 시간과 기억력이 부족할 때 실제로 먼저 하는 행동을 떠올려 답해 주세요.",
+    "scale": [
+      {
+        "id": "strongly_agree",
+        "label": "매우 그렇다",
+        "weight": 3
+      },
+      {
+        "id": "agree",
+        "label": "그렇다",
+        "weight": 2
+      },
+      {
+        "id": "disagree",
+        "label": "그렇지 않다",
+        "weight": 1
+      },
+      {
+        "id": "strongly_disagree",
+        "label": "전혀 그렇지 않다",
+        "weight": 0
+      }
+    ],
+    "scoring": {
+      "method": "paired-pole",
+      "description": "선택한 weight는 문항의 agreement_pole에, 3-weight는 같은 축의 반대 pole에 더한다.",
+      "axis_total": 21,
+      "tie_policy": "축별 두 pole 점수의 합이 홀수인 21점이므로 동점은 발생하지 않는다.",
+      "result_code_order": [
+        "source",
+        "coverage",
+        "recall",
+        "pace"
+      ]
+    },
+    "presentation": {
+      "question_order": "mixed",
+      "show_axis_during_test": false,
+      "allow_previous": true,
+      "allow_answer_change": true
+    }
+  },
+  "questions": [
+    {
+      "id": "q01",
+      "axis_id": "source",
+      "agreement_pole": "P",
+      "scenario_tag": "conflicting-explanations",
+      "prompt": "나는 강의안과 암기장의 설명이 다르면 판례 원문이나 교수저를 확인한 뒤 내 기준을 정한다."
+    },
+    {
+      "id": "q02",
+      "axis_id": "coverage",
+      "agreement_pole": "C",
+      "scenario_tag": "adding-material",
+      "prompt": "나는 새로운 내용을 추가하면 전체 회독이 느려질 것 같을 때 과감히 제외한다."
+    },
+    {
+      "id": "q03",
+      "axis_id": "recall",
+      "agreement_pole": "O",
+      "scenario_tag": "case-recall-failure",
+      "prompt": "나는 책을 보면 아는 내용인데 문제에서 떠오르지 않으면 책을 덮고 목차부터 직접 써본다."
+    },
+    {
+      "id": "q04",
+      "axis_id": "pace",
+      "agreement_pole": "S",
+      "scenario_tag": "daily-quota",
+      "prompt": "나는 시험이 아직 멀어도 하루에 처리할 분량을 정해 꾸준히 쌓는다."
+    },
+    {
+      "id": "q05",
+      "axis_id": "source",
+      "agreement_pole": "T",
+      "scenario_tag": "limited-time-standard",
+      "prompt": "나는 시간이 부족하면 법리의 전체 맥락보다 기출과 채점기준에 바로 맞는 문구를 먼저 선택한다."
+    },
+    {
+      "id": "q06",
+      "axis_id": "coverage",
+      "agreement_pole": "W",
+      "scenario_tag": "uncertain-latest-case",
+      "prompt": "나는 중요도가 애매한 최신판례라도 불의타가 걱정되면 단권화 자료에 일단 넣는다."
+    },
+    {
+      "id": "q07",
+      "axis_id": "recall",
+      "agreement_pole": "R",
+      "scenario_tag": "fuzzy-memory",
+      "prompt": "나는 기억이 흐릿하다고 느끼면 문제를 더 풀기 전에 관련 부분을 한 번 더 읽는다."
+    },
+    {
+      "id": "q08",
+      "axis_id": "pace",
+      "agreement_pole": "D",
+      "scenario_tag": "subject-sprint",
+      "prompt": "나는 여러 과목을 매일 나누기보다 일정 기간 한 과목에 몰입할 때 진도가 더 잘 나간다."
+    },
+    {
+      "id": "q09",
+      "axis_id": "source",
+      "agreement_pole": "P",
+      "scenario_tag": "new-doctrine",
+      "prompt": "나는 새로운 법리를 공부할 때 답안 문구를 외우기 전에 그 결론이 나온 이유와 체계를 이해하려 한다."
+    },
+    {
+      "id": "q10",
+      "axis_id": "coverage",
+      "agreement_pole": "C",
+      "scenario_tag": "priority-setting",
+      "prompt": "나는 공부 범위를 정할 때 빈출 여부와 배점을 기준으로 우선순위를 분명하게 나눈다."
+    },
+    {
+      "id": "q11",
+      "axis_id": "recall",
+      "agreement_pole": "O",
+      "scenario_tag": "blank-page",
+      "prompt": "나는 한 단원을 공부한 뒤 자료를 보지 않고 빈 종이에 쟁점과 목차를 적어본다."
+    },
+    {
+      "id": "q12",
+      "axis_id": "pace",
+      "agreement_pole": "S",
+      "scenario_tag": "minimum-routine",
+      "prompt": "나는 컨디션이 좋지 않은 날에도 미리 정한 최소 공부량은 지키려 한다."
+    },
+    {
+      "id": "q13",
+      "axis_id": "source",
+      "agreement_pole": "T",
+      "scenario_tag": "exam-use",
+      "prompt": "나는 새로운 판례를 보면 먼저 객관식·사례·기록 중 어디에서 점수로 바꿀 수 있을지 생각한다."
+    },
+    {
+      "id": "q14",
+      "axis_id": "coverage",
+      "agreement_pole": "W",
+      "scenario_tag": "supplementing-material",
+      "prompt": "나는 기본교재에 없는 보충논점을 발견하면 빠뜨리지 않도록 기존 자료에 붙여둔다."
+    },
+    {
+      "id": "q15",
+      "axis_id": "recall",
+      "agreement_pole": "R",
+      "scenario_tag": "annotation-refinement",
+      "prompt": "나는 회독할수록 밑줄·별표·정오표시를 다듬어 다음 회독에서 더 빠르게 읽을 수 있게 만든다."
+    },
+    {
+      "id": "q16",
+      "axis_id": "pace",
+      "agreement_pole": "D",
+      "scenario_tag": "deadline-focus",
+      "prompt": "나는 시험이나 모의고사 날짜가 가까워져야 집중력이 확실히 올라간다."
+    },
+    {
+      "id": "q17",
+      "axis_id": "source",
+      "agreement_pole": "P",
+      "scenario_tag": "own-words",
+      "prompt": "나는 다른 사람이 정리한 문구를 그대로 외우기보다 근거를 확인하고 내 문장으로 다시 정리한다."
+    },
+    {
+      "id": "q18",
+      "axis_id": "coverage",
+      "agreement_pole": "C",
+      "scenario_tag": "retainable-volume",
+      "prompt": "나는 시험장까지 가져갈 수 있는 양을 생각해 실제로 기억할 내용만 남기려 한다."
+    },
+    {
+      "id": "q19",
+      "axis_id": "recall",
+      "agreement_pole": "O",
+      "scenario_tag": "verbal-recall",
+      "prompt": "나는 판례 문구가 불확실할 때 원문을 다시 보기 전에 기억나는 만큼 말하거나 타이핑해 본다."
+    },
+    {
+      "id": "q20",
+      "axis_id": "pace",
+      "agreement_pole": "S",
+      "scenario_tag": "long-range-rotation",
+      "prompt": "나는 시험이 많이 남았을 때도 전 과목이 끊기지 않도록 일정한 주기로 조금씩 돌린다."
+    },
+    {
+      "id": "q21",
+      "axis_id": "source",
+      "agreement_pole": "T",
+      "scenario_tag": "answer-ready-language",
+      "prompt": "나는 여러 설명 중 하나를 골라야 하면 시험장에서 바로 재현할 수 있는 표현을 우선한다."
+    },
+    {
+      "id": "q22",
+      "axis_id": "coverage",
+      "agreement_pole": "W",
+      "scenario_tag": "unknown-issue-anxiety",
+      "prompt": "나는 아직 정리하지 못한 쟁점이 남아 있으면 출제 가능성이 낮아 보여도 그냥 넘기기 어렵다."
+    },
+    {
+      "id": "q23",
+      "axis_id": "recall",
+      "agreement_pole": "R",
+      "scenario_tag": "repeated-exposure",
+      "prompt": "나는 중요한 내용이 익숙해질 때까지 여러 번 눈에 노출해야 비로소 정리됐다고 느낀다."
+    },
+    {
+      "id": "q24",
+      "axis_id": "pace",
+      "agreement_pole": "D",
+      "scenario_tag": "intensive-window",
+      "prompt": "나는 긴 계획을 고르게 실행하기보다 짧은 집중기간을 정해 많은 분량을 처리하는 편이다."
+    },
+    {
+      "id": "q25",
+      "axis_id": "source",
+      "agreement_pole": "P",
+      "scenario_tag": "unprecedented-principle",
+      "prompt": "나는 아직 기출되지 않았더라도 법체계를 이해하는 데 핵심인 내용은 공부할 가치가 있다고 본다."
+    },
+    {
+      "id": "q26",
+      "axis_id": "coverage",
+      "agreement_pole": "C",
+      "scenario_tag": "final-volume-limit",
+      "prompt": "나는 시험이 가까워질수록 새 자료를 늘리기보다 최종적으로 볼 한 권의 분량을 지킨다."
+    },
+    {
+      "id": "q27",
+      "axis_id": "recall",
+      "agreement_pole": "R",
+      "scenario_tag": "input-before-practice",
+      "prompt": "나는 낯선 문제를 풀기 전에 관련 기본내용을 충분히 다시 읽어야 마음이 놓인다."
+    },
+    {
+      "id": "q28",
+      "axis_id": "pace",
+      "agreement_pole": "D",
+      "scenario_tag": "visible-milestone",
+      "prompt": "나는 추상적인 장기계획보다 다음 시험·진도마감처럼 가까운 목표가 있을 때 더 잘 움직인다."
+    }
+  ]
+}
