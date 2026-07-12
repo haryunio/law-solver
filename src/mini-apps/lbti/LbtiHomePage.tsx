@@ -1,9 +1,21 @@
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { LbtiLayout } from "./components/LbtiLayout";
 import { LbtiTypeCode } from "./components/LbtiTypeCode";
-import { lbtiAxes } from "./lib/lbti";
+import { lbtiAxes, lbtiTypes, type TypeCode } from "./lib/lbti";
 
 export function LbtiHomePage() {
+  const [previewIndex, setPreviewIndex] = useState(0);
+  const previewType = lbtiTypes[previewIndex]!;
+
+  useEffect(() => {
+    const intervalId = window.setInterval(() => {
+      setPreviewIndex((current) => (current + 1) % lbtiTypes.length);
+    }, 4000);
+
+    return () => window.clearInterval(intervalId);
+  }, []);
+
   return (
     <LbtiLayout>
       <main>
@@ -38,11 +50,11 @@ export function LbtiHomePage() {
             <div className="app-card relative overflow-hidden rounded-[2rem] border p-6 sm:p-8">
               <div className="absolute -right-10 -top-10 h-40 w-40 rounded-full bg-red-100/70 blur-2xl dark:bg-red-950/50" />
               <p className="relative text-xs font-bold tracking-[0.16em] text-red-600 dark:text-red-400">YOUR RESULT</p>
-              <div className="relative mt-5"><LbtiTypeCode code="PWOS" large /></div>
-              <h2 className="relative mt-5 text-2xl font-black tracking-tight sm:text-3xl">대법관 꿈나무</h2>
-              <p className="relative mt-3 text-sm leading-6 text-stone-600 dark:text-stone-300">
-                체계·범위·실전·루틴을 모두 챙기려는 정석 완주형. 당신의 결과는 무엇일까요?
-              </p>
+              <div key={previewType.code} className="landing-fade-up relative min-h-[190px] sm:min-h-[205px]">
+                <div className="mt-5"><LbtiTypeCode code={previewType.code as TypeCode} large /></div>
+                <h2 className="mt-5 text-2xl font-black tracking-tight sm:text-3xl">{previewType.name}</h2>
+                <p className="mt-3 text-sm leading-6 text-stone-600 dark:text-stone-300">{previewType.description}</p>
+              </div>
               <div className="relative mt-6 grid grid-cols-2 gap-2 text-xs font-semibold text-stone-600 dark:text-stone-300">
                 {["최종 기준", "학습 범위", "기억 방식", "시간 운영"].map((label) => (
                   <span key={label} className="app-subtle-surface rounded-xl border px-3 py-3">{label}</span>

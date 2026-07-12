@@ -11,8 +11,9 @@ const statusLabels: Record<MiniAppStatus, string> = {
 };
 
 function MiniAppCard({ app }: { app: MiniAppDefinition }) {
+  const isComingSoon = app.status === "coming-soon";
   const content = (
-    <div className="flex items-start gap-4 sm:gap-5">
+    <div className={`flex items-start gap-4 sm:gap-5 ${isComingSoon ? "select-none opacity-65 blur-[0.7px]" : ""}`}>
       <div
         className={`flex h-16 w-16 shrink-0 items-center justify-center rounded-[22px] text-xl font-black tracking-[-0.06em] shadow-sm sm:h-[72px] sm:w-[72px] sm:text-2xl ${app.iconClass}`}
         aria-hidden="true"
@@ -32,9 +33,12 @@ function MiniAppCard({ app }: { app: MiniAppDefinition }) {
   );
 
   const cardClass = "app-card relative overflow-hidden rounded-3xl border p-5 sm:p-6";
-  if (app.route && app.status !== "coming-soon") {
+  if (app.route && !isComingSoon) {
     return (
-      <Link to={app.route} className={`${cardClass} transition hover:border-red-300 dark:hover:border-red-800`}>
+      <Link
+        to={app.route}
+        className={`${cardClass} transition duration-200 hover:-translate-y-0.5 hover:border-red-300 hover:shadow-[var(--app-shadow-hover)] dark:hover:border-red-800`}
+      >
         {content}
       </Link>
     );
