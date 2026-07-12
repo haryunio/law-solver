@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { Link, NavLink } from "react-router-dom";
 import { BrandMark } from "../../../components/ui/BrandMark";
 import { LandingFooter } from "../../../components/ui/LandingFooter";
+import { ReturnLinkLabel } from "../../../components/ui/ReturnLinkLabel";
 import { useSettingsStore } from "../../../store/useSettingsStore";
 
 export function LbtiLayout({ children }: { children: ReactNode }) {
@@ -16,31 +17,35 @@ export function LbtiLayout({ children }: { children: ReactNode }) {
 
   return (
     <div className="app-page flex min-h-screen flex-col">
-      <header className="app-topbar sticky top-0 z-40 border-b">
-        <nav className="mx-auto flex h-[68px] w-full max-w-6xl items-center gap-3 px-3 sm:px-6 lg:px-8" aria-label="LBTI 메뉴">
-          <Link
-            to="/apps"
-            className="hidden shrink-0 text-sm font-semibold text-stone-500 transition hover:text-red-600 sm:inline-flex dark:text-stone-400 dark:hover:text-red-400"
-          >
-            ← 미니 앱
-          </Link>
-          <span className="hidden h-5 w-px bg-stone-200 sm:block dark:bg-stone-700" />
-          <Link to="/apps/lbti" className="flex min-w-0 items-center gap-2" aria-label="LBTI 홈">
-            <BrandMark size="small" />
-            <span className="truncate text-sm font-bold tracking-tight sm:text-base">LBTI</span>
-          </Link>
+      <header className="landing-nav-wrap">
+        <nav className="landing-container flex h-[72px] items-center gap-3" aria-label="LBTI 메뉴">
+          <div className="flex min-w-0 items-center gap-2.5">
+            <Link to="/" className="flex min-w-0 items-center gap-2.5" aria-label="Law Solver 홈">
+              <BrandMark className="landing-logo-mark" />
+              <span className="truncate text-[17px] font-semibold tracking-[-0.015em]">Law Solver</span>
+            </Link>
+            <span className="h-5 w-px shrink-0 bg-stone-300 dark:bg-stone-700" aria-hidden="true" />
+            <Link to="/apps/lbti" className="shrink-0 text-sm font-bold tracking-tight sm:text-base" aria-label="LBTI 홈">
+              LBTI
+            </Link>
+          </div>
 
-          <div className="ml-auto flex items-center gap-0.5 sm:gap-1">
-            <NavLink to="/apps/lbti/test" className={navClass}>테스트</NavLink>
-            <NavLink to="/apps/lbti/types" className={navClass}>모든 유형</NavLink>
+          <div className="ml-auto flex shrink-0 items-center gap-0.5 sm:gap-1">
+            <div className="hidden items-center gap-0.5 sm:flex sm:gap-1">
+              <NavLink to="/apps/lbti/test" className={navClass}>LBTI 테스트</NavLink>
+              <NavLink to="/apps/lbti/types" className={navClass}>LBTI 유형 보기</NavLink>
+            </div>
             <button
               type="button"
               onClick={toggleDarkMode}
-              className="app-icon-button ml-1 flex h-9 w-9 items-center justify-center rounded-lg border text-base text-stone-600 dark:text-stone-300"
+              className="landing-theme-button ml-1"
               aria-label={darkMode ? "라이트 모드로 전환" : "다크 모드로 전환"}
             >
               <span aria-hidden="true">{darkMode ? "☀" : "☾"}</span>
             </button>
+            <Link to="/apps" className="app-button-secondary ml-1 rounded-lg px-3 py-2 text-xs font-bold sm:px-4 sm:text-sm">
+              <ReturnLinkLabel>나가기</ReturnLinkLabel>
+            </Link>
           </div>
         </nav>
       </header>
