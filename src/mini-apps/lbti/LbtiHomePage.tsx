@@ -29,7 +29,7 @@ export function LbtiHomePage() {
               </div>
               <h1 className="mt-6 text-4xl font-black leading-[1.12] tracking-[-0.055em] text-stone-950 sm:text-6xl dark:text-white">
                 나는 어떤 방식으로<br />
-                <span className="landing-gradient-text">시험을 버티는 사람일까?</span>
+                <span className="landing-gradient-text">공부하는 사람일까?</span>
               </h1>
               <p className="mt-6 max-w-2xl text-base leading-7 text-stone-600 sm:text-lg sm:leading-8 dark:text-stone-300">
                 원전과 수험자료, 풀커버와 압축, 회독과 현출, 누적과 마감. 시간이 부족할 때 내가 먼저 고르는 공부 방식을 30개의 질문으로 알아보세요.
