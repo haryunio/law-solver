@@ -5,12 +5,15 @@ import { LbtiTypeCode } from "./components/LbtiTypeCode";
 import { lbtiAxes, lbtiTypes, type TypeCode } from "./lib/lbti";
 
 export function LbtiHomePage() {
-  const [previewIndex, setPreviewIndex] = useState(0);
+  const [previewIndex, setPreviewIndex] = useState(() => Math.floor(Math.random() * lbtiTypes.length));
   const previewType = lbtiTypes[previewIndex]!;
 
   useEffect(() => {
     const intervalId = window.setInterval(() => {
-      setPreviewIndex((current) => (current + 1) % lbtiTypes.length);
+      setPreviewIndex((current) => {
+        const nextOffset = 1 + Math.floor(Math.random() * (lbtiTypes.length - 1));
+        return (current + nextOffset) % lbtiTypes.length;
+      });
     }, 4000);
 
     return () => window.clearInterval(intervalId);

@@ -110,6 +110,85 @@ body {
   background: #242426 !important;
 }
 
+.app-rich-text {
+  min-width: 0;
+  white-space: pre-wrap;
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+}
+
+.app-rich-text p,
+.app-rich-text blockquote,
+.app-rich-text ul,
+.app-rich-text ol,
+.app-rich-text pre {
+  margin-block: 0.65em;
+}
+
+.app-rich-text ul,
+.app-rich-text ol {
+  padding-left: 1.5em;
+}
+
+.app-rich-text ul { list-style: disc; }
+.app-rich-text ol { list-style: decimal; }
+.app-rich-text blockquote { padding-left: 0.9em; border-left: 3px solid var(--app-border-strong); }
+.app-rich-text pre { overflow-x: auto; font-size: 0.9em; }
+
+.app-rich-table-wrap {
+  max-width: 100%;
+  margin-block: 0.9rem;
+  overflow-x: auto;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: var(--app-text);
+  white-space: normal;
+  outline: none;
+}
+
+.app-rich-table-wrap:focus-visible {
+  outline: 2px solid #ef6b5d;
+  outline-offset: 2px;
+}
+
+.app-rich-table {
+  width: 100%;
+  min-width: 100%;
+  border: 1px solid var(--app-border-strong);
+  border-collapse: collapse;
+  table-layout: auto;
+  background: var(--app-surface-muted);
+  color: inherit;
+  font-size: 0.8125rem;
+  font-weight: 400 !important;
+  line-height: 1.65;
+}
+
+.app-rich-table-wrap.is-wide > .app-rich-table { min-width: 34rem; }
+
+.app-rich-table th,
+.app-rich-table td {
+  border: 1px solid var(--app-border-strong);
+  padding: 0.5rem 0.625rem;
+  background: transparent;
+  font-weight: 400 !important;
+  text-align: left;
+  vertical-align: top;
+  white-space: pre-wrap;
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+}
+
+.app-rich-table th { background: color-mix(in srgb, var(--app-surface-muted) 80%, var(--app-surface-solid)); }
+.app-rich-table caption { padding: 0.55rem 0.625rem; color: var(--app-muted); text-align: left; }
+.app-rich-table .app-rich-table-wrap { margin-block: 0.75rem 0; border-radius: 0; background: transparent; }
+.app-rich-table .app-rich-table { background: var(--app-surface-solid); }
+
+@media (min-width: 768px) {
+  .app-rich-table { font-size: 0.875rem; }
+}
+
 .app-topbar {
   border-color: var(--app-border) !important;
   background: color-mix(in srgb, var(--app-surface-solid) 88%, transparent) !important;
