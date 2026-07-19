@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { ChoiceReviewList } from "../components/review/ChoiceReviewList";
 import { OverflowTooltipTitle } from "../components/ui/OverflowTooltipTitle";
+import { RichTextContent } from "../components/ui/RichTextContent";
 import { ReturnLinkLabel } from "../components/ui/ReturnLinkLabel";
 import { getAnswerParts, getAnswerToken } from "../lib/answer";
 import {
@@ -206,16 +207,15 @@ export function WrongAnswersPage() {
           </div>
           </div>
           <div ref={contentRef} className="min-h-0 flex-auto overflow-y-auto px-5 pb-6 md:px-8">
-          <h2
+          <RichTextContent
+            content={current.question}
             className={[
               "font-semibold dark:text-stone-100",
               current.choices
                 ? "text-sm leading-6 md:text-base md:leading-7"
                 : "text-base leading-7 md:text-lg md:leading-8",
             ].join(" ")}
-          >
-            {current.question}
-          </h2>
+          />
 
           {current.boxes && current.boxes.length > 0 && (
             <div className="mt-4 rounded-xl border-2 border-stone-200 bg-stone-50/50 p-4 dark:border-stone-800 dark:bg-stone-900/50">
@@ -232,7 +232,10 @@ export function WrongAnswersPage() {
                       ].join(" ")}
                     >
                       <span className="font-bold shrink-0">{symbols[idx] ?? idx + 1}.</span>
-                      <span className="text-stone-800 dark:text-stone-200">{cleanBox}</span>
+                      <RichTextContent
+                        content={cleanBox}
+                        className="min-w-0 flex-1 text-stone-800 dark:text-stone-200"
+                      />
                     </div>
                   );
                 })}
@@ -278,7 +281,10 @@ export function WrongAnswersPage() {
             {current.explanation ? (
               <article className="rounded-xl border border-stone-200 bg-stone-50 p-4 dark:border-stone-800 dark:bg-stone-950/30">
                 <p className="text-xs font-semibold text-stone-600 dark:text-stone-500">해설</p>
-                <p className="mt-1 text-sm text-stone-700 whitespace-pre-wrap dark:text-stone-300">{current.explanation}</p>
+                <RichTextContent
+                  content={current.explanation}
+                  className="mt-1 text-sm text-stone-700 dark:text-stone-300"
+                />
               </article>
             ) : null}
             {current.source ? (

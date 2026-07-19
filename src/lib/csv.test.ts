@@ -1,7 +1,13 @@
 import { describe, expect, it } from "vitest";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
-import { buildSessionExportCsv, parseCsvByType, readCsvFileText } from "./csv";
+import {
+  buildSessionExportCsv,
+  createSessionTitleFromFileName,
+  inferTestTypeFromCsv,
+  parseCsvByType,
+  readCsvFileText,
+} from "./csv";
 import { TestSession } from "../types/test";
 
 describe("parseCsvByType", () => {
@@ -68,6 +74,34 @@ describe("parseCsvByType", () => {
     expect(parsed).toHaveLength(2);
     expect(parsed[0]?.answer).toBe("해제");
     expect(parsed[1]?.answer).toBe("배상");
+  });
+});
+
+describe("CSV upload metadata", () => {
+  it("creates a clean session title from the selected file name", () => {
+    expect(createSessionTitleFromFileName("민법_기출(2026)-최종.csv")).toBe("민법 기출 2026 최종");
+    expect(createSessionTitleFromFileName("채권각론.v2.CSV")).toBe("채권각론 v2");
+  });
+
+  it("infers 5-choice from choice headers", () => {
+    const csv = [
+      "번호,문제,선택지1,선택지2,선택지3,선택지4,선택지5,정답",
+      "1,옳은 것은?,갑,을,병,정,무,3",
+    ].join("\n");
+
+    expect(inferTestTypeFromCsv(csv)).toBe("5-choice");
+  });
+
+  it("distinguishes OX and short answer csv by answer values", () => {
+    const oxCsv = ["번호,문제,정답", "1,계약은 합의로 성립한다,O", "2,언제나 서면이 필요하다,X"].join("\n");
+    const shortCsv = ["번호,문제,정답", "1,계약을 해소하는 의사표시는?,해제"].join("\n");
+
+    expect(inferTestTypeFromCsv(oxCsv)).toBe("OX");
+    expect(inferTestTypeFromCsv(shortCsv)).toBe("short");
+  });
+
+  it("keeps the current selection when required headers cannot be identified", () => {
+    expect(inferTestTypeFromCsv("이름,내용\n민법,테스트")).toBeNull();
   });
 });
 

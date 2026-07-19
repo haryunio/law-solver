@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ConfirmDialog } from "../ui/ConfirmDialog";
 import { OverflowTooltipTitle } from "../ui/OverflowTooltipTitle";
+import { RichTextContent } from "../ui/RichTextContent";
 import { getAnswerToken } from "../../lib/answer";
 import {
   QuestionNavigationMethod,
@@ -277,16 +278,15 @@ export function CbtSolveScreen({
           </div>
           </div>
           <div ref={contentRef} className="min-h-0 flex-auto overflow-y-auto px-5 pb-6 md:px-8">
-          <h2
+          <RichTextContent
+            content={current.question}
             className={[
               "font-semibold dark:text-stone-100",
               session.type === "5-choice"
                 ? "text-sm leading-6 md:text-base md:leading-7"
                 : "text-base leading-7 md:text-lg md:leading-8",
             ].join(" ")}
-          >
-            {current.question}
-          </h2>
+          />
 
           {current.boxes && current.boxes.length > 0 && (
             <div className="mt-4 rounded-xl border-2 border-stone-200 bg-stone-50/50 p-4 dark:border-stone-800 dark:bg-stone-900/50">
@@ -304,7 +304,10 @@ export function CbtSolveScreen({
                       ].join(" ")}
                     >
                       <span className="font-bold shrink-0">{symbols[idx] ?? idx + 1}.</span>
-                      <span className="text-stone-800 dark:text-stone-200">{cleanBox}</span>
+                      <RichTextContent
+                        content={cleanBox}
+                        className="min-w-0 flex-1 text-stone-800 dark:text-stone-200"
+                      />
                     </div>
                   );
                 })}
@@ -352,7 +355,11 @@ export function CbtSolveScreen({
                       {option.circle && (
                         <span className="shrink-0 font-bold">{option.circle}</span>
                       )}
-                      <span className="flex-1 font-medium">{option.text}</span>
+                      <RichTextContent
+                        as="span"
+                        content={option.text}
+                        className="min-w-0 flex-1 font-medium"
+                      />
                       {isCorrect && !showInlineNext && (
                         <span className="ml-auto shrink-0 text-xs font-bold text-blue-600 dark:text-blue-400">정답</span>
                       )}
@@ -384,7 +391,7 @@ export function CbtSolveScreen({
               {current.explanation && (
                 <div className="text-sm leading-relaxed text-stone-700 dark:text-stone-300">
                   <p className="mb-1 font-semibold text-stone-900 dark:text-stone-100">해설</p>
-                  <p>{current.explanation}</p>
+                  <RichTextContent content={current.explanation} />
                 </div>
               )}
               {current.source && (

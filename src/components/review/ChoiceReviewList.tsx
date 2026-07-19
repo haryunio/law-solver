@@ -1,4 +1,5 @@
 import { ParsedQuestion } from "../../types/test";
+import { RichTextContent } from "../ui/RichTextContent";
 
 const choiceMarkers = ["①", "②", "③", "④", "⑤"];
 
@@ -36,7 +37,7 @@ export function ChoiceReviewList({ question }: ChoiceReviewListProps) {
               ].join(" ")}
             >
               <span className="shrink-0 text-sm font-bold leading-5 md:text-base md:leading-6">{choiceMarkers[idx]}</span>
-              <span className="min-w-0 flex-1 whitespace-pre-wrap">{choice}</span>
+              <RichTextContent content={choice} className="min-w-0 flex-1" />
               <span className="flex shrink-0 flex-col items-end gap-1 sm:flex-row sm:items-center">
                 {isMine ? (
                   <span className="rounded-full bg-red-100 px-2 py-0.5 text-[11px] font-bold text-red-700 dark:bg-red-950/50 dark:text-red-300">

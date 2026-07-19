@@ -1,5 +1,10 @@
-import { FormEvent, useState } from "react";
-import { parseCsvByType, readCsvFileText } from "../../lib/csv";
+import { ChangeEvent, FormEvent, useRef, useState } from "react";
+import {
+  createSessionTitleFromFileName,
+  inferTestTypeFromCsv,
+  parseCsvByType,
+  readCsvFileText,
+} from "../../lib/csv";
 import { toAnalyticsQuestionType, trackEvent } from "../../lib/analytics";
 import { useTestStore } from "../../store/useTestStore";
 import { SolveOrder, TestType } from "../../types/test";
@@ -30,6 +35,27 @@ export function CsvUploadPanel({ subjectId, onCreated }: CsvUploadPanelProps) {
   const [file, setFile] = useState<File | null>(null);
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const selectedFileRef = useRef<File | null>(null);
+
+  const handleFileChange = async (event: ChangeEvent<HTMLInputElement>) => {
+    const selectedFile = event.currentTarget.files?.[0] ?? null;
+    selectedFileRef.current = selectedFile;
+    setFile(selectedFile);
+
+    if (!selectedFile) return;
+
+    setTitle(createSessionTitleFromFileName(selectedFile.name));
+
+    try {
+      const csvText = await readCsvFileText(selectedFile);
+      if (selectedFileRef.current !== selectedFile) return;
+
+      const inferredType = inferTestTypeFromCsv(csvText);
+      if (inferredType) setType(inferredType);
+    } catch {
+      // 파일을 제출할 때 기존 오류 UI에서 읽기 실패를 안내합니다.
+    }
+  };
 
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault();
@@ -78,6 +104,16 @@ export function CsvUploadPanel({ subjectId, onCreated }: CsvUploadPanelProps) {
       <h2 className="text-lg font-semibold text-stone-900 dark:text-stone-100">새 문제 등록</h2>
 
       <label className="block space-y-2">
+        <span className="text-sm font-medium text-stone-700 dark:text-stone-300">CSV 파일</span>
+        <input
+          type="file"
+          accept=".csv,text/csv"
+          onChange={(event) => void handleFileChange(event)}
+          className="app-control block w-full rounded-lg px-3 py-2 text-sm file:mr-4 file:rounded-lg file:border-0 file:bg-red-600 file:px-3 file:py-1.5 file:text-sm file:font-semibold file:text-white"
+        />
+      </label>
+
+      <label className="block space-y-2">
         <span className="text-sm font-medium text-stone-700 dark:text-stone-300">세션 제목</span>
         <input
           value={title}
@@ -106,16 +142,6 @@ export function CsvUploadPanel({ subjectId, onCreated }: CsvUploadPanelProps) {
           ariaLabel="풀이 순서 선택"
         />
       </div>
-
-      <label className="block space-y-2">
-        <span className="text-sm font-medium text-stone-700 dark:text-stone-300">CSV 파일</span>
-        <input
-          type="file"
-          accept=".csv,text/csv"
-          onChange={(e) => setFile(e.target.files?.[0] ?? null)}
-          className="app-control block w-full rounded-lg px-3 py-2 text-sm file:mr-4 file:rounded-lg file:border-0 file:bg-red-600 file:px-3 file:py-1.5 file:text-sm file:font-semibold file:text-white"
-        />
-      </label>
 
       {error ? (
         <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700 dark:border-red-900/50 dark:bg-red-950/30 dark:text-red-400">{error}</p>

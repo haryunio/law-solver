@@ -23,6 +23,46 @@ const getValue = (row: RawRow, keys: string[], fallbackIndex?: number) => {
   return "";
 };
 
+export const createSessionTitleFromFileName = (fileName: string) => {
+  const withoutExtension = fileName.replace(/\.[^.]+$/, "");
+  return withoutExtension
+    .normalize("NFKC")
+    .replace(/[^\p{L}\p{N}]+/gu, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+};
+
+export const inferTestTypeFromCsv = (csvText: string): TestType | null => {
+  const result = Papa.parse<RawRow>(csvText, {
+    header: true,
+    skipEmptyLines: "greedy",
+  });
+
+  if (result.errors.length > 0) return null;
+
+  const fields = result.meta.fields ?? [];
+  const normalizedFields = fields.map(normalize);
+  const hasQuestionHeader = normalizedFields.some((field) =>
+    ["문제", "question", "문항"].includes(field),
+  );
+  const hasAnswerHeader = normalizedFields.some((field) => ["정답", "answer"].includes(field));
+
+  if (!hasQuestionHeader || !hasAnswerHeader) return null;
+
+  const hasChoiceHeader = normalizedFields.some((field) =>
+    /^(?:지문|선지|선택지|choice|option)[1-5]$/.test(field),
+  );
+  if (hasChoiceHeader) return "5-choice";
+
+  const answers = result.data
+    .map((row) => getValue(row, ["정답", "answer"]))
+    .filter(Boolean);
+  if (answers.length === 0) return null;
+
+  const isOxCsv = answers.every((answer) => ["O", "X", "0", "1"].includes(answer.toUpperCase()));
+  return isOxCsv ? "OX" : "short";
+};
+
 const parseRawRows = (csvText: string): RawRow[] => {
   const result = Papa.parse<RawRow>(csvText, {
     header: true,
