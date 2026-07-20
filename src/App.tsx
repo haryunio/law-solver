@@ -10,6 +10,7 @@ import { SideAppsPage } from "./pages/SideAppsPage";
 import { SubjectListPage } from "./pages/SubjectListPage";
 import { WrongAnswersPage } from "./pages/WrongAnswersPage";
 import { PageViewTracker } from "./components/analytics/PageViewTracker";
+import { RouteMetadata } from "./components/seo/RouteMetadata";
 import { LbtiHomePage } from "./mini-apps/lbti/LbtiHomePage";
 import { LbtiResultPage } from "./mini-apps/lbti/LbtiResultPage";
 import { LbtiTestPage } from "./mini-apps/lbti/LbtiTestPage";
@@ -40,6 +41,7 @@ export default function App() {
   return (
     <>
       <ThemeWatcher />
+      <RouteMetadata />
       <PageViewTracker />
       <Routes>
         <Route path="/" element={<LandingPage />} />

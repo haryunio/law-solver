@@ -35,7 +35,7 @@ export function LbtiResultPage() {
   const selectedPoles = getSelectedPoles(code);
   const relatedTypes = getRelatedTypes(code);
   const oppositeType = getOppositeType(code);
-  const resultUrl = `${window.location.origin}/apps/lbti/result/${code.toLowerCase()}`;
+  const resultUrl = `${window.location.origin}/apps/lbti/result/${code.toLowerCase()}/`;
 
   const copyLink = async () => {
     try {

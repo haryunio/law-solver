@@ -59,7 +59,7 @@ Zustand store입니다. 문제 세션, 과목, 세션-과목 매핑 상태는 `u
 src/lib/
 ```
 
-CSV 파싱/다운로드, GA4 이벤트, 채점, 정렬, 답안 표시, ID 생성, 시간 포맷 등 도메인 유틸입니다. 관련 단위 테스트도 이 디렉터리에 있습니다. GA4 이벤트와 허용 파라미터는 `src/lib/analytics.ts`에서 중앙 관리합니다.
+CSV 파싱/다운로드, GA4 이벤트, SEO 정책, 채점, 정렬, 답안 표시, ID 생성, 시간 포맷 등 도메인 유틸입니다. 관련 단위 테스트도 이 디렉터리에 있습니다. GA4 이벤트와 허용 파라미터는 `src/lib/analytics.ts`, 검색 색인과 canonical 정책은 `src/lib/seo.ts`에서 중앙 관리합니다.
 
 ```txt
 src/types/
@@ -93,11 +93,13 @@ GitHub Pages용 정적 파일입니다. `404.html`은 SPA 새로고침 대응용
 - 서버 API가 없으므로 브라우저 API 사용 시 호환성을 고려합니다. 예: `crypto.randomUUID()` 직접 호출 대신 `src/lib/id.ts`의 `createId()` 사용.
 - CSV 헤더 호환성은 `src/lib/csv.ts`의 `normalize`, `getValue` 흐름을 기준으로 확장합니다.
 - 새 문제 등록은 CSV 파일을 첫 입력으로 배치합니다. 파일 선택 시 확장자를 제거하고 특수문자를 공백으로 바꾼 파일명을 세션 제목으로 제안하며, 선택지 헤더와 정답 값으로 5지선다·OX·단답형을 판별할 수 있을 때만 문제 타입을 자동 변경합니다. 판별 실패 시 사용자의 현재 선택을 유지합니다.
-- 문제·보기·선지·해설에 포함된 제한적 HTML은 `src/components/ui/RichTextContent.tsx`로 렌더링합니다. 표·줄바꿈·문단·목록·기본 강조와 셀 병합만 허용하고, 스크립트·외부 콘텐츠·폼·이벤트 속성·임의 스타일은 제거합니다. 문제 문자열을 `dangerouslySetInnerHTML`로 직접 주입하지 마세요.
+- 문제·보기·선지·해설에 포함된 제한적 HTML은 `src/components/ui/RichTextContent.tsx`로 렌더링합니다. 표·줄바꿈·문단·목록·기본 강조와 셀 병합만 허용하고, 스크립트·외부 콘텐츠·폼·이벤트 속성·임의 스타일은 제거합니다. HTML이 없는 일반 텍스트의 CRLF·LF·Unicode 줄 구분자는 명시적인 줄바꿈 요소로 변환합니다. 문제 본문과 선지는 한국어 문자 간 좌우맞춤을 사용합니다. 표에는 강제 최소 너비나 별도 가로 스크롤을 적용하지 않고 문제 카드 너비에 맞추며, 표 내부 글자는 모바일 12px·데스크톱 13px을 기준으로 합니다. 문제 문자열을 `dangerouslySetInnerHTML`로 직접 주입하지 마세요.
 - localStorage 데이터 구조를 바꿀 때는 기존 사용자 데이터와 마이그레이션 영향을 고려합니다.
 - `과목 없음`은 저장되는 subject가 아니라 세션-과목 매핑이 없는 상태입니다. `NO_SUBJECT_ID`는 라우팅/UI용 sentinel로만 사용하세요.
 - GA4 이벤트는 페이지 컴포넌트에서 `window.gtag`를 직접 호출하지 말고 `src/lib/analytics.ts`의 `trackEvent`, `trackPageView`를 사용하세요.
 - 새 GA4 이벤트나 파라미터를 추가할 때는 `AnalyticsEventMap`에 타입을 먼저 정의하고 README, AGENTS, 개인정보처리방침을 함께 갱신하세요.
+- 라우트별 title, description, canonical, robots와 소셜 메타데이터는 페이지 컴포넌트에서 직접 수정하지 말고 `src/lib/seo.ts`와 `src/components/seo/RouteMetadata.tsx`를 사용하세요.
+- 공개 라우트를 추가하거나 삭제할 때는 `INDEXABLE_PATHS`, `STATIC_APP_SHELL_PATHS`, sitemap 생성 결과와 README를 함께 갱신하세요. 세션·과목·문항 ID가 포함되는 학습 화면은 색인 대상이나 사이트맵에 넣지 마세요.
 
 ## 미니 앱 개발 규칙
 
@@ -240,6 +242,8 @@ npm run lint
 - `src/components/cbt/CbtSolveScreen.tsx`: 풀이 UX, 타이머, OMR, 단답형 입력, 정답 보기, 책갈피 기능이 모여 있습니다.
 - `src/lib/analytics.ts`: GA4 측정 ID, 이벤트 타입, 운영 도메인 제한, 페이지 경로 정규화가 들어 있습니다. 동적 ID나 학습 성과 데이터가 전송되지 않도록 주의하세요.
 - `src/components/analytics/PageViewTracker.tsx`: React Router 경로가 바뀔 때 수동 `page_view`를 전송합니다. 자동 History 페이지뷰와 함께 사용하지 마세요.
+- `src/lib/seo.ts`: 공개 색인 경로, 라우트별 title/description, canonical과 비공개 화면의 `noindex` 정책이 들어 있습니다. 공개 URL은 후행 슬래시가 있는 운영 도메인 URL을 canonical로 사용합니다.
+- `src/components/seo/RouteMetadata.tsx`: 클라이언트 라우팅 뒤 메타데이터를 갱신합니다. 비공개 화면에는 canonical을 남기지 말고 `noindex`를 유지하세요.
 - `src/index.css`: 랜딩 스타일과 앱 공통 `app-*` 디자인 토큰/컴포넌트 클래스가 함께 있습니다. 공통 색상이나 표면을 바꿀 때 라이트·다크 모드를 함께 확인하세요.
 - `src/components/ui/BrandMark.tsx`: `public/favicon.svg`를 사용하는 공통 로고입니다. 헤더와 푸터에서 동일한 자산을 유지하세요.
 - `src/pages/ResultPage.tsx`: 재풀이, CSV 다운로드, 결과 요약 액션이 많아 회귀 가능성이 큽니다.
@@ -303,6 +307,21 @@ GA4는 Google 태그 직접 설치 방식을 사용합니다. `index.html`에서
 
 GA4 관리 화면의 향상된 측정에서 `브라우저 방문 기록 이벤트에 따른 페이지 변경`은 꺼야 합니다. 활성화하면 수동 페이지뷰와 중복될 수 있습니다. 배포 후 Realtime/DebugView에서 각 이벤트가 한 번만 발생하는지 확인하고, 세부 파라미터를 보고서에서 사용하려면 이벤트 범위 맞춤 측정기준으로 등록합니다.
 
+## Google Search Console과 SEO
+
+Search Console은 도메인 속성 `lawsolver.haryun.io`를 기준으로 사용합니다. `src/lib/seo.ts`가 검색 노출 정책의 단일 출처이며, `RouteMetadata`가 React Router 이동에 맞춰 title, description, canonical, robots, Open Graph와 Twitter 메타데이터를 반영합니다.
+
+색인 대상은 랜딩, 미니 앱 목록, LBTI 소개, 전체 유형 목록과 16개 유형별 결과입니다. LBTI 질문 응답, 과목·문제 대시보드, 풀이·결과·리뷰, 알 수 없는 경로에는 `noindex`를 적용하고 사이트맵에 넣지 않습니다. 동적 학습 ID, 사용자가 입력한 제목이나 문제 내용은 메타데이터, canonical, 소셜 태그와 사이트맵에 넣지 마세요.
+
+`vite.config.ts`의 SEO artifact 플러그인은 빌드 후 다음을 생성합니다.
+
+- `dist/robots.txt`: 전체 크롤링 허용과 사이트맵 위치
+- `dist/sitemap.xml`: 색인 대상 정규 URL만 포함
+- `dist/apps/**/index.html`: GitHub Pages에서 공개 고정 경로와 LBTI 결과가 직접 요청에도 HTTP 200을 반환하도록 하는 앱 셸
+- `dist/favicon.png`: 소셜 공유 메타데이터가 가리키는 PNG 이미지
+
+공개 URL canonical은 GitHub Pages 디렉터리 응답과 일치하도록 후행 슬래시를 사용합니다. 새 공개 미니 앱을 출시하면 `getSeoMetadata`, `INDEXABLE_PATHS`, `STATIC_APP_SHELL_PATHS`를 함께 갱신하고 빌드 산출물의 title, canonical, robots 및 HTTP 200 응답을 확인하세요. 배포 후 `robots.txt`와 `sitemap.xml`을 확인하고 Search Console `Sitemaps`에 `sitemap.xml`을 제출합니다.
+
 ## 배포
 
 GitHub Actions 워크플로우는 `.github/workflows/deploy-pages.yml`입니다.
@@ -314,6 +333,8 @@ GitHub Actions 워크플로우는 `.github/workflows/deploy-pages.yml`입니다.
 - 배포 대상: GitHub Pages
 
 SPA 라우트 새로고침은 `public/404.html`과 `index.html`의 redirect restore 스크립트로 처리합니다.
+
+검색에 노출하는 공개 하위 경로는 빌드 시 별도 HTML 앱 셸을 생성하므로 404 fallback에 의존하지 않습니다. Search Console용 `robots.txt`와 `sitemap.xml`도 같은 빌드 단계에서 생성됩니다.
 
 ## localStorage 마이그레이션과 백업
 

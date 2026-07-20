@@ -36,4 +36,13 @@ describe("RichTextContent", () => {
     render(<RichTextContent content="다음 <보기> 중 옳은 것을 고르시오." />);
     expect(screen.getByText("다음 <보기> 중 옳은 것을 고르시오.")).toBeTruthy();
   });
+
+  it("renders line breaks in plain explanations as explicit breaks", () => {
+    const { container } = render(
+      <RichTextContent content={"ㄱ. 틀리다.\r\nㄴ. 맞다.\n따라서 정답은 4번."} />,
+    );
+
+    expect(container.querySelectorAll("br")).toHaveLength(2);
+    expect(container.textContent).toBe("ㄱ. 틀리다.ㄴ. 맞다.따라서 정답은 4번.");
+  });
 });

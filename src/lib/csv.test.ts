@@ -58,6 +58,16 @@ describe("parseCsvByType", () => {
     expect(first.answer).toBe("3");
   });
 
+  it("preserves line breaks inside a quoted explanation cell", () => {
+    const csv = [
+      "번호,문제,선택지1,선택지2,선택지3,선택지4,선택지5,정답,해설,출처",
+      '1,옳은 것은?,갑,을,병,정,무,4,"ㄱ. 틀리다.\nㄴ. 맞다.\n따라서 정답은 4번.",변호사시험',
+    ].join("\n");
+
+    const parsed = parseCsvByType(csv, "5-choice");
+    expect(parsed[0]?.explanation).toBe("ㄱ. 틀리다.\nㄴ. 맞다.\n따라서 정답은 4번.");
+  });
+
   it("parses the downloadable box-style 5-choice sample", () => {
     const csv = readFileSync(resolve("public/samples/5지선다_box_sample.csv"), "utf8");
     const parsed = parseCsvByType(csv, "5-choice");

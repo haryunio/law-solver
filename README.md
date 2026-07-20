@@ -60,6 +60,7 @@ License: CC BY-NC-ND
 ├── src/
 │   ├── components/
 │   │   ├── analytics/                  # React Router 페이지뷰 추적
+│   │   ├── seo/                        # 라우트별 title, canonical, robots 메타데이터
 │   │   ├── cbt/                        # CBT 풀이 UI
 │   │   ├── review/                     # 리뷰 화면용 재사용 UI
 │   │   ├── ui/                         # 브랜드, 모달, 공통 헤더/푸터 UI
@@ -70,7 +71,7 @@ License: CC BY-NC-ND
 │   │   ├── statute-recall/              # 조문 리콜
 │   │   ├── study-planner/               # 스터디 플래너
 │   │   └── focus-timer/                 # 집중 타이머
-│   ├── lib/                            # CSV, 분석, 정렬, 채점, ID, 시간 유틸 및 테스트
+│   ├── lib/                            # CSV, 분석, SEO, 정렬, 채점, ID, 시간 유틸 및 테스트
 │   ├── pages/                          # 라우트 단위 화면
 │   ├── store/                          # Zustand stores
 │   ├── types/                          # 공유 타입
@@ -192,6 +193,21 @@ LBTI의 네 지표와 16개 유형은 [`lbti-framework.json`](src/mini-apps/lbti
 
 GA4 데이터 스트림의 향상된 측정에서 `브라우저 방문 기록 이벤트에 따른 페이지 변경`은 꺼야 합니다. 이 설정이 켜져 있으면 수동 `page_view`와 중복 집계될 수 있습니다. 배포 후 DebugView에서 이벤트가 한 번씩 발생하는지 확인하고, 보고서에서 세부 구분값을 사용하려면 `page_type`, `question_type`, `solve_entry`, `navigation_method`, `review_type`, `retry_type`, `failure_type`을 이벤트 범위 맞춤 측정기준으로 등록합니다. `solve_completed`는 주요 이벤트로 지정할 수 있습니다.
 
+## Google Search Console과 SEO
+
+운영 도메인은 Search Console 도메인 속성 `lawsolver.haryun.io`를 기준으로 관리합니다. 검색에 노출할 공개 URL과 개인 학습 화면을 분리하며, 관련 정책은 `src/lib/seo.ts`가 단일 출처입니다.
+
+- 색인 대상: 랜딩, 미니 앱 목록, LBTI 소개, 16개 유형 목록, 16개 유형별 결과
+- 색인 제외: LBTI 응답 화면, 과목·문제 대시보드, 풀이, 채점 결과와 리뷰, 알 수 없는 경로
+- `src/components/seo/RouteMetadata.tsx`가 React Router 이동 시 title, description, canonical, robots, Open Graph와 Twitter 메타데이터를 갱신합니다.
+- `index.html`에는 운영 도메인 canonical, 기본 소셜 메타데이터와 `WebApplication` JSON-LD가 들어 있습니다.
+- `vite.config.ts`가 빌드할 때 `dist/robots.txt`, `dist/sitemap.xml`, 공개 하위 경로별 `index.html`과 PNG 소셜 이미지를 생성합니다.
+- 사이트맵에는 정규 URL만 절대 URL로 넣고, 세션·과목·문항 식별자나 쿼리 문자열은 넣지 않습니다.
+
+GitHub Pages는 존재하지 않는 SPA 하위 경로에 HTTP 404를 반환하므로, 검색에 노출할 고정 경로와 LBTI 유형 결과는 빌드 시 각각의 HTML 앱 셸을 생성해 직접 요청에도 HTTP 200이 되도록 합니다. 비공개 학습 경로는 기존 SPA 복구 흐름을 유지하면서 런타임에 `noindex`를 적용합니다.
+
+배포 후 `https://lawsolver.haryun.io/robots.txt`와 `https://lawsolver.haryun.io/sitemap.xml`이 200으로 열리는지 확인하고, Search Console의 `Sitemaps`에서 `sitemap.xml`을 제출합니다. 제출은 크롤링 힌트이며 색인을 보장하지 않으므로, URL 검사에서는 대표 공개 URL의 라이브 테스트와 실제 canonical 선택도 함께 확인합니다.
+
 ## 설치 방법
 
 ```bash
@@ -238,6 +254,8 @@ GitHub Pages 배포:
 - 워크플로우는 `npm ci`, `npm run build` 후 `dist`를 Pages artifact로 업로드합니다.
 - `public/CNAME`에 `lawsolver.haryun.io`가 설정되어 있습니다.
 - `public/404.html`과 `index.html`의 redirect restore 스크립트로 GitHub Pages에서 SPA 라우트 새로고침 404를 우회합니다.
+- 검색에 노출하는 공개 하위 경로는 `vite.config.ts`가 별도 `index.html`을 만들어 직접 요청도 200으로 응답합니다.
+- `robots.txt`와 `sitemap.xml`은 수동 편집 파일이 아니라 `src/lib/seo.ts`의 정책에서 빌드 시 생성됩니다.
 
 ## 데이터 백업/복원
 
@@ -292,7 +310,9 @@ npm run lint
 
 새 문제 등록에서 CSV 파일을 선택하면 확장자를 제외한 파일명이 세션 제목으로 입력됩니다. 파일명의 특수문자는 공백으로 바뀌며 연속 공백은 하나로 정리됩니다. 선택지 헤더가 있으면 5지선다로, 선택지 헤더가 없고 정답이 모두 O/X 계열이면 OX로, 그 밖의 정답 문자열은 단답형으로 자동 선택합니다. 형식을 판별할 수 없으면 현재 선택한 문제 타입을 유지합니다.
 
-문제·보기·선지·해설에는 표, 줄바꿈, 문단, 목록, 강조, 위첨자·아래첨자 등 제한된 HTML을 사용할 수 있습니다. 해당 HTML은 허용된 문서 태그만 React 요소로 변환하며 스크립트, iframe, 폼, 이미지, 이벤트 속성 및 임의 스타일은 제거합니다. 열이 많은 표는 작은 화면에서 표 내부를 가로 스크롤합니다.
+문제·보기·선지·해설에는 표, 줄바꿈, 문단, 목록, 강조, 위첨자·아래첨자 등 제한된 HTML을 사용할 수 있습니다. 해당 HTML은 허용된 문서 태그만 React 요소로 변환하며 스크립트, iframe, 폼, 이미지, 이벤트 속성 및 임의 스타일은 제거합니다. 표는 별도 가로 스크롤 없이 문제 카드 너비에 맞춰 표시됩니다.
+
+CSV의 큰따옴표로 감싼 셀 안에 실제 줄바꿈이 있으면 해당 개행을 유지합니다. 특히 여러 선지를 설명하는 해설은 각 줄을 화면의 명시적인 줄바꿈으로 표시합니다.
 
 ### OX
 
