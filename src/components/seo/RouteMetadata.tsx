@@ -1,6 +1,11 @@
 import { useEffect } from "react";
 import { useLocation } from "react-router-dom";
-import { getCanonicalUrl, getSeoMetadata, SITE_ORIGIN } from "../../lib/seo";
+import {
+  getCanonicalUrl,
+  getSeoMetadata,
+  SOCIAL_IMAGE_ALT,
+  SOCIAL_IMAGE_URL,
+} from "../../lib/seo";
 
 type MetaAttribute = "name" | "property";
 
@@ -34,8 +39,15 @@ export function RouteMetadata() {
     upsertMeta("property", "og:description", metadata.description);
     upsertMeta("name", "twitter:title", metadata.title);
     upsertMeta("name", "twitter:description", metadata.description);
-    upsertMeta("property", "og:image", `${SITE_ORIGIN}/favicon.png`);
-    upsertMeta("name", "twitter:image", `${SITE_ORIGIN}/favicon.png`);
+    upsertMeta("property", "og:image", SOCIAL_IMAGE_URL);
+    upsertMeta("property", "og:image:secure_url", SOCIAL_IMAGE_URL);
+    upsertMeta("property", "og:image:type", "image/png");
+    upsertMeta("property", "og:image:width", "2510");
+    upsertMeta("property", "og:image:height", "1416");
+    upsertMeta("property", "og:image:alt", SOCIAL_IMAGE_ALT);
+    upsertMeta("name", "twitter:card", "summary_large_image");
+    upsertMeta("name", "twitter:image", SOCIAL_IMAGE_URL);
+    upsertMeta("name", "twitter:image:alt", SOCIAL_IMAGE_ALT);
 
     let canonical = document.head.querySelector<HTMLLinkElement>('link[rel="canonical"]');
     if (canonicalUrl) {
