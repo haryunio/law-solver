@@ -77,29 +77,13 @@ const getSafePositiveInteger = (element: Element, attribute: string) => {
   return Number.isInteger(value) && value >= 1 && value <= 100 ? value : undefined;
 };
 
-const getTableColumnCount = (table: Element) => {
-  const rows: Element[] = [];
+const renderPlainTextWithLineBreaks = (text: string): ReactNode => {
+  const lines = text.split(/\r\n?|\n|\u2028|\u2029/);
+  if (lines.length === 1) return text;
 
-  Array.from(table.children).forEach((child) => {
-    const tagName = child.tagName.toLowerCase();
-    if (tagName === "tr") {
-      rows.push(child);
-      return;
-    }
-    if (["thead", "tbody", "tfoot"].includes(tagName)) {
-      rows.push(
-        ...Array.from(child.children).filter((row) => row.tagName.toLowerCase() === "tr"),
-      );
-    }
-  });
-
-  return rows.reduce((maximum, row) => {
-    const columnCount = Array.from(row.children).reduce((total, cell) => {
-      if (!["th", "td"].includes(cell.tagName.toLowerCase())) return total;
-      return total + (getSafePositiveInteger(cell, "colspan") ?? 1);
-    }, 0);
-    return Math.max(maximum, columnCount);
-  }, 0);
+  return lines.flatMap((line, index) =>
+    index === 0 ? [line] : [<br key={`plain-line-break-${index}`} />, line],
+  );
 };
 
 const renderSafeNode = (node: Node, key: string): ReactNode => {
@@ -125,15 +109,8 @@ const renderSafeNode = (node: Node, key: string): ReactNode => {
   }
 
   if (tagName === "table") {
-    const isWide = getTableColumnCount(element) >= 4;
     return (
-      <div
-        key={key}
-        className={["app-rich-table-wrap", isWide ? "is-wide" : ""].filter(Boolean).join(" ")}
-        role="region"
-        aria-label="문제에 포함된 표"
-        tabIndex={0}
-      >
+      <div key={key} className="app-rich-table-wrap">
         <table className="app-rich-table">{children}</table>
       </div>
     );
@@ -174,7 +151,9 @@ interface RichTextContentProps {
 
 export function RichTextContent({ content, className = "", as = "div" }: RichTextContentProps) {
   const renderedContent = useMemo(() => {
-    if (!supportedMarkupPattern.test(content) || typeof DOMParser === "undefined") return content;
+    if (!supportedMarkupPattern.test(content) || typeof DOMParser === "undefined") {
+      return renderPlainTextWithLineBreaks(content);
+    }
 
     const document = new DOMParser().parseFromString(content, "text/html");
     return Array.from(document.body.childNodes).map((node, index) =>

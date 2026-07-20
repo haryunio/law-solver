@@ -115,6 +115,8 @@ body {
   white-space: pre-wrap;
   word-break: keep-all;
   overflow-wrap: anywhere;
+  text-align: justify;
+  text-justify: inter-character;
 }
 
 .app-rich-text p,
@@ -138,18 +140,11 @@ body {
 .app-rich-table-wrap {
   max-width: 100%;
   margin-block: 0.9rem;
-  overflow-x: auto;
   border: 0;
   border-radius: 0;
   background: transparent;
   color: var(--app-text);
   white-space: normal;
-  outline: none;
-}
-
-.app-rich-table-wrap:focus-visible {
-  outline: 2px solid #ef6b5d;
-  outline-offset: 2px;
 }
 
 .app-rich-table {
@@ -160,12 +155,10 @@ body {
   table-layout: auto;
   background: var(--app-surface-muted);
   color: inherit;
-  font-size: 0.8125rem;
+  font-size: 0.75rem;
   font-weight: 400 !important;
   line-height: 1.65;
 }
-
-.app-rich-table-wrap.is-wide > .app-rich-table { min-width: 34rem; }
 
 .app-rich-table th,
 .app-rich-table td {
@@ -186,7 +179,7 @@ body {
 .app-rich-table .app-rich-table { background: var(--app-surface-solid); }
 
 @media (min-width: 768px) {
-  .app-rich-table { font-size: 0.875rem; }
+  .app-rich-table { font-size: 0.8125rem; }
 }
 
 .app-topbar {
