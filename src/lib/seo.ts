@@ -5,7 +5,7 @@ export const SITE_NAME = "Law Solver";
 export const SOCIAL_IMAGE_URL = `${SITE_ORIGIN}/og-image.png`;
 export const SOCIAL_IMAGE_ALT = "Law Solver 문제 풀이 화면 미리보기";
 export const DEFAULT_DESCRIPTION =
-  "OX, 5지선다, 단답형 문제를 직접 만들고 시험처럼 풀어 바로 복습하는 로스쿨 문제 풀이 앱";
+  "문제 만들기부터 복습과 오답 정리까지 한 번에. 로스쿨생이 만든 로스쿨 문제 풀이 앱";
 
 export interface SeoMetadata {
   title: string;
@@ -41,19 +41,19 @@ const publicMetadata: Record<string, SeoMetadata> = {
   },
   "/apps/lbti": {
     title: "Law Solver | LBTI",
-    description: "30개의 질문으로 원전과 수험자료, 회독과 현출 등 나의 로스쿨 공부 의사결정 유형을 알아보세요.",
+    description: "네 가지 로스쿨 공부 방식으로 알아보는 16가지 LBTI 유형과 특징을 살펴보세요.",
     indexable: true,
     canonicalPath: "/apps/lbti/",
   },
   "/apps/lbti/types": {
     title: "Law Solver | LBTI",
-    description: "로스쿨 공부 습관을 네 가지 선택 축으로 나눈 LBTI 16가지 유형과 각 유형의 특징을 살펴보세요.",
+    description: "네 가지 로스쿨 공부 방식으로 알아보는 16가지 LBTI 유형과 특징을 살펴보세요.",
     indexable: true,
     canonicalPath: "/apps/lbti/types/",
   },
   "/dashboard": {
     title: "Law Solver | 대시보드",
-    description: "과목별로 문제를 정리하고 CSV로 등록해 시험처럼 풀고 바로 복습하세요.",
+    description: "과목별로 문제를 정리하고, 시험처럼 풀고, 바로 복습하세요.",
     indexable: true,
     canonicalPath: "/dashboard/",
   },
