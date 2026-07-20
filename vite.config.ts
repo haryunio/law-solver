@@ -1,6 +1,6 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
-import { copyFile, mkdir, readFile, writeFile } from "node:fs/promises";
+import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { dirname, resolve } from "node:path";
 import {
   getCanonicalUrl,
@@ -86,7 +86,6 @@ const seoArtifactsPlugin = () => ({
       `User-agent: *\nAllow: /\n\nSitemap: ${SITE_ORIGIN}/sitemap.xml\n`,
       "utf8",
     );
-    await copyFile(resolve("favicon.png"), resolve(distDir, "favicon.png"));
   },
 });
 

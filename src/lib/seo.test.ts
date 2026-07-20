@@ -19,8 +19,16 @@ describe("SEO metadata", () => {
     const metadata = getSeoMetadata("/apps/lbti/result/pwrs");
 
     expect(metadata.indexable).toBe(true);
-    expect(metadata.title).toContain("PWRS");
+    expect(metadata.title).toBe("Law Solver | LBTI");
     expect(metadata.canonicalPath).toBe("/apps/lbti/result/pwrs/");
+  });
+
+  it("keeps the brand first and limits titles to one section depth", () => {
+    expect(getSeoMetadata("/").title).toBe("Law Solver");
+    expect(getSeoMetadata("/apps").title).toBe("Law Solver | 미니 앱");
+    expect(getSeoMetadata("/apps/lbti/types").title).toBe("Law Solver | LBTI");
+    expect(getSeoMetadata("/dashboard").title).toBe("Law Solver | 대시보드");
+    expect(getSeoMetadata("/result/private-session").title).toBe("Law Solver | 문제 풀이");
   });
 
   it("keeps tests, private learning routes, and invalid results out of the index", () => {
@@ -29,8 +37,17 @@ describe("SEO metadata", () => {
     expect(getSeoMetadata("/apps/lbti/result/invalid").indexable).toBe(false);
   });
 
+  it("includes the shared subject dashboard without exposing subject routes", () => {
+    const dashboard = getSeoMetadata("/dashboard");
+
+    expect(dashboard.indexable).toBe(true);
+    expect(dashboard.canonicalPath).toBe("/dashboard/");
+    expect(getSeoMetadata("/dashboard/private-subject").indexable).toBe(false);
+  });
+
   it("only includes canonical public pages in the sitemap path list", () => {
     expect(INDEXABLE_PATHS).toContain("/");
+    expect(INDEXABLE_PATHS).toContain("/dashboard");
     expect(INDEXABLE_PATHS).toContain("/apps/lbti/result/tcod");
     expect(INDEXABLE_PATHS).not.toContain("/apps/lbti/test");
     expect(new Set(INDEXABLE_PATHS).size).toBe(INDEXABLE_PATHS.length);
