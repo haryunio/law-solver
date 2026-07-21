@@ -9,6 +9,10 @@ import { SolvePage } from "./pages/SolvePage";
 import { SideAppsPage } from "./pages/SideAppsPage";
 import { SubjectListPage } from "./pages/SubjectListPage";
 import { WrongAnswersPage } from "./pages/WrongAnswersPage";
+import { AccountSubscriptionPage } from "./pages/AccountSubscriptionPage";
+import { AppHomePage } from "./pages/AppHomePage";
+import { PremiumDashboardPage } from "./pages/PremiumDashboardPage";
+import { SettingsPage } from "./pages/SettingsPage";
 import { PageViewTracker } from "./components/analytics/PageViewTracker";
 import { RouteMetadata } from "./components/seo/RouteMetadata";
 import { LbtiHomePage } from "./mini-apps/lbti/LbtiHomePage";
@@ -50,6 +54,10 @@ export default function App() {
         <Route path="/apps/lbti/test" element={<LbtiTestPage />} />
         <Route path="/apps/lbti/types" element={<LbtiTypesPage />} />
         <Route path="/apps/lbti/result/:typeCode" element={<LbtiResultPage />} />
+        <Route path="/home" element={<AppHomePage />} />
+        <Route path="/settings" element={<SettingsPage />} />
+        <Route path="/account" element={<AccountSubscriptionPage />} />
+        <Route path="/premium" element={<PremiumDashboardPage />} />
         <Route path="/dashboard" element={<SubjectListPage />} />
         <Route path="/dashboard/:subjectId" element={<DashboardPage />} />
         <Route path="/solve/:sessionId" element={<SolvePage />} />

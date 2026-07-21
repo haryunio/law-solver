@@ -135,7 +135,7 @@ export function LandingPage() {
               </p>
 
               <div className="mt-9 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
-                <Link to="/dashboard" className="landing-primary-cta">
+                <Link to="/home" className="landing-primary-cta">
                   문제 풀러 가요! <span className="landing-arrow" aria-hidden="true">→</span>
                 </Link>
                 <a href="#how-it-works" className="landing-secondary-cta">
@@ -322,7 +322,7 @@ export function LandingPage() {
                 <h2 className="landing-final-title mt-4 text-white">오늘 공부할 문제,<br />지금 바로 풀어볼까요?</h2>
                 <p className="landing-final-copy mx-auto mt-5 max-w-xl leading-7 text-red-50/80">CSV가 없어도 괜찮아요. 샘플 파일로 Law Solver의 풀이 방식을 먼저 경험해 보세요.</p>
                 <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
-                  <Link to="/dashboard" className="landing-primary-cta is-light">
+                  <Link to="/home" className="landing-primary-cta is-light">
                     문제 풀러 가요! <span className="landing-arrow" aria-hidden="true">→</span>
                   </Link>
                   <button type="button" onClick={() => setIsCsvGuideOpen(true)} className="landing-final-guide-button">샘플 CSV 받기</button>

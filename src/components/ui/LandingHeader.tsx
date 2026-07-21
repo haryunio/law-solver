@@ -45,7 +45,7 @@ export function LandingHeader({ activePage = "home", onOpenCsvGuide }: LandingHe
           >
             <span aria-hidden="true">{darkMode ? "☀" : "☾"}</span>
           </button>
-          <Link to="/dashboard" className="landing-nav-cta">
+          <Link to="/home" className="landing-nav-cta">
             시작하기 <span aria-hidden="true">→</span>
           </Link>
         </div>

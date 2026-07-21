@@ -9,6 +9,10 @@ describe("analytics helpers", () => {
     expect(getAnalyticsPage("/")?.pageType).toBe("main");
     expect(getAnalyticsPage("/apps")?.pageType).toBe("mini_apps");
     expect(getAnalyticsPage("/apps/lbti/result/private-result")?.pagePath).toBe("/apps/mini-app");
+    expect(getAnalyticsPage("/home")?.pageType).toBe("app_home");
+    expect(getAnalyticsPage("/settings")?.pagePath).toBe("/settings");
+    expect(getAnalyticsPage("/account")?.pageType).toBe("account");
+    expect(getAnalyticsPage("/premium")?.pageType).toBe("premium_dashboard");
     expect(getAnalyticsPage("/dashboard")?.pageType).toBe("subject_dashboard");
     expect(getAnalyticsPage("/dashboard/private-subject-id")?.pagePath).toBe(
       "/dashboard/subject",
