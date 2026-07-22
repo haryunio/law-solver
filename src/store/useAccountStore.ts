@@ -4,13 +4,17 @@ import {
   getPremiumErrorMessage,
   getCurrentSession,
   isPremiumBackendConfigured,
+  listMarketplaceProducts,
   onAuthStateChange,
   purchaseProduct,
+  redeemPromotionCode,
   signIn,
   signOut,
   signUp,
   type AccountData,
+  type MarketplaceProduct,
   type PremiumEntitlement,
+  type PremiumPurchase,
 } from "../lib/premiumApi";
 
 interface AccountStore {
@@ -23,6 +27,8 @@ interface AccountStore {
   entitlements: PremiumEntitlement[];
   isPremiumActive: boolean;
   packageIds: string[];
+  purchases: PremiumPurchase[];
+  marketplaceProducts: MarketplaceProduct[];
   notice: string | null;
   error: string | null;
   purchasingCode: string | null;
@@ -31,7 +37,9 @@ interface AccountStore {
   signUp: (email: string, password: string, displayName: string) => Promise<void>;
   logout: () => Promise<void>;
   purchase: (productCode: string) => Promise<void>;
+  redeemPromotion: (productCode: string, promotionCode: string) => Promise<void>;
   refreshAccount: () => Promise<void>;
+  refreshMarketplace: () => Promise<void>;
   clearFeedback: () => void;
 }
 
@@ -42,6 +50,7 @@ const signedOutState = {
   entitlements: [] as PremiumEntitlement[],
   isPremiumActive: false,
   packageIds: [] as string[],
+  purchases: [] as PremiumPurchase[],
 };
 
 const accountState = (account: AccountData) => {
@@ -55,6 +64,7 @@ const accountState = (account: AccountData) => {
     packageIds: active
       .filter((entitlement) => entitlement.kind === "course_pass" && entitlement.product_code)
       .map((entitlement) => entitlement.product_code as string),
+    purchases: account.purchases ?? [],
   };
 };
 
@@ -69,6 +79,7 @@ export const useAccountStore = create<AccountStore>((set, get) => ({
   notice: null,
   error: null,
   purchasingCode: null,
+  marketplaceProducts: [],
 
   initialize: async () => {
     if (get().initialized) return;
@@ -81,6 +92,8 @@ export const useAccountStore = create<AccountStore>((set, get) => ({
       set({ isLoading: true, error: null });
       try {
         const session = await getCurrentSession();
+        const marketplaceProducts = await listMarketplaceProducts();
+        set({ marketplaceProducts });
         if (session) {
           const account = await getAccount();
           set(accountState(account));
@@ -133,6 +146,20 @@ export const useAccountStore = create<AccountStore>((set, get) => ({
       });
     } finally {
       set({ isLoading: false });
+    }
+  },
+
+  refreshMarketplace: async () => {
+    if (!isPremiumBackendConfigured) return;
+    try {
+      set({ marketplaceProducts: await listMarketplaceProducts() });
+    } catch (error) {
+      set({
+        error: getPremiumErrorMessage(
+          error,
+          "판매 중인 상품을 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.",
+        ),
+      });
     }
   },
 
@@ -194,14 +221,39 @@ export const useAccountStore = create<AccountStore>((set, get) => ({
   purchase: async (productCode) => {
     set({ purchasingCode: productCode, error: null, notice: null });
     try {
+      const extendsPremium = get().isPremiumActive && get().marketplaceProducts.some(
+        (product) => product.code === productCode && product.kind === "premium",
+      );
       await purchaseProduct(productCode);
       set(accountState(await getAccount()));
-      set({ notice: "로컬 결제를 승인하고 30일 이용권을 발급했습니다." });
+      set({ notice: extendsPremium ? "Premium 만료일 뒤로 이용 기간을 추가했습니다." : "결제를 승인하고 이용권을 발급했습니다." });
     } catch (error) {
       set({
         error: getPremiumErrorMessage(
           error,
           "결제를 완료하지 못했습니다. 잠시 후 다시 시도해 주세요.",
+        ),
+      });
+      throw error;
+    } finally {
+      set({ purchasingCode: null });
+    }
+  },
+
+  redeemPromotion: async (productCode, promotionCode) => {
+    set({ purchasingCode: productCode, error: null, notice: null });
+    try {
+      const extendsPremium = get().isPremiumActive && get().marketplaceProducts.some(
+        (product) => product.code === productCode && product.kind === "premium",
+      );
+      await redeemPromotionCode(productCode, promotionCode);
+      set(accountState(await getAccount()));
+      set({ notice: extendsPremium ? "프로모션 코드가 적용되어 Premium 기간을 연장했습니다." : "프로모션 코드가 적용되어 이용권을 발급했습니다." });
+    } catch (error) {
+      set({
+        error: getPremiumErrorMessage(
+          error,
+          "프로모션 코드를 적용하지 못했습니다. 입력한 코드를 확인해 주세요.",
         ),
       });
       throw error;

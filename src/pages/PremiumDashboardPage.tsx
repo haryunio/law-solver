@@ -14,6 +14,7 @@ import {
   type PremiumCourse,
 } from "../lib/premiumApi";
 import {
+  getPremiumSubjectCoverStyle,
   premiumOrangeAccentColor,
   premiumOrangeCoverStyle,
 } from "../lib/subjectCover";
@@ -131,7 +132,7 @@ export function PremiumDashboardPage() {
                 >
                   <SubjectCardCover
                     title={course.name}
-                    coverStyle={premiumOrangeCoverStyle}
+                    coverStyle={getPremiumSubjectCoverStyle(course.name)}
                     topRight={<PremiumBadge />}
                     titleLines={2}
                   />

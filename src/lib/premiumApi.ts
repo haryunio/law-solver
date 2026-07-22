@@ -33,6 +33,34 @@ export interface AccountData {
   } | null;
   entitlement: PremiumEntitlement | null;
   entitlements: PremiumEntitlement[];
+  purchases: PremiumPurchase[];
+}
+
+export interface PremiumPurchase {
+  purchaseNumber: string;
+  productCode: string;
+  productName: string;
+  paymentMethod: "promotion" | "toss" | "bank_transfer" | "local";
+  amount: number;
+  currency: "KRW";
+  status: "paid" | "refunded";
+  purchasedAt: string;
+}
+
+export interface MarketplaceProduct {
+  id: string;
+  code: string;
+  name: string;
+  description: string;
+  kind: "premium" | "course_pass";
+  courseId: string | null;
+  courseCode: string | null;
+  courseName: string | null;
+  priceKrw: number;
+  currency: "KRW";
+  durationDays: number;
+  maxAttempts: number | null;
+  requiresPremium: boolean;
 }
 
 export interface PremiumCourse {
@@ -51,7 +79,7 @@ export interface PremiumProblemSetSummary {
   title: string;
   description: string;
   revision: number;
-  question_types: PremiumQuestionType[];
+  question_type: PremiumQuestionType;
   question_count: number;
   attempt_count: number;
   sort_order: number;
@@ -225,6 +253,12 @@ export function getPremiumErrorMessage(
     PROVIDER_MISMATCH: "결제 수단 정보가 일치하지 않습니다. 결제를 처음부터 다시 진행해 주세요.",
     UNSUPPORTED_CURRENCY: "지원하지 않는 결제 통화입니다.",
     TOSS_FRONTEND_NOT_CONFIGURED: "현재 결제를 진행할 수 없습니다. 잠시 후 다시 시도해 주세요.",
+    PROMOTION_CODE_INVALID: "프로모션 코드를 확인해 주세요.",
+    PROMOTION_CODE_USED: "이미 사용된 프로모션 코드입니다.",
+    PROMOTION_CODE_EXPIRED: "사용 기간이 지난 프로모션 코드입니다.",
+    PROMOTION_PRODUCT_MISMATCH: "선택한 상품에 사용할 수 없는 프로모션 코드입니다.",
+    PROMOTION_CODE_DISABLED: "현재 사용할 수 없는 프로모션 코드입니다.",
+    ATTEMPT_LIMIT_REACHED: "이 이용권에서 시작할 수 있는 풀이 횟수를 모두 사용했습니다.",
     PREMIUM_NOT_CONFIGURED: "Premium 서비스에 연결하지 못했습니다. 잠시 후 다시 시도해 주세요.",
     DATABASE_ERROR: "서비스가 일시적으로 원활하지 않습니다. 잠시 후 다시 시도해 주세요.",
     INTERNAL_ERROR: "일시적인 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.",
@@ -299,6 +333,28 @@ async function apiRequest<T>(
   return payload.data as T;
 }
 
+async function publicApiRequest<T>(functionName: string): Promise<T> {
+  if (!isPremiumBackendConfigured) {
+    throw new PremiumApiError("Premium 서버 설정이 없습니다.", "PREMIUM_NOT_CONFIGURED");
+  }
+  const response = await fetch(`${supabaseUrl}/functions/v1/${functionName}`, {
+    headers: { apikey: publishableKey },
+  });
+  const payload = await response.json().catch(() => null) as ({ data?: T } & ApiErrorBody) | null;
+  if (!response.ok) {
+    throw new PremiumApiError(
+      payload?.error?.message ?? "상품 정보를 불러오지 못했습니다.",
+      payload?.error?.code,
+      response.status,
+      payload?.error?.requestId,
+    );
+  }
+  if (!payload || !("data" in payload)) {
+    throw new PremiumApiError("상품 서버 응답 형식이 올바르지 않습니다.");
+  }
+  return payload.data as T;
+}
+
 export async function signUp(email: string, password: string, displayName: string) {
   const { data, error } = await requireClient().auth.signUp({
     email,
@@ -337,6 +393,9 @@ export function onAuthStateChange(
 
 export const getAccount = () => apiRequest<AccountData>("account-api");
 
+export const listMarketplaceProducts = () =>
+  publicApiRequest<MarketplaceProduct[]>("marketplace-api");
+
 export async function purchaseProduct(productCode: string) {
   const checkout = await apiRequest<{
     order: {
@@ -368,6 +427,16 @@ export async function purchaseProduct(productCode: string) {
     }),
   });
 }
+
+export const redeemPromotionCode = (productCode: string, promotionCode: string) =>
+  apiRequest<{ order: { status: string; purchaseNumber?: string }; paymentMethod: "promotion" }>(
+    "promotion-api",
+    "",
+    {
+      method: "POST",
+      body: JSON.stringify({ productCode, promotionCode }),
+    },
+  );
 
 export const listPremiumCourses = () =>
   apiRequest<PremiumCourse[]>("learning-api", "/courses");

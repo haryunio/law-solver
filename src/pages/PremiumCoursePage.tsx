@@ -104,17 +104,14 @@ export function PremiumCoursePage() {
                     </h2>
                     <div className="mt-3 flex flex-wrap items-center gap-2">
                       <PremiumBadge />
-                      {problemSet.question_types.map((questionType) => (
-                        <span
-                          key={questionType}
-                          className={[
-                            "rounded-full border px-2.5 py-0.5 text-[11px] font-bold",
-                            questionTypeStyle[questionType],
-                          ].join(" ")}
-                        >
-                          {questionTypeLabel[questionType]}
-                        </span>
-                      ))}
+                      <span
+                        className={[
+                          "rounded-full border px-2.5 py-0.5 text-[11px] font-bold",
+                          questionTypeStyle[problemSet.question_type],
+                        ].join(" ")}
+                      >
+                        {questionTypeLabel[problemSet.question_type]}
+                      </span>
                     </div>
                   </div>
                   <div className="mt-4 grid grid-cols-2 gap-2 text-sm">

@@ -25,6 +25,10 @@ const defaultCoverPalette = subjectCoverPalettes[0]!;
 const hashString = (value: string) =>
   [...value].reduce((hash, char) => ((hash << 5) - hash + char.charCodeAt(0)) | 0, 0);
 
+const normalizeSubjectName = (subjectName: string) => subjectName.trim().normalize("NFC");
+const getSubjectNameHash = (subjectName: string) =>
+  hashString(normalizeSubjectName(subjectName)) >>> 0;
+
 const getPaletteById = (paletteId: SubjectCoverPalette) =>
   subjectCoverPalettes.find((palette) => palette.id === paletteId) ?? defaultCoverPalette;
 
@@ -62,4 +66,13 @@ export const getSubjectAccentColor = (paletteId: SubjectCoverPalette) => {
 
   const [, baseMid] = palette.base ?? defaultCoverPalette.base ?? [8, 32, 50];
   return `hsl(${baseMid} 72% 54%)`;
+};
+
+export const getPremiumSubjectCoverStyle = (subjectName: string): CSSProperties => {
+  const hash = getSubjectNameHash(subjectName);
+  const angle = 105 + (hash % 151);
+
+  return {
+    background: `linear-gradient(${angle}deg, hsl(18 80% 46%), hsl(25 88% 54%) 52%, hsl(36 94% 59%))`,
+  };
 };

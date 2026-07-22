@@ -28,6 +28,15 @@ describe("Premium user-facing errors", () => {
     expect(getPremiumErrorMessage(
       new PremiumApiError("unknown upstream error", "UNKNOWN", 503),
     )).toBe("서비스가 일시적으로 원활하지 않습니다. 잠시 후 다시 시도해 주세요.");
+    expect(getPremiumErrorMessage(
+      new PremiumApiError("promotion code already redeemed", "PROMOTION_CODE_USED", 409),
+    )).toBe("이미 사용된 프로모션 코드입니다.");
+    expect(getPremiumErrorMessage(
+      new PremiumApiError("promotion code product mismatch", "PROMOTION_PRODUCT_MISMATCH", 422),
+    )).toBe("선택한 상품에 사용할 수 없는 프로모션 코드입니다.");
+    expect(getPremiumErrorMessage(
+      new PremiumApiError("attempt limit reached", "ATTEMPT_LIMIT_REACHED", 409),
+    )).toBe("이 이용권에서 시작할 수 있는 풀이 횟수를 모두 사용했습니다.");
   });
 
   it("handles connection errors and unknown values without exposing technical text", () => {

@@ -101,7 +101,7 @@ export function PremiumMembershipSkeleton() {
         <div className="flex-1">
           <SkeletonBlock className="h-7 w-64 max-w-full rounded-lg" />
           <SkeletonBlock className="mt-4 h-5 w-28 rounded-full" />
-          <SkeletonBlock className="mt-3 h-4 w-20 rounded-full" />
+          <SkeletonBlock className="mt-4 h-32 w-full rounded-xl" />
           <SkeletonBlock className="mt-5 h-4 w-52 max-w-full rounded-full" />
           <SkeletonBlock className="mt-3 h-4 w-60 max-w-full rounded-full" />
         </div>
