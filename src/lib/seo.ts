@@ -94,7 +94,9 @@ export function getSeoMetadata(pathname: string): SeoMetadata {
   if (routePath === "/home") return privateMetadata("Law Solver");
   if (routePath === "/settings") return privateMetadata("Law Solver | 환경설정");
   if (routePath === "/account") return privateMetadata("Law Solver | 계정 및 구독");
-  if (routePath === "/premium") return privateMetadata("Law Solver | 온라인 문제 풀이");
+  if (routePath === "/premium" || routePath.startsWith("/premium/")) {
+    return privateMetadata("Law Solver | 온라인 문제 풀이");
+  }
   if (routePath.startsWith("/dashboard/")) return privateMetadata("Law Solver | 대시보드");
   if (routePath.startsWith("/solve/")) return privateMetadata("Law Solver | 문제 풀이");
   if (routePath.startsWith("/result/")) return privateMetadata("Law Solver | 문제 풀이");

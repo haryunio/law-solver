@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { ChoiceReviewList } from "../components/review/ChoiceReviewList";
+import { useSessionPageAdapter } from "../components/session/SessionPageContext";
+import { AsyncTransitionOverlay } from "../components/ui/AsyncLoading";
 import { OverflowTooltipTitle } from "../components/ui/OverflowTooltipTitle";
 import { RichTextContent } from "../components/ui/RichTextContent";
 import { ReturnLinkLabel } from "../components/ui/ReturnLinkLabel";
@@ -15,7 +17,9 @@ import { useTestStore } from "../store/useTestStore";
 export function WrongAnswersPage() {
   const { sessionId = "" } = useParams();
   const navigate = useNavigate();
-  const session = useTestStore((state) => state.sessions.find((item) => item.id === sessionId));
+  const adapter = useSessionPageAdapter();
+  const localSession = useTestStore((state) => state.sessions.find((item) => item.id === sessionId));
+  const session = adapter?.session ?? localSession;
   const updateWrongNote = useTestStore((state) => state.updateWrongNote);
   
   const wrongQuestions = useMemo(() => (session ? getWrongQuestions(session) : []), [session]);
@@ -30,6 +34,7 @@ export function WrongAnswersPage() {
   const [index, setIndex] = useState(0);
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [note, setNote] = useState("");
+  const [isSavingNote, setIsSavingNote] = useState(false);
   const contentRef = useRef<HTMLDivElement | null>(null);
   const trackedReviewSessionRef = useRef<string | null>(null);
   const trackedReviewQuestionIdsRef = useRef(new Set<string>());
@@ -85,7 +90,7 @@ export function WrongAnswersPage() {
     return (
       <div className="app-page p-6">
         <div className="app-card mx-auto max-w-2xl rounded-2xl border p-8 text-center">
-          <p className="text-stone-700">세션을 찾을 수 없습니다.</p>
+          <p className="text-stone-700">문제 세션을 찾을 수 없습니다. 대시보드에서 다시 선택해 주세요.</p>
           <Link
             to="/dashboard"
             className="app-button-primary mt-4 inline-flex rounded-lg px-4 py-2 text-sm font-semibold"
@@ -103,7 +108,10 @@ export function WrongAnswersPage() {
         <div className="app-card mx-auto max-w-2xl rounded-2xl border p-8 text-center">
           <p className="text-stone-700">채점 완료 후 확인할 수 있습니다.</p>
           <button
-            onClick={() => navigate(`/solve/${session.id}`, { state: { solveEntry: "resume" } })}
+            onClick={() => navigate(
+              adapter ? adapter.solvePath(session.id) : `/solve/${session.id}`,
+              { state: { solveEntry: "resume" } },
+            )}
             className="app-button-primary mt-4 rounded-lg px-4 py-2 text-sm font-semibold"
           >
             풀이 화면으로
@@ -119,7 +127,7 @@ export function WrongAnswersPage() {
         <div className="app-card mx-auto max-w-2xl rounded-2xl border p-8 text-center">
           <p className="text-stone-700">오답이 없습니다.</p>
           <Link
-            to={`/result/${session.id}`}
+            to={adapter?.resultPath(session.id) ?? `/result/${session.id}`}
             className="app-button-secondary mt-4 inline-flex rounded-lg px-4 py-2 text-sm font-semibold"
           >
             <ReturnLinkLabel>결과로 돌아가기</ReturnLinkLabel>
@@ -133,9 +141,9 @@ export function WrongAnswersPage() {
     return (
       <div className="app-page p-6">
         <div className="app-card mx-auto max-w-2xl rounded-2xl border p-8 text-center">
-          <p className="text-stone-700">오답 데이터를 불러오지 못했습니다.</p>
+          <p className="text-stone-700">오답 데이터를 불러오지 못했습니다. 결과 화면에서 다시 열어 주세요.</p>
           <Link
-            to={`/result/${session.id}`}
+            to={adapter?.resultPath(session.id) ?? `/result/${session.id}`}
             className="app-button-secondary mt-4 inline-flex rounded-lg px-4 py-2 text-sm font-semibold"
           >
             <ReturnLinkLabel>결과로 돌아가기</ReturnLinkLabel>
@@ -146,29 +154,39 @@ export function WrongAnswersPage() {
   }
   const solveNo = solveOrderMap.get(current.id) ?? index + 1;
 
-  const saveCurrentNote = () => {
+  const saveCurrentNote = async () => {
     if (session && current) {
-      updateWrongNote(session.id, current.id, note);
+      if (adapter?.saveWrongNote) {
+        if (note === (current.wrong_note || "")) return;
+        setIsSavingNote(true);
+        try {
+          await adapter.saveWrongNote(current.id, note);
+        } finally {
+          setIsSavingNote(false);
+        }
+      } else {
+        updateWrongNote(session.id, current.id, note);
+      }
     }
   };
 
-  const goToResult = () => {
-    saveCurrentNote();
-    navigate(`/result/${session.id}`);
+  const goToResult = async () => {
+    await saveCurrentNote();
+    navigate(adapter?.resultPath(session.id) ?? `/result/${session.id}`);
   };
 
-  const goToPrev = () => {
-    saveCurrentNote();
+  const goToPrev = async () => {
+    await saveCurrentNote();
     setIndex((prev) => Math.max(0, prev - 1));
   };
 
-  const goToNext = () => {
-    saveCurrentNote();
+  const goToNext = async () => {
+    await saveCurrentNote();
     setIndex((prev) => Math.min(wrongQuestions.length - 1, prev + 1));
   };
 
-  const goToIndex = (newIndex: number) => {
-    saveCurrentNote();
+  const goToIndex = async (newIndex: number) => {
+    await saveCurrentNote();
     setIndex(newIndex);
     setIsSheetOpen(false);
   };
@@ -184,7 +202,7 @@ export function WrongAnswersPage() {
             />
           </div>
           <button
-            onClick={goToResult}
+            onClick={() => void goToResult()}
             className="app-button-secondary shrink-0 rounded-lg px-2.5 py-1.5 text-xs font-semibold sm:px-3 sm:text-sm"
           >
             <ReturnLinkLabel>결과로</ReturnLinkLabel>
@@ -308,7 +326,7 @@ export function WrongAnswersPage() {
 
           <div className="app-focus-page grid shrink-0 grid-cols-[2fr_1fr_2fr] overflow-hidden border-t border-stone-200 md:grid-cols-2 dark:border-stone-800">
             <button
-              onClick={goToPrev}
+              onClick={() => void goToPrev()}
               disabled={index === 0}
               className="border-r border-stone-200 bg-stone-50 px-4 py-3 text-sm font-bold text-stone-800 shadow-[0_-1px_0_rgba(0,0,0,0.02)] transition hover:bg-stone-100 disabled:cursor-not-allowed disabled:opacity-40 dark:border-stone-800 dark:bg-stone-950/40 dark:text-stone-200 dark:hover:bg-stone-800"
             >
@@ -323,7 +341,7 @@ export function WrongAnswersPage() {
               OMR
             </button>
             <button
-              onClick={goToNext}
+              onClick={() => void goToNext()}
               disabled={index === wrongQuestions.length - 1}
               className="app-button-primary px-4 py-3 text-sm font-bold disabled:cursor-not-allowed disabled:opacity-40 md:border-l"
             >
@@ -346,7 +364,7 @@ export function WrongAnswersPage() {
               <button
                 key={question.id}
                 ref={(el) => omrRefs.set(qIdx, el)}
-                onClick={() => goToIndex(qIdx)}
+                onClick={() => void goToIndex(qIdx)}
                 className={[
                   "grid w-full grid-cols-[32px_1fr_1fr_8px] border-b border-stone-200 px-2 py-1.5 text-left text-xs font-semibold last:border-b-0 dark:border-stone-800",
                   qIdx === index
@@ -384,7 +402,7 @@ export function WrongAnswersPage() {
               {wrongQuestions.map((question, qIdx) => (
                 <button
                   key={question.id}
-                  onClick={() => goToIndex(qIdx)}
+                  onClick={() => void goToIndex(qIdx)}
                   className={[
                     "grid w-full grid-cols-[32px_1fr_1fr_8px] border-b border-stone-200 px-2 py-2 text-left text-xs font-semibold last:border-b-0 dark:border-stone-800",
                     qIdx === index
@@ -402,6 +420,8 @@ export function WrongAnswersPage() {
           </div>
         </div>
       ) : null}
+
+      {isSavingNote ? <AsyncTransitionOverlay label="오답 노트를 저장하는 중입니다" /> : null}
     </div>
   );
 }

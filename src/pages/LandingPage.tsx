@@ -122,7 +122,7 @@ export function LandingPage() {
             <div className="landing-fade-up">
               <div className="landing-eyebrow">
                 <span className="landing-pulse-dot" />
-                서버 없이, 내 브라우저에 안전하게
+                오프라인 문제는, 내 브라우저에 안전하게
               </div>
 
               <h1 className="landing-hero-title mt-7 max-w-3xl">

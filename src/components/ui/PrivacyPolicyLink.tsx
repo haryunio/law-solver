@@ -55,7 +55,24 @@ export function PrivacyPolicyLink() {
             <div className="mt-6 space-y-6 text-sm leading-7 text-stone-600 dark:text-stone-300">
               <section>
                 <h3 className="text-base font-bold text-stone-900 dark:text-stone-100">
-                  1. 개인정보 자동 수집의 목적 및 거부에 관한 사항
+                  1. 계정 및 Premium 서비스 데이터
+                </h3>
+                <p className="mt-3">
+                  Premium 온라인 기능을 사용하는 경우 회원가입·로그인을 위해 이메일과 표시 이름을 처리합니다. 회원권과
+                  과목 이용권의 주문·결제 상태·유효기간, 온라인 문제 풀이의 답안·상태·채점 결과도 사용자 계정에 연결하여
+                  Supabase 기반 서버에 저장합니다. 오프라인 대시보드에 업로드한 CSV와 로컬 풀이 기록은 사용자가 별도
+                  동기화 기능을 실행하지 않는 한 Premium 서버로 전송하지 않습니다.
+                </p>
+                <p className="mt-3">
+                  실제 결제 기능을 사용하는 경우 결제 승인에 필요한 주문번호와 금액이 결제대행사에 전달될 수 있습니다.
+                  카드번호 등 결제수단 정보는 Law Solver 서버에 직접 저장하지 않습니다. 계정 데이터 열람·정정·삭제 문의는
+                  제작자 이메일로 요청할 수 있습니다.
+                </p>
+              </section>
+
+              <section>
+                <h3 className="text-base font-bold text-stone-900 dark:text-stone-100">
+                  2. 개인정보 자동 수집의 목적 및 거부에 관한 사항
                 </h3>
                 <p className="mt-3">
                   이 사이트는 홈페이지 방문 현황 및 이용 형태 파악을 통한 사이트 운영·개선을 위해 이용자의 정보를
@@ -94,8 +111,8 @@ export function PrivacyPolicyLink() {
                   풀이·복기·재풀이 활동과 같은 비식별 이용 통계를 수집할 수 있습니다. LBTI
                   테스트를 완료하면 16개 중 하나인 최종 4자 유형 코드를 수집할 수 있습니다. 문제의 정오 여부, 점수,
                   진행률, 문항 수와 풀이 시간, LBTI 질문별 응답, 축별 점수와 소요시간은 수집하지 않습니다.
-                  또한 개인을 직접 식별할 수 있는 정보, 사용자가 업로드한 문제와 선택한 답안, 과목·세션명 및 식별자,
-                  브라우저에 저장된 학습 데이터 원본은 수집하지 않으며, 분석 정보를 다른 경로를 통해 얻은 개인식별
+                  Google Analytics에는 개인을 직접 식별할 수 있는 정보, 사용자가 업로드한 문제와 선택한 답안, 과목·세션명 및 식별자,
+                  브라우저나 Premium 서버에 저장된 학습 데이터 원본을 보내지 않으며, 분석 정보를 다른 경로를 통해 얻은 개인식별
                   정보와 결합하지 않습니다.
                 </p>
               </section>

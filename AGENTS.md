@@ -4,12 +4,20 @@
 
 ## 프로젝트 개요
 
-`law-solver`는 서버 없이 브라우저에서 실행되는 React 기반 로스쿨 문제 풀이 앱입니다. 사용자는 과목별 대시보드에서 CSV 파일을 업로드해 OX, 5지선다, 단답형 문제 세션을 만들고, CBT 화면에서 풀이한 뒤 결과 확인, 오답노트, 재풀이, CSV 내보내기, JSON 백업/복원을 수행합니다.
+`law-solver`는 React 기반 로스쿨 문제 풀이 앱입니다. 오프라인 CSV 문제와 설정은 브라우저에 저장하고, Premium 계정·결제·온라인 학습은 비공개 `law-solver-server` Supabase 백엔드를 사용합니다.
 
-데이터 저장은 서버나 DB가 아니라 브라우저 localStorage를 사용합니다.
+오프라인 데이터 저장은 브라우저 localStorage를 사용합니다.
 
 - 세션 저장 key: `law-solver-storage`
 - 환경설정 저장 key: `law-solver-settings`
+
+## 연관 저장소와 변경 경계
+
+- 프론트는 이 저장소, 비공개 Supabase 백엔드는 형제 폴더 `../law-solver-server`에서 관리합니다.
+- API·DTO·RLS·결제·문제 콘텐츠 변경은 서버 저장소가 소유합니다. `../law-solver-server/docs/API.md`, `AUTHORIZATION.md`, `FRONTEND_INTEGRATION.md`를 먼저 갱신한 뒤 프론트 client와 UI를 맞추세요.
+- 프론트는 공개 Supabase URL과 publishable key만 사용합니다. 서버의 CSV 콘텐츠, migration용 관리자 값, `service_role`, 결제·SMTP secret을 이 저장소로 복사하지 마세요.
+- 두 저장소에 걸친 변경은 각각 검증하고 별도 커밋으로 남깁니다. 한 저장소의 커밋에 다른 저장소 파일을 포함하거나 두 저장소의 배포를 암묵적으로 묶지 마세요.
+- 프론트는 `develop`을 통합 기준으로 하고 Premium 작업은 `feature/premium`에서 진행합니다. 서버는 `develop`에서 통합하고 안정 상태만 `main`으로 반영하며, 서버 CI/CD는 별도 결정 전까지 수동 검증·배포를 기준으로 합니다.
 
 ## 기술 스택
 
@@ -19,6 +27,7 @@
 - Tailwind CSS
 - React Router
 - Zustand + persist middleware
+- Supabase JavaScript Client
 - Papa Parse
 - Google Analytics 4 (`gtag.js`)
 - Vitest
@@ -29,7 +38,7 @@
 src/App.tsx
 ```
 
-라우팅과 테마/폰트 watcher를 담당합니다. 라우트는 `/`, `/apps`, `/apps/lbti`, `/apps/lbti/test`, `/apps/lbti/types`, `/apps/lbti/result/:typeCode`, `/home`, `/settings`, `/account`, `/premium`, `/dashboard`, `/dashboard/:subjectId`, `/solve/:sessionId`, `/result/:sessionId`, `/wrong/:sessionId`, `/review/:sessionId`입니다. 출시된 미니 앱은 `/apps/:appId` 아래에 추가합니다.
+라우팅과 테마/폰트·계정 watcher를 담당합니다. Premium 온라인 라우트는 `/premium`, `/premium/courses/:courseId`, `/premium/courses/:courseId/problem-sets/:problemSetId`, `/premium/attempts/:attemptId`, `/premium/results/:attemptId`, `/premium/wrong/:attemptId`, `/premium/review/:attemptId`이며 동적 ID를 메타데이터나 분석에 보내지 않습니다. 출시된 미니 앱은 `/apps/:appId` 아래에 추가합니다.
 
 ```txt
 src/pages/
@@ -53,13 +62,13 @@ Law Solver 안에서 독립적으로 실행되는 미니 앱 영역입니다. `c
 src/store/
 ```
 
-Zustand store입니다. 문제 세션, 과목, 세션-과목 매핑 상태는 `useTestStore.ts`, 다크 모드와 글꼴 설정은 `useSettingsStore.ts`에서 관리합니다.
+Zustand store입니다. 문제 세션, 과목, 세션-과목 매핑 상태는 `useTestStore.ts`, 다크 모드와 글꼴 설정은 `useSettingsStore.ts`, 온라인 계정·이용권 상태는 `useAccountStore.ts`에서 관리합니다.
 
 ```txt
 src/lib/
 ```
 
-CSV 파싱/다운로드, GA4 이벤트, SEO 정책, 채점, 정렬, 답안 표시, ID 생성, 시간 포맷 등 도메인 유틸입니다. 관련 단위 테스트도 이 디렉터리에 있습니다. GA4 이벤트와 허용 파라미터는 `src/lib/analytics.ts`, 검색 색인과 canonical 정책은 `src/lib/seo.ts`에서 중앙 관리합니다.
+CSV 파싱/다운로드, Premium API client, GA4 이벤트, SEO 정책, 채점, 정렬, 답안 표시, ID 생성, 시간 포맷 등 도메인 유틸입니다. `premiumApi.ts`에는 공개 Supabase client와 인증된 Edge Function 호출만 두며 관리자 key를 사용하지 않습니다.
 
 ```txt
 src/types/
@@ -90,7 +99,14 @@ GitHub Pages용 정적 파일입니다. `404.html`은 SPA 새로고침 대응용
 - 공통 브랜드 마크는 `src/components/ui/BrandMark.tsx`, 공통 푸터는 `src/components/ui/AppFooter.tsx`를 사용합니다. 화면마다 로고나 푸터를 다시 만들지 마세요.
 - 과목 목록과 문제 대시보드의 상단 GNB는 `src/components/ui/DashboardHeaderTitle.tsx`를 사용합니다. 모바일에서도 브랜드명은 `Law Solver` 전체를 표시하고, 제목의 계층 구분에는 `|` 문자가 아니라 컴포넌트의 얇은 시각 구분선을 사용합니다. 모바일에서만 액션을 2열 전체 너비로 표시하고, `sm` 이상에서는 텍스트 너비의 버튼을 우측 정렬합니다. GNB가 두 줄인 `sm`·`md` 구간에서는 액션 영역의 가로 구분선 위아래에 각각 해당 구간의 카드 패딩과 같은 여백을 적용하며, 한 줄이 되는 `lg`부터 구분선과 추가 여백을 제거합니다.
 - 채점 결과 페이지도 대시보드와 동일한 GNB와 `app-card` 체계를 사용합니다. 상단은 정답률·풀이 시간 지표, 문제 확인, 다시 풀기의 독립 카드 3개를 2:1:1 비율로 배치하고, 전체·정답·오답·미응답·책갈피는 작은 통계표로 표시합니다. 문제 확인·다시 풀기 버튼의 높이와 글자 크기는 모바일에서도 축소하지 않습니다. 상세 분석표는 그 아래 전체 너비를 사용하며 OMR 표에는 파트 열을 포함합니다.
-- 서버 API가 없으므로 브라우저 API 사용 시 호환성을 고려합니다. 예: `crypto.randomUUID()` 직접 호출 대신 `src/lib/id.ts`의 `createId()` 사용.
+- 브라우저 API 사용 시 호환성을 고려합니다. 예: `crypto.randomUUID()` 직접 호출 대신 `src/lib/id.ts`의 `createId()` 사용.
+- Premium API는 `src/lib/premiumApi.ts`를 통해 호출하고, 오프라인 `law-solver-storage`와 Supabase Auth·온라인 학습 데이터를 섞지 마세요.
+- Premium 화면에는 Supabase Auth, Edge Function, 결제사, 네트워크의 원문 `error.message`를 직접 표시하지 않습니다. `getPremiumErrorMessage`에서 안정적인 오류 code·HTTP status를 행동 가능한 한국어 안내로 변환하고, 화면별 fallback도 사용자가 다음에 할 일을 포함해야 합니다.
+- Premium 활성 문제풀이는 별도 화면을 만들지 말고 `src/components/cbt/CbtSolveScreen.tsx`에 서버 상태 adapter를 연결합니다. 문제 카드, 박스형 지문, 선지, OMR, 모바일 OMR, 책갈피, 이동 버튼과 중단·제출 모달은 오프라인 CSV 풀이와 같은 컴포넌트·레이아웃을 유지하세요. Premium 콘텐츠와 풀이 결과에는 CSV 다운로드 버튼이나 export 동작을 제공하지 않습니다. 선지 선택은 로컬 상태에 먼저 반영하고 이전·다음·OMR 이동, 중단·제출 시 떠나는 문항만 서버에 저장합니다. `?`는 현재 문항의 정답·해설만 지연 조회하며 기본 attempt DTO에 전체 정답을 섞지 않습니다.
+- Premium 과목 화면은 구매한 문제 세트를 카드로 표시합니다. 카드 본문에는 제목만 표시하고 서버 `description` 통문자열을 UI 메타데이터처럼 파싱하거나 반복 노출하지 마세요. Premium 표시는 `src/components/ui/PremiumBadge.tsx`의 금색 체크 배지만 사용하고 화면별 변형 태그를 만들지 않습니다. 서버의 구조화된 `question_types`로 OX·5지선다·단답형 태그를 만들고, 전체 문항 수와 현재 사용자의 풀이 세션 수를 2열로 표시합니다. 카드 하단의 중립 회색 `풀이 세션 보기` 링크를 선택하면 해당 문제의 세션 목록으로 이동합니다. 구매나 목록 조회만으로 세션을 자동 생성하지 말고, 빈 목록의 `새로 문제 풀이 시작하기`를 사용자가 누를 때 첫 세션을 생성하세요. 세션은 얇은 카드형 목록으로 회차·첫 풀이/새로 풀기/전체 다시 풀기/오답 풀기/책갈피 풀기·진행 상태·진행도·시간·점수를 표시하고, 재풀이는 원본을 덮어쓰지 않는 새 세션으로 누적합니다.
+- Premium 결과·오답 확인·전체 확인은 별도 UI를 만들지 말고 `ResultPage`, `WrongAnswersPage`, `ReviewAllPage`에 서버 session adapter를 연결합니다. 재풀이 제목·풀이 순서·책갈피와 오답 노트도 서버에 보존하세요.
+- 로그인 프로필 아바타는 `ProfileAvatar`를 사용합니다. 표시 이름의 첫 글자를 이니셜로 쓰고 이름 해시로 정한 팔레트가 사용자에게 안정적으로 유지되도록 하며 화면마다 임의 색상이나 고정 `LS` 문구를 만들지 마세요.
+- 프론트에는 Supabase URL과 publishable key만 둘 수 있습니다. `service_role`/secret key, DB 비밀번호와 Toss secret key는 금지합니다.
 - CSV 헤더 호환성은 `src/lib/csv.ts`의 `normalize`, `getValue` 흐름을 기준으로 확장합니다.
 - 새 문제 등록은 CSV 파일을 첫 입력으로 배치합니다. 파일 선택 시 확장자를 제거하고 특수문자를 공백으로 바꾼 파일명을 세션 제목으로 제안하며, 선택지 헤더와 정답 값으로 5지선다·OX·단답형을 판별할 수 있을 때만 문제 타입을 자동 변경합니다. 판별 실패 시 사용자의 현재 선택을 유지합니다.
 - 문제·보기·선지·해설에 포함된 제한적 HTML은 `src/components/ui/RichTextContent.tsx`로 렌더링합니다. 표·줄바꿈·문단·목록·기본 강조와 셀 병합만 허용하고, 스크립트·외부 콘텐츠·폼·이벤트 속성·임의 스타일은 제거합니다. HTML이 없는 일반 텍스트의 CRLF·LF·Unicode 줄 구분자는 명시적인 줄바꿈 요소로 변환합니다. 문제 본문과 선지는 한국어 문자 간 좌우맞춤을 사용합니다. 표에는 강제 최소 너비나 별도 가로 스크롤을 적용하지 않고 문제 카드 너비에 맞추며, 표 내부 글자는 모바일 12px·데스크톱 13px을 기준으로 합니다. 문제 문자열을 `dangerouslySetInnerHTML`로 직접 주입하지 마세요.
@@ -134,6 +150,7 @@ GitHub Pages용 정적 파일입니다. `404.html`은 SPA 새로고침 대응용
 - `app-button-secondary`: 중립적인 보조 행동
 - `app-control`: input, select, textarea의 공통 포커스와 표면
 - `app-modal-backdrop`, `app-modal-surface`: 모달과 모바일 bottom sheet
+- `app-toast`, `app-toast-error|success|warning|info`: 문서 흐름과 분리된 상태·오류 토스트 표면
 - `app-progress-gradient`: 진행률처럼 제한된 면적의 브랜드 그라디언트
 
 디자인 작업에서는 다음 원칙을 지킵니다.
@@ -149,6 +166,8 @@ GitHub Pages용 정적 파일입니다. `404.html`은 SPA 새로고침 대응용
 - 라이트 모드에서는 미색 배경과 따뜻한 흰색 표면을, 다크 모드에서는 갈색 기운이 아주 옅은 짙은 표면을 사용합니다.
 - 랜딩의 넓은 강조 패널은 갈색이나 마젠타로 치우치지 않는 브랜드 레드→코럴→오렌지 그라디언트를 사용합니다.
 - 모달과 모바일 bottom sheet의 공통 배경 블러는 `app-modal-backdrop`의 2px을 기준으로 하며, 개별 화면에서 더 강한 블러를 중복 적용하지 않습니다.
+- 일시적인 성공·오류·경고 안내는 페이지 안에 배너를 삽입하지 말고 `src/components/ui/Toast.tsx`를 사용합니다. Toast는 `document.body` 포털과 `position: fixed`로 렌더링해 메뉴·카드 위치를 바꾸지 않으며, 치명적인 데이터 없음 상태만 기존 전체 화면 empty state로 표시합니다.
+- Premium 비동기 화면은 단일 텍스트 로딩 카드나 빈 화면 대신 `AsyncLoading.tsx`, `PremiumLoadingStates.tsx`의 공통 스피너·스켈레톤을 사용합니다. 스켈레톤은 도착 화면의 카드 수와 대략적인 높이를 유지해 레이아웃 이동을 줄이고 `role=status`의 한국어 진행 안내를 제공하세요. 버튼 작업은 기존 너비 안에서 인라인 스피너를 표시하고, 풀이 제출·중단처럼 화면 전체를 잠가야 하는 작업만 고정 오버레이를 사용합니다. `prefers-reduced-motion`과 `app-focus-page`에서는 로딩 애니메이션을 정지합니다.
 - 탭 전환처럼 문서 높이가 달라지는 화면에서도 중앙 정렬 UI가 흔들리지 않도록 최상위 `html`의 `scrollbar-gutter: stable`을 유지합니다.
 - 디자인 전용 작업에서 Zustand store, localStorage 스키마, CSV 파서, 채점 로직을 함께 수정하지 않습니다.
 - 공통 스타일을 추가할 때 기존 `app-*` 클래스나 UI 컴포넌트를 먼저 확장하고 페이지마다 긴 스타일 문자열을 복제하지 않습니다.
@@ -249,7 +268,7 @@ npm run lint
 - `src/pages/ResultPage.tsx`: 재풀이, CSV 다운로드, 결과 요약 액션이 많아 회귀 가능성이 큽니다.
 - `src/pages/AppHomePage.tsx`: `/home` 서비스 홈입니다. 환경설정, 계정·구독, 온라인 Premium, 오프라인 문제 풀이의 진입점을 제공합니다.
 - `src/pages/SettingsPage.tsx`: `/settings` 환경설정 화면입니다. 테마·글꼴과 오프라인 전체 데이터 백업/복원/초기화를 탭으로 관리합니다.
-- `src/pages/AccountSubscriptionPage.tsx`, `src/pages/PremiumDashboardPage.tsx`: 실제 백엔드 연결 전 계정·구독 및 온라인 Premium 흐름을 보여주는 명시적 UI 목업입니다. 실제 인증이나 결제로 오해될 상태를 만들지 마세요.
+- `src/pages/AccountSubscriptionPage.tsx`, `src/pages/Premium*Page.tsx`: Supabase Auth, 30일 선불 회원권·과목권, 온라인 풀이·결과 흐름입니다. 결제 금액과 학습 권한·채점은 서버 판단을 신뢰하며 프론트에서 재계산하지 마세요.
 - `src/pages/SubjectListPage.tsx`: `/dashboard` 오프라인 과목 목록 화면입니다. 과목 관리, 표지 색상 선택, 과목 카드 드래그 순서 변경이 이 페이지에 있습니다. 과목 삭제는 세션 삭제가 아니라 매핑 삭제로 처리해야 합니다.
 - `src/pages/DashboardPage.tsx`: `/dashboard/:subjectId` 과목별 세션 대시보드입니다. 새 문제 등록과 편집 시 세션-과목 매핑이 맞는지 확인하세요. 전체 데이터 백업/복원 UI는 이 페이지에 두지 않습니다.
 - `src/mini-apps/catalog.ts`: `/apps`에 노출되는 앱과 순서의 단일 출처입니다. 앱 카드 내용을 `SideAppsPage.tsx`에 다시 하드코딩하지 마세요.
@@ -262,7 +281,7 @@ npm run lint
 
 현재 필수 환경변수는 없습니다.
 
-이 프로젝트는 프론트엔드 전용 앱이므로 빌드된 JS가 사용자에게 그대로 전달됩니다. API 키, 토큰, 개인정보, 서버용 시크릿을 코드나 `.env`에 넣지 마세요. Vite 환경변수를 추가해야 한다면 클라이언트에 공개되어도 되는 값만 `VITE_` 접두사로 사용하세요.
+이 프로젝트의 빌드된 JS는 사용자에게 그대로 전달됩니다. 공개 Supabase URL·publishable key 외의 API 키, 토큰, 개인정보, 서버용 시크릿을 코드나 `.env`에 넣지 마세요. Vite 환경변수에는 클라이언트 공개값만 `VITE_` 접두사로 사용하세요.
 
 GA4 측정 ID `G-DRXS2G7E5F`는 공개 식별자이며 `index.html`과 `src/lib/analytics.ts`에 명시되어 있습니다. 비밀키처럼 `.env`로 숨기지 않으며, 실제 이벤트는 호스트명이 `lawsolver.haryun.io`일 때만 전송합니다.
 

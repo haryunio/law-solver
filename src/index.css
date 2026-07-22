@@ -552,6 +552,34 @@ body {
 
 .dark .app-modal-surface { box-shadow: 0 30px 80px rgba(0, 0, 0, 0.48); }
 
+.app-toast {
+  border-color: var(--app-border-strong) !important;
+  background: var(--app-surface-solid) !important;
+  color: var(--app-text);
+  box-shadow: 0 18px 48px rgba(67, 38, 23, 0.2), 0 5px 16px rgba(67, 38, 23, 0.1);
+}
+
+.app-toast-error { border-color: #f3aaa1 !important; }
+.app-toast-error > span { border-color: #ef9a91; background: #fff0ed; color: #b72f25; }
+.app-toast-success { border-color: #a7d9bc !important; }
+.app-toast-success > span { border-color: #91cfa9; background: #ecfdf3; color: #14733d; }
+.app-toast-warning { border-color: #e8ca7c !important; }
+.app-toast-warning > span { border-color: #dfbd62; background: #fff8da; color: #8a5d0a; }
+.app-toast-info { border-color: #a9cbed !important; }
+.app-toast-info > span { border-color: #8db9e4; background: #eff7ff; color: #1e5f9e; }
+
+.dark .app-toast {
+  box-shadow: 0 22px 54px rgba(0, 0, 0, 0.42), 0 6px 18px rgba(0, 0, 0, 0.28);
+}
+.dark .app-toast-error { border-color: #8f3d37 !important; }
+.dark .app-toast-error > span { border-color: #9f4941; background: #4a201d; color: #fca5a5; }
+.dark .app-toast-success { border-color: #376b4b !important; }
+.dark .app-toast-success > span { border-color: #417b57; background: #183d28; color: #86efac; }
+.dark .app-toast-warning { border-color: #755b25 !important; }
+.dark .app-toast-warning > span { border-color: #84672b; background: #493813; color: #fcd34d; }
+.dark .app-toast-info { border-color: #365f88 !important; }
+.dark .app-toast-info > span { border-color: #3d6e9d; background: #173450; color: #93c5fd; }
+
 .app-icon-button {
   border-color: var(--app-border) !important;
   background: var(--app-surface-solid) !important;
@@ -564,6 +592,45 @@ body {
 
 .app-progress-gradient {
   background: linear-gradient(90deg, #ef4444 0%, #f97316 100%) !important;
+}
+
+.app-skeleton {
+  background: #e7e5e4 !important;
+  animation: app-skeleton-pulse 1.45s ease-in-out infinite;
+}
+
+.dark .app-skeleton {
+  background: #3f3a36 !important;
+}
+
+.app-spinner {
+  display: inline-block;
+  width: 1.125rem;
+  height: 1.125rem;
+  flex: 0 0 auto;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 9999px;
+  animation: app-spinner-rotate 700ms linear infinite;
+}
+
+.app-spinner-sm {
+  width: 0.875rem;
+  height: 0.875rem;
+}
+
+.app-async-overlay {
+  background: rgba(28, 25, 23, 0.2);
+  backdrop-filter: blur(2px);
+}
+
+@keyframes app-skeleton-pulse {
+  0%, 100% { opacity: 0.62; }
+  50% { opacity: 1; }
+}
+
+@keyframes app-spinner-rotate {
+  to { transform: rotate(360deg); }
 }
 
 .app-result-link {
@@ -599,6 +666,11 @@ body {
 .app-focus-page .app-control {
   animation: none !important;
   transition: border-color 90ms ease, box-shadow 90ms ease !important;
+}
+
+.app-focus-page .app-skeleton,
+.app-focus-page .app-spinner {
+  animation: none !important;
 }
 
 .app-focus-page .app-button-primary {
@@ -928,6 +1000,7 @@ html {
 
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
+  .app-skeleton, .app-spinner { animation: none !important; }
   .landing-pulse-dot, .landing-fade-up, .landing-modal { animation: none; }
   .landing-step-card, .landing-primary-cta, .landing-secondary-cta { transition: none; }
 }

@@ -144,7 +144,7 @@ const pageDefinitions: Array<{
     pageTitle: "계정 및 구독",
   },
   {
-    matches: (pathname) => pathname === "/premium",
+    matches: (pathname) => pathname === "/premium" || pathname.startsWith("/premium/"),
     pageType: "premium_dashboard",
     pagePath: "/premium",
     pageTitle: "온라인 문제 풀이",

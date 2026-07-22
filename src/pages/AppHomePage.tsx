@@ -3,7 +3,7 @@ import { AppFooter } from "../components/ui/AppFooter";
 import { DashboardHeaderTitle } from "../components/ui/DashboardHeaderTitle";
 import { PremiumBadge } from "../components/ui/PremiumBadge";
 import { ReturnLinkLabel } from "../components/ui/ReturnLinkLabel";
-import { useAccountPreviewStore } from "../store/useAccountPreviewStore";
+import { useAccountStore } from "../store/useAccountStore";
 
 type HomeMenuKind = "online" | "offline" | "settings" | "account";
 
@@ -87,8 +87,8 @@ function HomeMenuGraphic({ kind }: { kind: HomeMenuKind }) {
 }
 
 export function AppHomePage() {
-  const isSignedIn = useAccountPreviewStore((state) => state.isSignedIn);
-  const displayName = useAccountPreviewStore((state) => state.displayName);
+  const isSignedIn = useAccountStore((state) => state.isSignedIn);
+  const displayName = useAccountStore((state) => state.displayName);
 
   return (
     <div className="app-page px-4 py-8 transition-colors duration-300 md:px-6">

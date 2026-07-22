@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate, useParams, useLocation } from "react-router-dom";
 import { ChoiceReviewList } from "../components/review/ChoiceReviewList";
+import { useSessionPageAdapter } from "../components/session/SessionPageContext";
 import { OverflowTooltipTitle } from "../components/ui/OverflowTooltipTitle";
 import { RichTextContent } from "../components/ui/RichTextContent";
 import { ReturnLinkLabel } from "../components/ui/ReturnLinkLabel";
@@ -16,7 +17,9 @@ export function ReviewAllPage() {
   const { sessionId = "" } = useParams();
   const location = useLocation();
   const navigate = useNavigate();
-  const session = useTestStore((state) => state.sessions.find((item) => item.id === sessionId));
+  const adapter = useSessionPageAdapter();
+  const localSession = useTestStore((state) => state.sessions.find((item) => item.id === sessionId));
+  const session = adapter?.session ?? localSession;
   
   const searchParams = new URLSearchParams(location.search);
   const onlyBookmarks = searchParams.get("onlyBookmarks") === "true";
@@ -83,7 +86,7 @@ export function ReviewAllPage() {
     return (
       <div className="app-page p-6">
         <div className="app-card mx-auto max-w-2xl rounded-2xl border p-8 text-center">
-          <p className="text-stone-700 dark:text-stone-300">세션을 찾을 수 없습니다.</p>
+          <p className="text-stone-700 dark:text-stone-300">문제 세션을 찾을 수 없습니다. 대시보드에서 다시 선택해 주세요.</p>
           <Link
             to="/dashboard"
             className="app-button-primary mt-4 inline-flex rounded-lg px-4 py-2 text-sm font-semibold"
@@ -101,7 +104,10 @@ export function ReviewAllPage() {
         <div className="app-card mx-auto max-w-2xl rounded-2xl border p-8 text-center">
           <p className="text-stone-700 dark:text-stone-300">채점 완료 후 확인할 수 있습니다.</p>
           <button
-            onClick={() => navigate(`/solve/${session.id}`, { state: { solveEntry: "resume" } })}
+            onClick={() => navigate(
+              adapter ? adapter.solvePath(session.id) : `/solve/${session.id}`,
+              { state: { solveEntry: "resume" } },
+            )}
             className="app-button-primary mt-4 rounded-lg px-4 py-2 text-sm font-semibold"
           >
             풀이 화면으로
@@ -115,9 +121,9 @@ export function ReviewAllPage() {
     return (
       <div className="app-page p-6">
         <div className="app-card mx-auto max-w-2xl rounded-2xl border p-8 text-center">
-          <p className="text-stone-700 dark:text-stone-300">데이터를 불러오지 못했습니다.</p>
+          <p className="text-stone-700 dark:text-stone-300">문제 데이터를 불러오지 못했습니다. 대시보드에서 다시 선택해 주세요.</p>
           <Link
-            to={`/result/${session.id}`}
+            to={adapter?.resultPath(session.id) ?? `/result/${session.id}`}
             className="app-button-secondary mt-4 inline-flex rounded-lg px-4 py-2 text-sm font-semibold"
           >
             <ReturnLinkLabel>결과로 돌아가기</ReturnLinkLabel>
@@ -140,7 +146,7 @@ export function ReviewAllPage() {
             />
           </div>
           <Link
-            to={`/result/${session.id}`}
+            to={adapter?.resultPath(session.id) ?? `/result/${session.id}`}
             className="app-button-secondary shrink-0 rounded-lg px-2.5 py-1.5 text-xs font-semibold sm:px-3 sm:text-sm"
           >
             <ReturnLinkLabel>결과로</ReturnLinkLabel>

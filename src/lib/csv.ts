@@ -71,7 +71,8 @@ const parseRawRows = (csvText: string): RawRow[] => {
 
   const firstError = result.errors[0];
   if (firstError) {
-    throw new Error(firstError.message);
+    const rowNumber = typeof firstError.row === "number" ? ` ${firstError.row + 2}번째 행을` : " 파일 내용을";
+    throw new Error(`CSV${rowNumber} 읽지 못했습니다. 쉼표와 따옴표 형식을 확인해 주세요.`);
   }
 
   return result.data.filter((row) =>
@@ -83,13 +84,13 @@ const parseOxAnswer = (value: string): "O" | "X" => {
   const token = value.trim().toUpperCase();
   if (token === "O" || token === "0") return "O";
   if (token === "X" || token === "1") return "X";
-  throw new Error(`OX 정답 값이 올바르지 않습니다: ${value}`);
+  throw new Error(`OX 정답은 O 또는 X로 입력해 주세요. 확인할 값: ${value}`);
 };
 
 const parseChoiceAnswer = (value: string): "1" | "2" | "3" | "4" | "5" => {
   const token = value.trim();
   if (["1", "2", "3", "4", "5"].includes(token)) return token as "1" | "2" | "3" | "4" | "5";
-  throw new Error(`5지선다 정답 값이 올바르지 않습니다: ${value}`);
+  throw new Error(`5지선다 정답은 1부터 5까지의 숫자로 입력해 주세요. 확인할 값: ${value}`);
 };
 
 const parseOxRows = (rows: RawRow[]): ParsedQuestion[] => {
@@ -99,7 +100,7 @@ const parseOxRows = (rows: RawRow[]): ParsedQuestion[] => {
     const question = getValue(row, ["문제", "question", "문항"], 1);
     const answerRaw = getValue(row, ["정답", "answer"], 2);
     if (!question || !answerRaw) {
-      throw new Error(`${idx + 2}번째 행에 문제/정답이 비어 있습니다.`);
+      throw new Error(`${idx + 2}번째 행의 문제와 정답을 모두 입력해 주세요.`);
     }
 
     return {
@@ -149,7 +150,7 @@ const parseChoiceRows = (rows: RawRow[]): ParsedQuestion[] => {
     });
 
     if (!question || choices.some((choice) => !choice) || !answerRaw) {
-      throw new Error(`${idx + 2}번째 행에 문제/선지/정답이 비어 있습니다.`);
+      throw new Error(`${idx + 2}번째 행의 문제, 선택지 5개와 정답을 모두 입력해 주세요.`);
     }
 
     return {
@@ -175,7 +176,7 @@ const parseShortRows = (rows: RawRow[]): ParsedQuestion[] => {
     const question = getValue(row, ["문제", "question", "문항"], 1);
     const answerRaw = getValue(row, ["정답", "answer"], 2);
     if (!question || !answerRaw) {
-      throw new Error(`${idx + 2}번째 행에 문제/정답이 비어 있습니다.`);
+      throw new Error(`${idx + 2}번째 행의 문제와 정답을 모두 입력해 주세요.`);
     }
 
     return {
@@ -194,7 +195,7 @@ const parseShortRows = (rows: RawRow[]): ParsedQuestion[] => {
 
 export const parseCsvByType = (csvText: string, type: TestType): ParsedQuestion[] => {
   const rows = parseRawRows(csvText);
-  if (!rows.length) throw new Error("CSV 데이터가 비어 있습니다.");
+  if (!rows.length) throw new Error("CSV에 등록할 문제가 없습니다. 헤더 아래에 문제를 한 개 이상 입력해 주세요.");
   
   if (type === "OX") return parseOxRows(rows);
   if (type === "5-choice") return parseChoiceRows(rows);
@@ -254,7 +255,12 @@ export const downloadCsvFile = (csvContent: string, fileName: string) => {
 const stripBom = (text: string) => text.replace(/^\uFEFF/, "");
 
 export const readCsvFileText = async (file: File): Promise<string> => {
-  const buffer = await file.arrayBuffer();
+  let buffer: ArrayBuffer;
+  try {
+    buffer = await file.arrayBuffer();
+  } catch {
+    throw new Error("CSV 파일을 읽지 못했습니다. 파일을 다시 선택해 주세요.");
+  }
   const bytes = new Uint8Array(buffer);
 
   const hasUtf8Bom = bytes.length >= 3 && bytes[0] === 0xef && bytes[1] === 0xbb && bytes[2] === 0xbf;
