@@ -26,6 +26,8 @@ lbti/
 
 현재 manifest는 `available` 상태입니다. `/apps/lbti` 소개, `/test` 설문, `/types` 전체 유형, `/result/:typeCode` 공유 결과 화면이 모두 이 폴더 안에서 동작합니다. 답변은 서버나 localStorage에 저장하지 않으며 결과 링크에는 유형 코드만 포함합니다.
 
+GA4에는 테스트를 모두 완료해 결과가 계산될 때 `lbti_result_completed` 이벤트와 최종 4자 유형 코드인 `lbti_type`만 전송합니다. 질문별 응답, 축 점수, 진행률과 소요시간은 전송하지 않으며 공유 결과 페이지 방문과 전체 유형 탐색은 결과 분포 집계에 포함하지 않습니다.
+
 ## 구현 파일
 
 - `LbtiHomePage.tsx`: 소개와 테스트 진입
