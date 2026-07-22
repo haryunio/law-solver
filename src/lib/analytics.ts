@@ -17,6 +17,23 @@ export type AnalyticsPageType =
   | "review";
 
 export type AnalyticsQuestionType = "ox" | "multiple_choice" | "short_answer";
+export type AnalyticsLbtiType =
+  | "PWRS"
+  | "PWRD"
+  | "PWOS"
+  | "PWOD"
+  | "PCRS"
+  | "PCRD"
+  | "PCOS"
+  | "PCOD"
+  | "TWRS"
+  | "TWRD"
+  | "TWOS"
+  | "TWOD"
+  | "TCRS"
+  | "TCRD"
+  | "TCOS"
+  | "TCOD";
 export type SolveEntry =
   | "upload"
   | "resume"
@@ -39,6 +56,9 @@ type AnalyticsParameterValue = string | number | boolean;
 type AnalyticsParameters = Record<string, AnalyticsParameterValue | undefined>;
 
 interface AnalyticsEventMap {
+  lbti_result_completed: {
+    lbti_type: AnalyticsLbtiType;
+  };
   problem_upload_completed: {
     question_type: AnalyticsQuestionType;
   };

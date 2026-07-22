@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { trackEvent } from "../../lib/analytics";
 import { LbtiLayout } from "./components/LbtiLayout";
 import { calculateLbtiResult, lbtiQuestions, lbtiScale, type LbtiAnswers } from "./lib/lbti";
 
@@ -28,6 +29,9 @@ export function LbtiTestPage() {
     }
 
     const result = calculateLbtiResult(answers);
+    trackEvent("lbti_result_completed", {
+      lbti_type: result.code,
+    });
     navigate(`/apps/lbti/result/${result.code.toLowerCase()}`, {
       state: { axisScores: result.axisScores },
     });

@@ -179,6 +179,7 @@ LBTI의 네 지표와 16개 유형은 [`lbti-framework.json`](src/mini-apps/lbti
 
 | 이벤트 | 발생 시점 | 추가 구분값 |
 | --- | --- | --- |
+| `lbti_result_completed` | LBTI 30문항 완료 후 결과 계산 | `lbti_type` |
 | `problem_upload_completed` | CSV 업로드와 세션 생성 성공 | `question_type` |
 | `problem_upload_failed` | CSV 읽기 또는 파싱 실패 | `question_type`, `failure_type` |
 | `solve_started` | 문제 풀이 진입 | `question_type`, `solve_entry` |
@@ -189,17 +190,18 @@ LBTI의 네 지표와 16개 유형은 [`lbti-framework.json`](src/mini-apps/lbti
 | `review_question_viewed` | 리뷰에서 새 문항 확인 | `question_type`, `review_type` |
 | `retry_created` | 전체·오답·책갈피 재풀이 세션 생성 | `question_type`, `retry_type` |
 
-`question_type`은 `ox`, `multiple_choice`, `short_answer` 중 하나입니다. `question_completed`는 같은 풀이 방문에서 같은 문항을 앞뒤로 반복 이동해도 한 번만 보냅니다. 답변한 현재 문항은 다른 문항으로 이동하거나 제출·일시 중단할 때 기록합니다.
+`question_type`은 `ox`, `multiple_choice`, `short_answer` 중 하나입니다. `lbti_type`은 LBTI의 16개 4자 유형 코드 중 하나입니다. `lbti_result_completed`는 공유 결과 페이지를 열거나 유형 목록을 살펴볼 때가 아니라 실제 테스트를 모두 완료해 결과를 계산할 때만 보냅니다. `question_completed`는 같은 풀이 방문에서 같은 문항을 앞뒤로 반복 이동해도 한 번만 보냅니다. 답변한 현재 문항은 다른 문항으로 이동하거나 제출·일시 중단할 때 기록합니다.
 
 다음 데이터는 GA4로 전송하지 않습니다.
 
 - 문제 본문, 선택지, 해설, 출처와 사용자가 선택하거나 입력한 답안
 - 문제 정오 여부, 점수, 진행률, 문항 수와 풀이 시간
+- LBTI 질문별 응답, 축별 점수, 진행률과 소요시간
 - 과목명, 세션명, CSV 파일명
 - `subjectId`, `sessionId`, 문항 ID를 포함한 식별자
 - localStorage에 저장된 학습 데이터 원본
 
-GA4 데이터 스트림의 향상된 측정에서 `브라우저 방문 기록 이벤트에 따른 페이지 변경`은 꺼야 합니다. 이 설정이 켜져 있으면 수동 `page_view`와 중복 집계될 수 있습니다. 배포 후 DebugView에서 이벤트가 한 번씩 발생하는지 확인하고, 보고서에서 세부 구분값을 사용하려면 `page_type`, `question_type`, `solve_entry`, `navigation_method`, `review_type`, `retry_type`, `failure_type`을 이벤트 범위 맞춤 측정기준으로 등록합니다. `solve_completed`는 주요 이벤트로 지정할 수 있습니다.
+GA4 데이터 스트림의 향상된 측정에서 `브라우저 방문 기록 이벤트에 따른 페이지 변경`은 꺼야 합니다. 이 설정이 켜져 있으면 수동 `page_view`와 중복 집계될 수 있습니다. 배포 후 DebugView에서 이벤트가 한 번씩 발생하는지 확인하고, 보고서에서 세부 구분값을 사용하려면 `page_type`, `question_type`, `solve_entry`, `navigation_method`, `review_type`, `retry_type`, `failure_type`, `lbti_type`을 이벤트 범위 맞춤 측정기준으로 등록합니다. `solve_completed`는 주요 이벤트로 지정할 수 있습니다.
 
 ## Google Search Console과 SEO
 

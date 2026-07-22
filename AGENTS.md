@@ -287,6 +287,7 @@ GA4는 Google 태그 직접 설치 방식을 사용합니다. `index.html`에서
 
 허용된 행동 이벤트는 다음과 같습니다.
 
+- `lbti_result_completed`
 - `problem_upload_completed`, `problem_upload_failed`
 - `solve_started`, `question_completed`, `solve_paused`, `solve_completed`
 - `review_started`, `review_question_viewed`
@@ -295,6 +296,7 @@ GA4는 Google 태그 직접 설치 방식을 사용합니다. `index.html`에서
 허용된 맞춤 파라미터는 다음 범위로 제한합니다.
 
 - `page_type`
+- `lbti_type`: LBTI의 16개 4자 유형 코드
 - `question_type`: `ox`, `multiple_choice`, `short_answer`
 - `solve_entry`
 - `navigation_method`
@@ -306,11 +308,14 @@ GA4는 Google 태그 직접 설치 방식을 사용합니다. `index.html`에서
 
 - 문제 본문, 선택지, 해설, 출처, 선택·입력 답안
 - 문제 정오 여부, 점수, 진행률, 문항 수, 풀이 시간
+- LBTI 질문별 응답, 축별 점수, 진행률, 소요시간
 - 과목명, 세션명, CSV 파일명
 - subject/session/question ID 또는 이를 유추할 수 있는 값
 - localStorage 원본 데이터
 
 `question_completed`는 답변한 문항을 떠날 때 기록하며 동일한 풀이 방문에서 문항당 한 번만 전송합니다. 답변한 현재 문항은 다른 문항으로 이동하거나 제출·일시 중단할 때 기록합니다. 이 중복 방지 규칙을 유지하세요.
+
+`lbti_result_completed`는 30문항을 모두 완료해 결과를 계산할 때만 전송합니다. 공유 결과 URL 방문이나 전체 유형 탐색은 유형 분포에 포함하지 않으며, `lbti_type` 외에 질문별 응답, 축 점수, 진행률과 소요시간을 보내지 마세요.
 
 GA4 관리 화면의 향상된 측정에서 `브라우저 방문 기록 이벤트에 따른 페이지 변경`은 꺼야 합니다. 활성화하면 수동 페이지뷰와 중복될 수 있습니다. 배포 후 Realtime/DebugView에서 각 이벤트가 한 번만 발생하는지 확인하고, 세부 파라미터를 보고서에서 사용하려면 이벤트 범위 맞춤 측정기준으로 등록합니다.
 
