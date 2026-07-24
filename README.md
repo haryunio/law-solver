@@ -67,7 +67,7 @@ Law Solver Premium은 배포·권한 경계가 다른 두 저장소로 나눕니
 | [`haryunio/law-solver`](https://github.com/haryunio/law-solver) | 공개 | React UI, 오프라인 CSV, 공개 Supabase client와 Premium 화면 | `law-solver/` |
 | `haryunio/law-solver-server` | 비공개 | Auth/RLS, DB migration, Edge Functions, 결제, 비공개 문제 콘텐츠 | 형제 폴더 `law-solver-server/` |
 
-프론트는 `develop`을 통합 개발 기준으로 사용하고 Premium 기능은 `feature/premium`에서 작업합니다. 서버는 `develop`에서 기능을 통합하고 검증된 상태만 `main`으로 반영합니다. 서버 CI/CD 자동화는 아직 활성화하지 않았으며 현재는 저장소의 검증 명령을 로컬에서 실행합니다.
+프론트는 `develop`을 통합 개발 기준으로 사용하고 Premium 기능은 `feature/premium`에서 작업합니다. 서버는 `develop`에서 기능을 통합하고 검증된 상태만 `main`으로 반영합니다. 서버는 PR CI와 수동 승인형 Supabase production 배포 workflow를 사용하며 production seed/reset은 허용하지 않습니다.
 
 API·DTO·권한 계약은 서버의 `docs/API.md`, `docs/AUTHORIZATION.md`, `docs/FRONTEND_INTEGRATION.md`가 기준입니다. 계약 변경은 서버 구현과 문서를 먼저 갱신한 뒤 이 저장소의 `src/lib/premiumApi.ts`와 화면을 맞추고, 각 저장소에 독립적인 커밋으로 남깁니다. 서버 콘텐츠와 secret은 프론트 저장소로 복사하지 않습니다.
 
@@ -282,6 +282,8 @@ VITE_SUPABASE_PUBLISHABLE_KEY=<law-solver-server의 npm run status 출력값>
 
 환경변수를 추가해야 하는 기능을 만들 때는 Vite 관례에 따라 클라이언트에 노출 가능한 값만 `VITE_` 접두사를 사용하세요. 비밀키나 서버 전용 시크릿은 이 프로젝트의 프론트엔드 번들에 넣으면 안 됩니다.
 
+운영 GitHub Pages workflow는 Supabase URL을 `https://dpbklhfqdnrktgulvszs.supabase.co`로 고정하고, 공개 publishable key를 repository variable `VITE_SUPABASE_PUBLISHABLE_KEY`에서 읽습니다. 이 variable이 없으면 Premium이 빠진 빌드를 배포하지 않고 build 단계에서 중단합니다. 현재 운영 Auth는 custom SMTP 도입 전 회원가입 이메일 확인을 임시 생략하며, session 없는 가입 응답을 처리하는 확인 메일 대기 분기는 로컬 테스트와 향후 이메일 인증 재활성화를 위해 유지합니다.
+
 ## 개발 서버 실행
 
 ```bash
@@ -309,7 +311,7 @@ npm run preview
 GitHub Pages 배포:
 
 - `.github/workflows/deploy-pages.yml`이 `main` 브랜치 push 또는 수동 실행(`workflow_dispatch`) 시 동작합니다.
-- 워크플로우는 `npm ci`, `npm run build` 후 `dist`를 Pages artifact로 업로드합니다.
+- 워크플로우는 운영 Supabase 공개 연결값을 검증하고 `npm ci`, `npm run build` 후 `dist`를 Pages artifact로 업로드합니다.
 - `public/CNAME`에 `lawsolver.haryun.io`가 설정되어 있습니다.
 - `public/404.html`과 `index.html`의 redirect restore 스크립트로 GitHub Pages에서 SPA 라우트 새로고침 404를 우회합니다.
 - 검색에 노출하는 공개 하위 경로는 `vite.config.ts`가 별도 `index.html`을 만들어 직접 요청도 200으로 응답합니다.

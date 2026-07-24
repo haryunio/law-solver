@@ -185,6 +185,8 @@ export const useAccountStore = create<AccountStore>((set, get) => ({
         set(accountState(await getAccount()));
         set({ notice: "회원가입과 로그인을 완료했습니다." });
       } else {
+        // Retained for the planned custom-SMTP phase. The initial hosted launch uses
+        // immediate confirmation, while local development still verifies the HTML email flow.
         set({ notice: "확인 메일을 보냈습니다. 로컬 테스트 메일함에서 인증 링크를 열어 주세요." });
       }
     } catch (error) {

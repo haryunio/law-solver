@@ -342,6 +342,16 @@ export function AccountSubscriptionPage() {
                     <span className="text-sm font-semibold text-stone-500 dark:text-stone-400">{premiumProduct?.durationDays ?? 30}일</span>
                     <strong className="text-xl font-bold tracking-[-0.02em]">{formatPrice(premiumProduct?.priceKrw ?? 9900)}</strong>
                   </p>
+                  <ul className="mt-4 space-y-2 text-sm font-medium text-stone-700 dark:text-stone-300">
+                    <li className="flex items-center gap-2">
+                      <span className="text-red-600 dark:text-red-400" aria-hidden="true">✓</span>
+                      온라인 문제 풀이 기능 사용
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <span className="text-red-600 dark:text-red-400" aria-hidden="true">✓</span>
+                      Premium 전용 과목 이용권 구매 가능
+                    </li>
+                  </ul>
                 </div>
 
                 <div className="mt-6 border-t border-stone-200 pt-5 dark:border-stone-700">

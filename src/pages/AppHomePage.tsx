@@ -114,8 +114,17 @@ export function AppHomePage() {
             >
               <div className="flex min-h-7 min-w-0 justify-end">
                 {menu.kind === "account" ? (
-                  <span className="max-w-full truncate text-right text-[11px] font-semibold leading-5 text-stone-500 dark:text-stone-400">
-                    {isSignedIn ? `어서오세요, ${displayName}님.` : "로그아웃 상태입니다"}
+                  <span className="inline-flex max-w-full items-center gap-1.5 rounded-full border border-stone-200 bg-stone-100 px-2.5 py-1 text-[11px] font-bold leading-4 text-stone-700 shadow-sm dark:border-stone-700 dark:bg-stone-800 dark:text-stone-200">
+                    <span
+                      className={[
+                        "h-1.5 w-1.5 shrink-0 rounded-full",
+                        isSignedIn ? "bg-emerald-500" : "bg-red-500",
+                      ].join(" ")}
+                      aria-hidden="true"
+                    />
+                    <span className="truncate">
+                      {isSignedIn ? `어서오세요, ${displayName}님.` : "로그인해 주세요"}
+                    </span>
                   </span>
                 ) : menu.premium ? (
                   <PremiumBadge />
