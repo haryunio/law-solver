@@ -1,10 +1,16 @@
 import { useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
+import {
+  useSessionPageAdapter,
+  type SessionRetryMode,
+} from "../components/session/SessionPageContext";
 import { AppFooter } from "../components/ui/AppFooter";
+import { ButtonLoadingContent } from "../components/ui/AsyncLoading";
 import { DashboardHeaderTitle } from "../components/ui/DashboardHeaderTitle";
 import { IconCloseButton } from "../components/ui/IconCloseButton";
 import { ReturnLinkLabel } from "../components/ui/ReturnLinkLabel";
 import { ThemeSelect } from "../components/ui/ThemeSelect";
+import { Toast } from "../components/ui/Toast";
 import { getAnswerToken } from "../lib/answer";
 import {
   RetryType,
@@ -54,7 +60,10 @@ const solveOrderOptions = [
 export function ResultPage() {
   const { sessionId = "" } = useParams();
   const navigate = useNavigate();
-  const session = useTestStore((state) => state.sessions.find((item) => item.id === sessionId));
+  const adapter = useSessionPageAdapter();
+  const localSession = useTestStore((state) => state.sessions.find((item) => item.id === sessionId));
+  const session = adapter?.session ?? localSession;
+  const allowCsvDownload = adapter?.allowCsvDownload ?? true;
   const sessionSubjectMap = useTestStore((state) => state.sessionSubjectMap);
   const createSession = useTestStore((state) => state.createSession);
 
@@ -65,12 +74,14 @@ export function ResultPage() {
   const [retryTitle, setRetryTitle] = useState("");
   const [retryOrderMode, setRetryOrderMode] = useState<SolveOrder>("number");
   const [resultTab, setResultTab] = useState<ResultTab>("omr");
+  const [isCreatingRetry, setIsCreatingRetry] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   if (!session) {
     return (
       <div className="app-page p-6">
         <div className="app-card mx-auto max-w-2xl rounded-2xl border p-8 text-center">
-          <p className="text-stone-700 dark:text-stone-300">세션을 찾을 수 없습니다.</p>
+          <p className="text-stone-700 dark:text-stone-300">풀이 결과를 찾을 수 없습니다. 대시보드에서 문제를 다시 선택해 주세요.</p>
           <Link
             to="/dashboard"
             className="app-button-primary mt-4 inline-flex rounded-lg px-4 py-2 text-sm font-semibold"
@@ -100,7 +111,7 @@ export function ResultPage() {
     setIsBookmarkRetryModalOpen(true);
   };
 
-  const handleRetrySubmit = (
+  const handleRetrySubmit = async (
     e: React.FormEvent,
     options: { onlyWrong?: boolean; onlyBookmark?: boolean } = {},
   ) => {
@@ -126,20 +137,46 @@ export function ResultPage() {
       bookmark: false, // 새 풀이에서는 책갈피를 비움
     }));
 
-    const newSessionId = createSession({
-      title: retryTitle.trim(),
-      type: session.type,
-      orderMode: retryOrderMode,
-      questions: resetQuestions,
-      subjectId: sessionSubjectMap[session.id] ?? null,
-    });
+    const retryMode: SessionRetryMode = options.onlyWrong
+      ? "incorrect"
+      : options.onlyBookmark
+        ? "bookmarked"
+        : "all";
+
+    setIsCreatingRetry(true);
+    setError(null);
+    let newSessionId: string;
+    try {
+      newSessionId = adapter
+        ? await adapter.createRetry({
+            sourceSessionId: session.id,
+            mode: retryMode,
+            title: retryTitle.trim(),
+            orderMode: retryOrderMode,
+          })
+        : createSession({
+            title: retryTitle.trim(),
+            type: session.type,
+            orderMode: retryOrderMode,
+            questions: resetQuestions,
+            subjectId: sessionSubjectMap[session.id] ?? null,
+          });
+    } catch (cause) {
+      setError(
+        cause instanceof Error
+          ? cause.message
+          : "재풀이를 준비하지 못했습니다. 잠시 후 다시 시도해 주세요.",
+      );
+      setIsCreatingRetry(false);
+      return;
+    }
 
     trackEvent("retry_created", {
       retry_type: retryType,
       question_type: toAnalyticsQuestionType(session.type),
     });
 
-    navigate(`/solve/${newSessionId}`, {
+    navigate(adapter ? adapter.solvePath(newSessionId) : `/solve/${newSessionId}`, {
       state: {
         solveEntry:
           retryType === "wrong"
@@ -175,7 +212,10 @@ export function ResultPage() {
         <div className="app-card mx-auto max-w-2xl rounded-2xl border p-8 text-center">
           <p className="text-stone-700 dark:text-stone-300">아직 제출되지 않은 세션입니다.</p>
           <button
-            onClick={() => navigate(`/solve/${session.id}`, { state: { solveEntry: "resume" } })}
+            onClick={() => navigate(
+              adapter ? adapter.solvePath(session.id) : `/solve/${session.id}`,
+              { state: { solveEntry: "resume" } },
+            )}
             className="app-button-primary mt-4 rounded-lg px-4 py-2 text-sm font-semibold"
           >
             이어서 풀기
@@ -196,7 +236,9 @@ export function ResultPage() {
     session.total_questions > 0
       ? Math.round(session.elapsed_time / session.total_questions)
       : 0;
-  const subjectDashboardPath = getSubjectDashboardPath(sessionSubjectMap[session.id]);
+  const subjectDashboardPath = adapter?.dashboardPath ?? getSubjectDashboardPath(sessionSubjectMap[session.id]);
+  const wrongPath = adapter?.wrongPath(session.id) ?? `/wrong/${session.id}`;
+  const reviewPath = adapter?.reviewPath(session.id) ?? `/review/${session.id}`;
   const chapterStats = Array.from(
     session.questions.reduce(
       (acc, question) => {
@@ -234,6 +276,7 @@ export function ResultPage() {
 
   return (
     <div className="app-page px-4 py-7 transition-colors duration-300 md:px-6 md:py-8">
+      <Toast message={error} onDismiss={() => setError(null)} />
       <div className="mx-auto max-w-6xl">
         <DashboardHeaderTitle
           title={session.title}
@@ -241,13 +284,15 @@ export function ResultPage() {
           logoTo={subjectDashboardPath}
           logoLabel="문제 풀이 대시보드로 이동"
         >
-          <button
-            type="button"
-            onClick={() => setIsDownloadModalOpen(true)}
-            className="app-button-secondary rounded-xl px-3 py-2 text-sm font-semibold sm:px-4"
-          >
-            CSV 다운로드
-          </button>
+          {allowCsvDownload ? (
+            <button
+              type="button"
+              onClick={() => setIsDownloadModalOpen(true)}
+              className="app-button-secondary rounded-xl px-3 py-2 text-sm font-semibold sm:px-4"
+            >
+              CSV 다운로드
+            </button>
+          ) : null}
           <Link
             to={subjectDashboardPath}
             className="app-button-secondary rounded-xl px-3 py-2 text-center text-sm font-semibold sm:px-4"
@@ -323,7 +368,7 @@ export function ResultPage() {
             </h2>
             <div className="grid min-h-0 flex-1 grid-rows-3 gap-2">
               <Link
-                to={`/wrong/${session.id}`}
+                to={wrongPath}
                 className={[
                   "flex items-center justify-between rounded-xl border px-3 py-2.5 text-sm font-semibold transition-colors duration-100",
                   wrongCount > 0
@@ -335,14 +380,14 @@ export function ResultPage() {
                 <span className="opacity-75">{wrongCount}</span>
               </Link>
               <Link
-                to={`/review/${session.id}`}
+                to={reviewPath}
                 className="flex items-center justify-between rounded-xl border border-orange-200 bg-white px-3 py-2.5 text-sm font-semibold text-orange-700 transition-colors duration-100 hover:bg-orange-50 dark:border-orange-900/50 dark:bg-stone-900 dark:text-orange-400 dark:hover:bg-orange-950/25"
               >
                 <span>전체 확인</span>
                 <span className="opacity-75">{session.total_questions}</span>
               </Link>
               <Link
-                to={`/review/${session.id}?onlyBookmarks=true`}
+                to={`${reviewPath}?onlyBookmarks=true`}
                 className={[
                   "flex items-center justify-between rounded-xl border px-3 py-2.5 text-sm font-semibold transition-colors duration-100",
                   bookmarkCount > 0
@@ -560,9 +605,10 @@ export function ResultPage() {
               <div className="pt-2">
                 <button
                   type="submit"
-                  className="app-button-primary app-button-primary-standalone w-full rounded-lg py-2.5 text-sm font-semibold"
+                  disabled={isCreatingRetry}
+                  className="app-button-primary app-button-primary-standalone w-full rounded-lg py-2.5 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-60"
                 >
-                  풀이 시작하기
+                  {isCreatingRetry ? <ButtonLoadingContent label="풀이 준비 중" /> : "풀이 시작하기"}
                 </button>
               </div>
             </form>
@@ -611,9 +657,10 @@ export function ResultPage() {
               <div className="pt-2">
                 <button
                   type="submit"
-                  className="app-button-primary app-button-primary-standalone w-full rounded-lg py-2.5 text-sm font-semibold"
+                  disabled={isCreatingRetry}
+                  className="app-button-primary app-button-primary-standalone w-full rounded-lg py-2.5 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-60"
                 >
-                  오답 풀기 시작
+                  {isCreatingRetry ? <ButtonLoadingContent label="오답 풀이 준비 중" /> : "오답 풀기 시작"}
                 </button>
               </div>
             </form>
@@ -662,9 +709,12 @@ export function ResultPage() {
               <div className="pt-2">
                 <button
                   type="submit"
-                  className="w-full rounded-lg bg-amber-500 py-2.5 text-sm font-semibold text-white transition hover:bg-amber-600 dark:bg-amber-600 dark:hover:bg-amber-700"
+                  disabled={isCreatingRetry}
+                  className="w-full rounded-lg bg-amber-500 py-2.5 text-sm font-semibold text-white transition hover:bg-amber-600 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-amber-600 dark:hover:bg-amber-700"
                 >
-                  책갈피 문제 풀기 시작
+                  {isCreatingRetry
+                    ? <ButtonLoadingContent label="책갈피 풀이 준비 중" />
+                    : "책갈피 문제 풀기 시작"}
                 </button>
               </div>
             </form>
@@ -672,7 +722,7 @@ export function ResultPage() {
         </div>
       ) : null}
 
-      {isDownloadModalOpen ? (
+      {allowCsvDownload && isDownloadModalOpen ? (
         <div className="fixed inset-0 z-50">
           <button onClick={() => setIsDownloadModalOpen(false)} className="app-modal-backdrop absolute inset-0" />
           <div className="absolute left-1/2 top-1/2 w-[92vw] max-w-sm -translate-x-1/2 -translate-y-1/2">

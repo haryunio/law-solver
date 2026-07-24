@@ -14,10 +14,15 @@ import { AppFooter } from "../components/ui/AppFooter";
 import { DashboardHeaderTitle } from "../components/ui/DashboardHeaderTitle";
 import { IconCloseButton } from "../components/ui/IconCloseButton";
 import { ReturnLinkLabel } from "../components/ui/ReturnLinkLabel";
+import { SubjectCardCover } from "../components/ui/SubjectCardCover";
 import { getSubjectDashboardPath, SubjectDropPlacement } from "../lib/subject";
+import {
+  getSubjectAccentColor,
+  getSubjectCoverStyle,
+  subjectCoverPalettes as coverPalettes,
+} from "../lib/subjectCover";
 import { NO_SUBJECT_ID, Subject, SubjectCoverPalette } from "../types/test";
 import { useTestStore } from "../store/useTestStore";
-import { FontFamily, useSettingsStore } from "../store/useSettingsStore";
 
 type DialogState = {
   title: string;
@@ -39,62 +44,6 @@ interface SubjectCardData {
   coverPalette?: SubjectCoverPalette;
 }
 
-const hashString = (value: string) =>
-  [...value].reduce((hash, char) => ((hash << 5) - hash + char.charCodeAt(0)) | 0, 0);
-
-const coverPalettes: Array<{
-  id: SubjectCoverPalette;
-  label: string;
-  base?: [number, number, number];
-}> = [
-  { id: "warm", label: "노을", base: [8, 32, 50] },
-  { id: "green", label: "새싹", base: [104, 78, 48] },
-  { id: "blue", label: "바다", base: [218, 202, 188] },
-  { id: "purple", label: "마법", base: [278, 304, 330] },
-  { id: "gray", label: "우주" },
-];
-
-const defaultCoverPalette = coverPalettes[0]!;
-
-const getPaletteById = (paletteId: SubjectCoverPalette) =>
-  coverPalettes.find((palette) => palette.id === paletteId) ?? defaultCoverPalette;
-
-const getSubjectCoverStyle = (
-  subjectName: string,
-  paletteId: SubjectCoverPalette,
-): CSSProperties => {
-  const hash = Math.abs(hashString(subjectName));
-  const palette = getPaletteById(paletteId);
-  const angle = 105 + (hash % 151);
-
-  if (palette.id === "gray") {
-    const start = 16 + (hash % 8);
-    const mid = 42 + ((hash >> 3) % 12);
-    const end = 78 + ((hash >> 6) % 10);
-
-    return {
-      background: `linear-gradient(${angle}deg, hsl(0 0% ${start}%), hsl(0 0% ${mid}%) 52%, hsl(0 0% ${end}%))`,
-    };
-  }
-
-  const [baseStart, baseMid, baseEnd] = palette?.base ?? [8, 32, 50];
-  const start = baseStart + (hash % 12) - 6;
-  const mid = baseMid + ((hash >> 3) % 12) - 6;
-  const end = baseEnd + ((hash >> 6) % 12) - 6;
-
-  return {
-    background: `linear-gradient(${angle}deg, hsl(${start} 68% 50%), hsl(${mid} 72% 56%) 52%, hsl(${end} 78% 62%))`,
-  };
-};
-
-const getSubjectAccentColor = (paletteId: SubjectCoverPalette) => {
-  const palette = getPaletteById(paletteId);
-  if (palette.id === "gray") return "hsl(0 0% 46%)";
-
-  const [, baseMid] = palette.base ?? defaultCoverPalette.base ?? [8, 32, 50];
-  return `hsl(${baseMid} 72% 54%)`;
-};
-
 export function SubjectListPage() {
   const sessions = useTestStore((state) => state.sessions);
   const subjects = useTestStore((state) => state.subjects);
@@ -103,15 +52,9 @@ export function SubjectListPage() {
   const updateSubject = useTestStore((state) => state.updateSubject);
   const reorderSubject = useTestStore((state) => state.reorderSubject);
   const deleteSubject = useTestStore((state) => state.deleteSubject);
-  const resetSessions = useTestStore((state) => state.resetSessions);
-  const importDashboardData = useTestStore((state) => state.importDashboardData);
-  const getDashboardBackupData = useTestStore((state) => state.getDashboardBackupData);
-  const { darkMode, toggleDarkMode, fontFamily, setFontFamily } = useSettingsStore();
 
   const [isSubjectManageOpen, setIsSubjectManageOpen] = useState(false);
   const [isCreateSubjectOpen, setIsCreateSubjectOpen] = useState(false);
-  const [isDashboardManageOpen, setIsDashboardManageOpen] = useState(false);
-  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [newSubjectName, setNewSubjectName] = useState("");
   const [newSubjectPalette, setNewSubjectPalette] = useState<SubjectCoverPalette>("warm");
   const [editingSubjectId, setEditingSubjectId] = useState<string | null>(null);
@@ -467,125 +410,14 @@ export function SubjectListPage() {
     });
   };
 
-  const handleBackup = () => {
-    const data = JSON.stringify(getDashboardBackupData(), null, 2);
-    const blob = new Blob([data], { type: "application/json" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `law-solver-backup-${new Date().toISOString().split("T")[0]}.json`;
-    a.click();
-    URL.revokeObjectURL(url);
-  };
-
-  const handleRestore = () => {
-    const input = document.createElement("input");
-    input.type = "file";
-    input.accept = ".json";
-    input.onchange = (e) => {
-      const file = (e.target as HTMLInputElement).files?.[0];
-      if (!file) return;
-      const reader = new FileReader();
-      reader.onload = (re) => {
-        try {
-          const content = re.target?.result as string;
-          const data = JSON.parse(content);
-          if (Array.isArray(data) || (data && Array.isArray(data.sessions))) {
-            setDialog({
-              title: "전체 데이터를 불러올까요?",
-              description: "현재 과목, 문제, 풀이내역, 오답노트가 백업 파일 내용으로 모두 덮어씌워집니다.",
-              confirmLabel: "불러오기",
-              variant: "danger",
-              onCancel: () => setDialog(null),
-              onConfirm: () => {
-                if (Array.isArray(data)) {
-                  importDashboardData({
-                    sessions: data,
-                    subjects: [],
-                    sessionSubjectMap: {},
-                  });
-                } else {
-                  importDashboardData({
-                    sessions: data.sessions,
-                    subjects: data.subjects,
-                    sessionSubjectMap: data.sessionSubjectMap,
-                  });
-                }
-                setIsDashboardManageOpen(false);
-                setDialog({
-                  title: "복구가 완료되었습니다.",
-                  description: "백업 파일의 전체 데이터가 반영되었습니다.",
-                  confirmLabel: "확인",
-                  variant: "success",
-                  onConfirm: () => setDialog(null),
-                });
-              },
-            });
-          } else {
-            setDialog({
-              title: "백업 파일을 확인해 주세요.",
-              description: "올바른 Law Solver 백업 JSON 형식이 아닙니다.",
-              confirmLabel: "확인",
-              onConfirm: () => setDialog(null),
-            });
-          }
-        } catch (err) {
-          setDialog({
-            title: "파일을 읽지 못했습니다.",
-            description: "JSON 파일이 손상되었거나 읽을 수 없는 형식입니다.",
-            confirmLabel: "확인",
-            onConfirm: () => setDialog(null),
-          });
-        }
-      };
-      reader.readAsText(file);
-    };
-    input.click();
-  };
-
-  const handleReset = () => {
-    setDialog({
-      title: "전체 데이터를 초기화할까요?",
-      description: "과목, 문제, 풀이내역, 오답노트가 모두 삭제됩니다. 이 작업은 되돌릴 수 없습니다.",
-      confirmLabel: "초기화",
-      variant: "danger",
-      onCancel: () => setDialog(null),
-      onConfirm: () => {
-        resetSessions();
-        setIsDashboardManageOpen(false);
-        setDialog({
-          title: "초기화가 완료되었습니다.",
-          description: "전체 데이터베이스가 초기화되었습니다.",
-          confirmLabel: "확인",
-          variant: "success",
-          onConfirm: () => setDialog(null),
-        });
-      },
-    });
-  };
-
   return (
     <div className="app-page px-4 py-8 transition-colors duration-300 md:px-6">
       <div className="mx-auto max-w-6xl">
         <DashboardHeaderTitle
           title="과목 대시보드"
-          logoTo="/"
-          logoLabel="메인으로 이동"
+          logoTo="/home"
+          logoLabel="홈으로 이동"
         >
-          <button
-            type="button"
-            onClick={() => setIsSettingsOpen(true)}
-            className="app-button-secondary rounded-xl px-3 py-2 text-sm font-semibold sm:px-4"
-          >
-            환경설정
-          </button>
-          <button
-            type="button"
-            onClick={() => setIsDashboardManageOpen(true)}
-            className="app-button-secondary rounded-xl px-3 py-2 text-sm font-semibold sm:px-4"
-          >
-            데이터 관리
-          </button>
           <button
             type="button"
             onClick={() => setIsSubjectManageOpen(true)}
@@ -594,10 +426,10 @@ export function SubjectListPage() {
             과목 관리
           </button>
           <Link
-            to="/"
+            to="/home"
             className="app-button-secondary rounded-xl px-3 py-2 text-center text-sm font-semibold sm:px-4"
           >
-            <ReturnLinkLabel>메인으로</ReturnLinkLabel>
+            <ReturnLinkLabel>홈으로</ReturnLinkLabel>
           </Link>
         </DashboardHeaderTitle>
 
@@ -613,27 +445,18 @@ export function SubjectListPage() {
                 } as CSSProperties
               }
             >
-              <div
-                className="relative h-[104px] overflow-hidden"
-                style={getSubjectCoverStyle(
+              <SubjectCardCover
+                title={subject.name}
+                coverStyle={getSubjectCoverStyle(
                   subject.name,
                   subject.coverPalette ?? "warm",
                 )}
-              >
-                <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(255,255,255,0.30),transparent_34%),radial-gradient(circle_at_88%_12%,rgba(255,255,255,0.20),transparent_28%)]" />
-                <div className="absolute inset-0 hidden bg-black/30 dark:block" />
-                <div className="absolute left-0 top-0 h-full w-4 bg-black/10" />
-                <div className="absolute left-4 top-0 h-full w-px bg-white/25" />
-                <div className="absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-black/36 via-black/14 to-transparent" />
-                <div className="absolute bottom-4 left-6 right-5 flex items-end justify-between gap-3">
-                  <h2 className="min-w-0 truncate text-2xl font-semibold text-white drop-shadow-sm">
-                    {subject.name}
-                  </h2>
+                badge={(
                   <span className="shrink-0 rounded-full border border-white/25 bg-white/25 px-2.5 py-1 text-xs font-bold text-white shadow-sm backdrop-blur">
                     {subject.total}개
                   </span>
-                </div>
-              </div>
+                )}
+              />
 
               <div className="grid h-[104px] grid-cols-2 gap-2 p-4 text-sm">
                 <div className="app-subtle-surface flex flex-col justify-center rounded-xl border p-3">
@@ -856,102 +679,6 @@ export function SubjectListPage() {
                 </button>
               </div>
             </form>
-          </div>
-        </div>
-      ) : null}
-
-      {isSettingsOpen ? (
-        <div className="fixed inset-0 z-50">
-          <button onClick={() => setIsSettingsOpen(false)} className="app-modal-backdrop absolute inset-0" />
-          <div className="absolute left-1/2 top-1/2 w-[92vw] max-w-sm -translate-x-1/2 -translate-y-1/2">
-            <div className="app-modal-surface rounded-2xl border p-6">
-              <div className="mb-4 flex items-center justify-between">
-                <h2 className="text-lg font-semibold text-stone-900 dark:text-stone-100">환경설정</h2>
-                <IconCloseButton onClick={() => setIsSettingsOpen(false)} label="환경설정 닫기" />
-              </div>
-              <div className="space-y-6">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium text-stone-700 dark:text-stone-300">다크 모드</span>
-                  <button
-                    onClick={toggleDarkMode}
-                    className={[
-                      "relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out outline-none",
-                      darkMode ? "bg-red-600" : "bg-stone-200 dark:bg-stone-800",
-                    ].join(" ")}
-                  >
-                    <span
-                      className={[
-                        "pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out dark:bg-stone-200",
-                        darkMode ? "translate-x-5" : "translate-x-0",
-                      ].join(" ")}
-                    />
-                  </button>
-                </div>
-
-                <div className="space-y-3">
-                  <span className="text-sm font-medium text-stone-700 dark:text-stone-300">글꼴 설정</span>
-                  <div className="grid grid-cols-1 gap-2">
-                    {[
-                      { id: "pretendard", label: "기본 (Pretendard)", class: "font-pretendard" },
-                      { id: "nanum-gothic", label: "나눔고딕", class: "font-nanum-gothic" },
-                      { id: "nanum-myeongjo", label: "나눔명조", class: "font-nanum-myeongjo" },
-                    ].map((font) => (
-                      <button
-                        key={font.id}
-                        onClick={() => setFontFamily(font.id as FontFamily)}
-                        className={[
-                          "flex items-center justify-between rounded-xl border px-4 py-3 text-sm transition",
-                          fontFamily === font.id
-                            ? "border-red-600 bg-red-50 text-red-700 dark:border-red-600 dark:bg-red-950/30 dark:text-red-400"
-                            : "border-stone-200 bg-white text-stone-700 dark:border-stone-800 dark:bg-stone-800 dark:text-stone-300 hover:bg-stone-50 dark:hover:bg-stone-700",
-                          font.class,
-                        ].join(" ")}
-                      >
-                        <span>{font.label}</span>
-                        {fontFamily === font.id && <span className="text-xs font-bold">●</span>}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      ) : null}
-
-      {isDashboardManageOpen ? (
-        <div className="fixed inset-0 z-50">
-          <button onClick={() => setIsDashboardManageOpen(false)} className="app-modal-backdrop absolute inset-0" />
-          <div className="absolute left-1/2 top-1/2 w-[92vw] max-w-sm -translate-x-1/2 -translate-y-1/2">
-            <div className="app-modal-surface rounded-2xl border p-6">
-              <div className="mb-4 flex items-center justify-between">
-                <h2 className="text-lg font-semibold text-stone-900 dark:text-stone-100">전체 데이터 관리</h2>
-                <IconCloseButton onClick={() => setIsDashboardManageOpen(false)} label="전체 데이터 관리 닫기" />
-              </div>
-              <div className="grid gap-3">
-                <button
-                  onClick={handleBackup}
-                  className="flex w-full flex-col items-center justify-center rounded-xl border border-stone-200 bg-white p-4 transition hover:bg-stone-50 dark:border-stone-800 dark:bg-stone-900 dark:hover:bg-stone-800"
-                >
-                  <span className="text-sm font-bold text-stone-800 dark:text-stone-200">전체 데이터 백업하기</span>
-                  <span className="text-xs text-stone-500 dark:text-stone-500">과목, 문제, 풀이 기록을 JSON으로 저장</span>
-                </button>
-                <button
-                  onClick={handleRestore}
-                  className="flex w-full flex-col items-center justify-center rounded-xl border border-stone-200 bg-white p-4 transition hover:bg-stone-50 dark:border-stone-800 dark:bg-stone-900 dark:hover:bg-stone-800"
-                >
-                  <span className="text-sm font-bold text-stone-800 dark:text-stone-200">전체 데이터 불러오기</span>
-                  <span className="text-xs text-stone-500 dark:text-stone-500">백업 파일로 현재 데이터베이스 덮어쓰기</span>
-                </button>
-                <button
-                  onClick={handleReset}
-                  className="flex w-full flex-col items-center justify-center rounded-xl border border-red-100 bg-red-50 p-4 transition hover:bg-red-100/50 dark:border-red-900/50 dark:bg-red-950/30 dark:hover:bg-red-900/30"
-                >
-                  <span className="text-sm font-bold text-red-600 dark:text-red-400">전체 초기화</span>
-                  <span className="text-xs text-red-500 dark:text-red-500">모든 과목, 문제, 기록 영구 삭제</span>
-                </button>
-              </div>
-            </div>
           </div>
         </div>
       ) : null}

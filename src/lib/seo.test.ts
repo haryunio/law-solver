@@ -33,6 +33,10 @@ describe("SEO metadata", () => {
 
   it("keeps tests, private learning routes, and invalid results out of the index", () => {
     expect(getSeoMetadata("/apps/lbti/test").indexable).toBe(false);
+    expect(getSeoMetadata("/home").indexable).toBe(false);
+    expect(getSeoMetadata("/settings").indexable).toBe(false);
+    expect(getSeoMetadata("/account").indexable).toBe(false);
+    expect(getSeoMetadata("/premium").indexable).toBe(false);
     expect(getSeoMetadata("/solve/private-session").indexable).toBe(false);
     expect(getSeoMetadata("/apps/lbti/result/invalid").indexable).toBe(false);
   });
@@ -56,5 +60,10 @@ describe("SEO metadata", () => {
   it("creates a refreshable shell for the non-indexed LBTI test without adding it to the sitemap", () => {
     expect(STATIC_APP_SHELL_PATHS).toContain("/apps/lbti/test");
     expect(INDEXABLE_PATHS).not.toContain("/apps/lbti/test");
+    expect(STATIC_APP_SHELL_PATHS).toContain("/home");
+    expect(STATIC_APP_SHELL_PATHS).toContain("/settings");
+    expect(STATIC_APP_SHELL_PATHS).toContain("/account");
+    expect(STATIC_APP_SHELL_PATHS).toContain("/premium");
+    expect(INDEXABLE_PATHS).not.toContain("/premium");
   });
 });
