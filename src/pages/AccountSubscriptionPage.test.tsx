@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 
-import { cleanup, render, screen } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { afterEach, describe, expect, it } from "vitest";
 import { useAccountStore } from "../store/useAccountStore";
@@ -110,5 +110,32 @@ describe("AccountSubscriptionPage Premium membership", () => {
     expect(screen.getByText("온라인 문제 풀이 기능 사용")).toBeTruthy();
     expect(screen.getByText("Premium 전용 과목 이용권 구매 가능")).toBeTruthy();
     expect(screen.getByRole("button", { name: "Premium 30일 구매" })).toBeTruthy();
+  });
+
+  it("requires both legal agreements before signup", () => {
+    useAccountStore.setState({
+      configured: true,
+      initialized: true,
+      isLoading: false,
+      isSignedIn: false,
+    });
+
+    render(
+      <MemoryRouter initialEntries={["/account"]}>
+        <AccountSubscriptionPage />
+      </MemoryRouter>,
+    );
+
+    fireEvent.click(screen.getByRole("tab", { name: "회원가입" }));
+
+    const termsAgreement = screen.getByRole("checkbox", { name: "이용약관 확인 및 동의" });
+    const privacyAgreement = screen.getByRole("checkbox", { name: "개인정보처리방침 확인 및 동의" });
+    const signupButton = screen.getByRole("button", { name: "회원가입" });
+
+    expect(signupButton).toHaveProperty("disabled", true);
+    fireEvent.click(termsAgreement);
+    expect(signupButton).toHaveProperty("disabled", true);
+    fireEvent.click(privacyAgreement);
+    expect(signupButton).toHaveProperty("disabled", false);
   });
 });

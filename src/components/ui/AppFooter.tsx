@@ -1,5 +1,6 @@
 import { BrandMark } from "./BrandMark";
 import { PrivacyPolicyLink } from "./PrivacyPolicyLink";
+import { TermsOfServiceLink } from "./TermsOfServiceLink";
 
 export function AppFooter() {
   return (
@@ -14,11 +15,11 @@ export function AppFooter() {
             haryun@knu.ac.kr
           </a>
         </p>
-        <div className="flex items-center gap-2">
-          <span>CC BY-NC-ND ⓒ 2026 Haryun</span>
-          <div className="border-l border-stone-300 pl-2 dark:border-stone-700">
-            <PrivacyPolicyLink />
-          </div>
+        <span>CC BY-NC-ND ⓒ 2026 Haryun</span>
+        <div className="mt-1 flex items-center gap-2" aria-label="서비스 정책">
+          <TermsOfServiceLink />
+          <span aria-hidden="true">|</span>
+          <PrivacyPolicyLink />
         </div>
       </div>
     </footer>

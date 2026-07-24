@@ -18,6 +18,8 @@ import { ProfileAvatar } from "../components/ui/ProfileAvatar";
 import { ReturnLinkLabel } from "../components/ui/ReturnLinkLabel";
 import { SubjectCardCover } from "../components/ui/SubjectCardCover";
 import { Toast, type ToastTone } from "../components/ui/Toast";
+import { PrivacyPolicyLink } from "../components/ui/PrivacyPolicyLink";
+import { TermsOfServiceLink } from "../components/ui/TermsOfServiceLink";
 import {
   getPremiumSubjectCoverStyle,
   premiumOrangeAccentColor,
@@ -60,6 +62,8 @@ export function AccountSubscriptionPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const activeTab = getAccountTab(searchParams.get("tab"));
   const [authMode, setAuthMode] = useState<AuthMode>("login");
+  const [hasAgreedToTerms, setHasAgreedToTerms] = useState(false);
+  const [hasAgreedToPrivacyPolicy, setHasAgreedToPrivacyPolicy] = useState(false);
   const [isConfigurationToastVisible, setIsConfigurationToastVisible] = useState(true);
   const [purchaseModalProduct, setPurchaseModalProduct] = useState<PurchaseModalProduct | null>(null);
   const configured = useAccountStore((state) => state.configured);
@@ -97,6 +101,7 @@ export function AccountSubscriptionPage() {
     const submittedPassword = String(formData.get("password") ?? "");
     try {
       if (authMode === "signup") {
+        if (!hasAgreedToTerms || !hasAgreedToPrivacyPolicy) return;
         await signUp(
           submittedEmail,
           submittedPassword,
@@ -307,9 +312,60 @@ export function AccountSubscriptionPage() {
                       required
                     />
                   </label>
+                  {authMode === "signup" ? (
+                    <div className="app-subtle-surface space-y-3 rounded-xl border p-4">
+                      <div className="flex items-start gap-3">
+                        <input
+                          id="terms-agreement"
+                          name="termsAgreement"
+                          type="checkbox"
+                          checked={hasAgreedToTerms}
+                          onChange={(event) => setHasAgreedToTerms(event.target.checked)}
+                          required
+                          aria-label="이용약관 확인 및 동의"
+                          className="mt-1 h-4 w-4 shrink-0 accent-red-600"
+                        />
+                        <p className="text-sm leading-6 text-stone-600 dark:text-stone-300">
+                          <label htmlFor="terms-agreement" className="cursor-pointer">
+                            <span className="font-semibold text-red-600 dark:text-red-400">[필수]</span>{" "}
+                          </label>
+                          <TermsOfServiceLink className="font-semibold text-red-600 underline underline-offset-4 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300" />
+                          <label htmlFor="terms-agreement" className="cursor-pointer">
+                            을 확인했으며 동의합니다.
+                          </label>
+                        </p>
+                      </div>
+                      <div className="flex items-start gap-3">
+                        <input
+                          id="privacy-policy-agreement"
+                          name="privacyPolicyAgreement"
+                          type="checkbox"
+                          checked={hasAgreedToPrivacyPolicy}
+                          onChange={(event) => setHasAgreedToPrivacyPolicy(event.target.checked)}
+                          required
+                          aria-label="개인정보처리방침 확인 및 동의"
+                          className="mt-1 h-4 w-4 shrink-0 accent-red-600"
+                        />
+                        <p className="text-sm leading-6 text-stone-600 dark:text-stone-300">
+                          <label htmlFor="privacy-policy-agreement" className="cursor-pointer">
+                            <span className="font-semibold text-red-600 dark:text-red-400">[필수]</span>{" "}
+                          </label>
+                          <PrivacyPolicyLink className="font-semibold text-red-600 underline underline-offset-4 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300" />
+                          <label htmlFor="privacy-policy-agreement" className="cursor-pointer">
+                            을 확인했으며 동의합니다.
+                          </label>
+                        </p>
+                      </div>
+                    </div>
+                  ) : null}
                   <button
                     type="submit"
-                    disabled={!configured || !initialized || isLoading}
+                    disabled={
+                      !configured
+                      || !initialized
+                      || isLoading
+                      || (authMode === "signup" && (!hasAgreedToTerms || !hasAgreedToPrivacyPolicy))
+                    }
                     className="app-button-primary w-full rounded-xl px-4 py-3 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-60"
                   >
                     {isLoading
