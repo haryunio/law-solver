@@ -2,6 +2,9 @@ node_modules
 dist
 .DS_Store
 coverage
+.env
+.env.local
+.env.*.local
 *.tsbuildinfo
 vite.config.js
 vite.config.d.ts

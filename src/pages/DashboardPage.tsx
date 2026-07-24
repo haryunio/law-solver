@@ -125,7 +125,7 @@ export function DashboardPage() {
     return (
       <div className="app-page px-4 py-8 md:px-6">
         <div className="app-card mx-auto max-w-2xl rounded-2xl border p-8 text-center">
-          <p className="text-stone-700 dark:text-stone-300">과목을 찾을 수 없습니다.</p>
+          <p className="text-stone-700 dark:text-stone-300">과목을 찾을 수 없습니다. 과목 목록에서 다시 선택해 주세요.</p>
           <Link
             to="/dashboard"
             className="app-button-primary mt-4 inline-flex rounded-lg px-4 py-2 text-sm font-semibold"

@@ -14,18 +14,36 @@ import { downloadSessionCsv } from "../../lib/csv";
 import { getSubjectDashboardPath } from "../../lib/subject";
 import { formatElapsedTime } from "../../lib/time";
 import { useTestStore } from "../../store/useTestStore";
-import { AnswerValue } from "../../types/test";
+import { AnswerValue, TestSession } from "../../types/test";
 
 interface CbtSolveScreenProps {
   sessionId: string;
   solveEntry?: SolveEntry;
+  sessionOverride?: TestSession;
+  onAnswerChange?: (questionId: string, answer: AnswerValue) => void;
+  onBookmarkChange?: (questionId: string) => void;
+  onElapsedTimeTick?: () => void;
+  onQuestionLeave?: (questionId: string) => void;
+  canRevealAnswer?: boolean;
+  onAnswerRevealRequest?: (questionId: string) => boolean | Promise<boolean>;
+  onPaused?: (sessionId: string) => void;
   onSubmitted?: (sessionId: string) => void;
+  allowCsvDownload?: boolean;
 }
 
 export function CbtSolveScreen({
   sessionId,
   solveEntry = "direct",
+  sessionOverride,
+  onAnswerChange,
+  onBookmarkChange,
+  onElapsedTimeTick,
+  onQuestionLeave,
+  canRevealAnswer = true,
+  onAnswerRevealRequest,
+  onPaused,
   onSubmitted,
+  allowCsvDownload = true,
 }: CbtSolveScreenProps) {
   const navigate = useNavigate();
   const sessions = useTestStore((state) => state.sessions);
@@ -35,16 +53,22 @@ export function CbtSolveScreen({
   const tickElapsedTime = useTestStore((state) => state.tickElapsedTime);
   const submitSession = useTestStore((state) => state.submitSession);
 
-  const session = useMemo(() => sessions.find((item) => item.id === sessionId), [sessions, sessionId]);
+  const storedSession = useMemo(
+    () => sessions.find((item) => item.id === sessionId),
+    [sessions, sessionId],
+  );
+  const session = sessionOverride ?? storedSession;
 
   const [index, setIndex] = useState(0);
   const [showAnswer, setShowAnswer] = useState(false);
+  const [isAnswerRevealLoading, setIsAnswerRevealLoading] = useState(false);
   const [isOmrOpen, setIsOmrOpen] = useState(false);
   const [isPauseDialogOpen, setIsPauseDialogOpen] = useState(false);
   const [isSubmitDialogOpen, setIsSubmitDialogOpen] = useState(false);
   const contentRef = useRef<HTMLDivElement | null>(null);
   const trackedSolveSessionRef = useRef<string | null>(null);
   const trackedQuestionIdsRef = useRef(new Set<string>());
+  const activeQuestionIdRef = useRef<string | null>(null);
   const omrRefs = useMemo(() => new Map<number, HTMLButtonElement | null>(), []);
 
   useEffect(() => {
@@ -68,6 +92,7 @@ export function CbtSolveScreen({
 
   useEffect(() => {
     setShowAnswer(false);
+    setIsAnswerRevealLoading(false);
     contentRef.current?.scrollTo({ top: 0 });
   }, [index]);
 
@@ -80,9 +105,15 @@ export function CbtSolveScreen({
 
   useEffect(() => {
     if (!session || session.status === "completed") return;
-    const timer = window.setInterval(() => tickElapsedTime(sessionId), 1000);
+    const timer = window.setInterval(() => {
+      if (sessionOverride) {
+        onElapsedTimeTick?.();
+      } else {
+        tickElapsedTime(sessionId);
+      }
+    }, 1000);
     return () => window.clearInterval(timer);
-  }, [session?.status, sessionId, tickElapsedTime]);
+  }, [session?.status, sessionId, sessionOverride, onElapsedTimeTick, tickElapsedTime]);
 
   useEffect(() => {
     if (!session) return;
@@ -95,7 +126,7 @@ export function CbtSolveScreen({
     return (
       <div className="app-page p-6">
         <div className="app-card mx-auto max-w-2xl rounded-2xl border p-8 text-center text-stone-700 dark:text-stone-300">
-          세션을 찾을 수 없습니다.
+          문제를 찾을 수 없습니다. 대시보드에서 문제를 다시 선택해 주세요.
         </div>
       </div>
     );
@@ -111,6 +142,7 @@ export function CbtSolveScreen({
       </div>
     );
   }
+  activeQuestionIdRef.current = current.id;
 
   const CIRCLED_NUMBERS = ["①", "②", "③", "④", "⑤"];
 
@@ -141,6 +173,10 @@ export function CbtSolveScreen({
       : "md:h-[calc(100vh-112px)] md:max-h-[calc(100vh-112px)]";
 
   const handleAnswer = (answer: string) => {
+    if (sessionOverride) {
+      onAnswerChange?.(current.id, answer as AnswerValue);
+      return;
+    }
     updateAnswer(session.id, current.id, answer as AnswerValue);
   };
 
@@ -157,6 +193,7 @@ export function CbtSolveScreen({
   const goToQuestion = (nextIndex: number, navigationMethod: QuestionNavigationMethod) => {
     const boundedIndex = Math.max(0, Math.min(session.total_questions - 1, nextIndex));
     if (boundedIndex === index) return;
+    onQuestionLeave?.(current.id);
     trackCurrentQuestion(navigationMethod);
     setIndex(boundedIndex);
   };
@@ -174,11 +211,14 @@ export function CbtSolveScreen({
 
   const submitImmediately = () => {
     setIsSubmitDialogOpen(false);
+    onQuestionLeave?.(current.id);
     trackCurrentQuestion("submit");
     trackEvent("solve_completed", {
       question_type: toAnalyticsQuestionType(session.type),
     });
-    submitSession(session.id);
+    if (!sessionOverride) {
+      submitSession(session.id);
+    }
     onSubmitted?.(session.id);
   };
 
@@ -191,10 +231,15 @@ export function CbtSolveScreen({
   };
 
   const pauseAndReturnToDashboard = () => {
+    onQuestionLeave?.(current.id);
     trackCurrentQuestion("pause");
     trackEvent("solve_paused", {
       question_type: toAnalyticsQuestionType(session.type),
     });
+    if (sessionOverride) {
+      onPaused?.(session.id);
+      return;
+    }
     navigate(subjectDashboardPath);
   };
 
@@ -251,7 +296,32 @@ export function CbtSolveScreen({
             </div>
             <div className="flex items-center gap-2">
               <button
-                onClick={() => setShowAnswer((prev) => !prev)}
+                onClick={() => {
+                  if (showAnswer) {
+                    setShowAnswer(false);
+                    return;
+                  }
+                  if (canRevealAnswer) {
+                    setShowAnswer(true);
+                  } else {
+                    const requestedQuestionId = current.id;
+                    setIsAnswerRevealLoading(true);
+                    void Promise.resolve(onAnswerRevealRequest?.(requestedQuestionId) ?? false)
+                      .then((canReveal) => {
+                        if (canReveal && activeQuestionIdRef.current === requestedQuestionId) {
+                          setShowAnswer(true);
+                        }
+                      })
+                      .catch(() => undefined)
+                      .finally(() => {
+                        if (activeQuestionIdRef.current === requestedQuestionId) {
+                          setIsAnswerRevealLoading(false);
+                        }
+                      });
+                  }
+                }}
+                disabled={isAnswerRevealLoading}
+                aria-label={isAnswerRevealLoading ? "정답과 해설을 불러오는 중" : "?"}
                 title={showAnswer ? "정답 숨기기" : "정답/해설 보기"}
                 className={[
                   "flex h-8 w-8 items-center justify-center rounded-full border text-sm",
@@ -260,10 +330,18 @@ export function CbtSolveScreen({
                     : "border-stone-300 bg-white text-stone-500 hover:border-blue-500 hover:text-blue-500 dark:border-stone-700 dark:bg-stone-800 dark:text-stone-400 dark:hover:border-blue-500 dark:hover:text-blue-500",
                 ].join(" ")}
               >
-                ?
+                {isAnswerRevealLoading
+                  ? <span className="app-spinner app-spinner-sm" aria-hidden="true" />
+                  : "?"}
               </button>
               <button
-                onClick={() => toggleBookmark(session.id, current.id)}
+                onClick={() => {
+                  if (sessionOverride) {
+                    onBookmarkChange?.(current.id);
+                  } else {
+                    toggleBookmark(session.id, current.id);
+                  }
+                }}
                 title={current.bookmark ? "책갈피 해제" : "책갈피 추가"}
                 className={[
                   "flex h-8 w-8 items-center justify-center rounded-full border text-sm",
@@ -472,12 +550,14 @@ export function CbtSolveScreen({
               );
             })}
           </div>
-          <button
-            onClick={() => downloadSessionCsv(session)}
-            className="app-button-secondary mt-4 w-full rounded-lg px-3 py-2 text-xs font-semibold"
-          >
-            CSV 다운로드
-          </button>
+          {allowCsvDownload ? (
+            <button
+              onClick={() => downloadSessionCsv(session)}
+              className="app-button-secondary mt-4 w-full rounded-lg px-3 py-2 text-xs font-semibold"
+            >
+              CSV 다운로드
+            </button>
+          ) : null}
         </aside>
       </div>
 

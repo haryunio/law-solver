@@ -2,17 +2,24 @@ interface IconCloseButtonProps {
   onClick: () => void;
   label?: string;
   className?: string;
+  disabled?: boolean;
 }
 
-export function IconCloseButton({ onClick, label = "닫기", className = "" }: IconCloseButtonProps) {
+export function IconCloseButton({
+  onClick,
+  label = "닫기",
+  className = "",
+  disabled = false,
+}: IconCloseButtonProps) {
   return (
     <button
       type="button"
       onClick={onClick}
+      disabled={disabled}
       aria-label={label}
       title={label}
       className={[
-        "app-icon-button inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full border text-stone-500 shadow-sm transition hover:text-red-600 focus:outline-none focus:ring-2 focus:ring-red-200 dark:text-stone-400 dark:hover:text-red-400 dark:focus:ring-red-900/50",
+        "app-icon-button inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full border text-stone-500 shadow-sm transition hover:text-red-600 focus:outline-none focus:ring-2 focus:ring-red-200 disabled:cursor-not-allowed disabled:opacity-50 dark:text-stone-400 dark:hover:text-red-400 dark:focus:ring-red-900/50",
         className,
       ].join(" ")}
     >

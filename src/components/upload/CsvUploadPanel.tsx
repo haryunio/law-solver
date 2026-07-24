@@ -9,6 +9,7 @@ import { toAnalyticsQuestionType, trackEvent } from "../../lib/analytics";
 import { useTestStore } from "../../store/useTestStore";
 import { SolveOrder, TestType } from "../../types/test";
 import { ThemeSelect } from "../ui/ThemeSelect";
+import { Toast } from "../ui/Toast";
 
 const testTypeOptions = [
   { value: "OX", label: "OX" },
@@ -89,7 +90,9 @@ export function CsvUploadPanel({ subjectId, onCreated }: CsvUploadPanelProps) {
         question_type: toAnalyticsQuestionType(type),
         failure_type: "read_or_parse",
       });
-      const message = e instanceof Error ? e.message : "CSV 파싱 중 오류가 발생했습니다.";
+      const message = e instanceof Error
+        ? e.message
+        : "CSV 파일을 읽지 못했습니다. 파일 형식을 확인한 뒤 다시 시도해 주세요.";
       setError(message);
     } finally {
       setIsLoading(false);
@@ -101,6 +104,7 @@ export function CsvUploadPanel({ subjectId, onCreated }: CsvUploadPanelProps) {
       onSubmit={handleSubmit}
       className="app-modal-surface space-y-4 rounded-2xl border p-5 shadow-xl"
     >
+      <Toast message={error} onDismiss={() => setError("")} />
       <h2 className="text-lg font-semibold text-stone-900 dark:text-stone-100">새 문제 등록</h2>
 
       <label className="block space-y-2">
@@ -142,10 +146,6 @@ export function CsvUploadPanel({ subjectId, onCreated }: CsvUploadPanelProps) {
           ariaLabel="풀이 순서 선택"
         />
       </div>
-
-      {error ? (
-        <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700 dark:border-red-900/50 dark:bg-red-950/30 dark:text-red-400">{error}</p>
-      ) : null}
 
       <div className="pt-3">
         <button

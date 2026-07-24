@@ -6,6 +6,10 @@ export type AnalyticsPageType =
   | "main"
   | "mini_apps"
   | "mini_app"
+  | "app_home"
+  | "settings"
+  | "account"
+  | "premium_dashboard"
   | "subject_dashboard"
   | "problem_dashboard"
   | "solve"
@@ -120,6 +124,30 @@ const pageDefinitions: Array<{
     pageType: "mini_app",
     pagePath: "/apps/mini-app",
     pageTitle: "미니 앱 실행",
+  },
+  {
+    matches: (pathname) => pathname === "/home",
+    pageType: "app_home",
+    pagePath: "/home",
+    pageTitle: "서비스 홈",
+  },
+  {
+    matches: (pathname) => pathname === "/settings",
+    pageType: "settings",
+    pagePath: "/settings",
+    pageTitle: "환경설정",
+  },
+  {
+    matches: (pathname) => pathname === "/account",
+    pageType: "account",
+    pagePath: "/account",
+    pageTitle: "계정 및 구독",
+  },
+  {
+    matches: (pathname) => pathname === "/premium" || pathname.startsWith("/premium/"),
+    pageType: "premium_dashboard",
+    pagePath: "/premium",
+    pageTitle: "온라인 문제 풀이",
   },
   {
     matches: (pathname) => pathname === "/dashboard",
