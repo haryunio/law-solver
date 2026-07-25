@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import { useEffect, useState } from "react";
-import { IconCloseButton } from "./IconCloseButton";
+import { LegalDocumentModal } from "./LegalDocumentModal";
 
 type LegalItem = {
   text: ReactNode;
@@ -580,63 +580,29 @@ export function TermsOfServiceLink({ className = defaultLinkClass }: TermsOfServ
       </button>
 
       {isOpen ? (
-        <div
-          className="fixed inset-0 z-[100] flex items-center justify-center p-4 text-left"
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="terms-of-service-title"
+        <LegalDocumentModal
+          eyebrow="TERMS OF SERVICE"
+          title="Law Solver 서비스 이용약관"
+          titleId="terms-of-service-title"
+          effectiveDate="2026년 7월 25일"
+          closeLabel="이용약관"
+          onClose={() => setIsOpen(false)}
         >
-          <button
-            type="button"
-            onClick={() => setIsOpen(false)}
-            className="app-modal-backdrop absolute inset-0"
-            aria-label="이용약관 닫기"
-          />
-          <section className="app-modal-surface relative max-h-[88vh] w-full max-w-4xl overflow-y-auto rounded-2xl border p-5 shadow-2xl sm:p-7">
-            <div className="flex items-start justify-between gap-4">
-              <div>
-                <p className="text-xs font-bold tracking-[0.16em] text-red-600 dark:text-red-400">
-                  TERMS OF SERVICE
-                </p>
-                <h2
-                  id="terms-of-service-title"
-                  className="mt-2 text-xl font-bold text-stone-950 dark:text-stone-100 sm:text-2xl"
-                >
-                  Law Solver 서비스 이용약관
-                </h2>
-                <p className="mt-2 text-xs text-stone-500 dark:text-stone-400">
-                  시행일: 2026년 7월 25일
-                </p>
-              </div>
-              <IconCloseButton onClick={() => setIsOpen(false)} label="이용약관 닫기" />
-            </div>
-
-            <div className="mt-7 space-y-9 text-sm leading-7 text-stone-600 dark:text-stone-300">
-              {chapters.map((chapter) => (
-                <section key={chapter.number}>
-                  <h3 className="border-b border-stone-200 pb-2 text-lg font-bold text-stone-950 dark:border-stone-700 dark:text-stone-100">
-                    제{chapter.number}장 {chapter.title}
-                  </h3>
-                  <div className="mt-5 space-y-7">
-                    {chapter.articles.map((article) => (
-                      <LegalArticleContent key={article.number} article={article} />
-                    ))}
-                  </div>
-                </section>
-              ))}
-            </div>
-
-            <div className="mt-8 flex justify-end">
-              <button
-                type="button"
-                onClick={() => setIsOpen(false)}
-                className="app-button-secondary rounded-lg px-5 py-2.5 text-sm font-semibold"
-              >
-                닫기
-              </button>
-            </div>
-          </section>
-        </div>
+          <div className="space-y-9 text-left text-sm leading-7 text-stone-600 dark:text-stone-300">
+            {chapters.map((chapter) => (
+              <section key={chapter.number}>
+                <h3 className="border-b border-stone-200 pb-2 text-lg font-bold text-stone-950 dark:border-stone-700 dark:text-stone-100">
+                  제{chapter.number}장 {chapter.title}
+                </h3>
+                <div className="mt-5 space-y-7">
+                  {chapter.articles.map((article) => (
+                    <LegalArticleContent key={article.number} article={article} />
+                  ))}
+                </div>
+              </section>
+            ))}
+          </div>
+        </LegalDocumentModal>
       ) : null}
     </>
   );

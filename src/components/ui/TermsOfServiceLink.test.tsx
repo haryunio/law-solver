@@ -7,6 +7,23 @@ import { TermsOfServiceLink } from "./TermsOfServiceLink";
 afterEach(cleanup);
 
 describe("TermsOfServiceLink", () => {
+  it("renders the modal at the document root and restores page scrolling when closed", () => {
+    render(
+      <div className="app-card">
+        <TermsOfServiceLink />
+      </div>,
+    );
+    fireEvent.click(screen.getByRole("button", { name: "이용약관" }));
+
+    const dialog = screen.getByRole("dialog");
+    expect(dialog.parentElement).toBe(document.body);
+    expect(document.body.style.overflow).toBe("hidden");
+
+    fireEvent.click(screen.getByRole("button", { name: "이용약관 닫기" }));
+    expect(screen.queryByRole("dialog")).toBeNull();
+    expect(document.body.style.overflow).toBe("");
+  });
+
   it("renders all chapters and articles without draft placeholders", () => {
     render(<TermsOfServiceLink />);
     fireEvent.click(screen.getByRole("button", { name: "이용약관" }));

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { IconCloseButton } from "./IconCloseButton";
+import { LegalDocumentModal } from "./LegalDocumentModal";
 
 const externalLinkClass =
   "break-all font-medium text-red-600 underline underline-offset-4 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300";
@@ -43,38 +43,15 @@ export function PrivacyPolicyLink({ className = defaultLinkClass }: PrivacyPolic
       </button>
 
       {isOpen ? (
-        <div
-          className="fixed inset-0 z-[100] flex items-center justify-center p-4 text-left"
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="privacy-policy-title"
+        <LegalDocumentModal
+          eyebrow="PRIVACY POLICY"
+          title="개인정보처리방침"
+          titleId="privacy-policy-title"
+          effectiveDate="2026년 7월 25일"
+          closeLabel="개인정보처리방침"
+          onClose={() => setIsOpen(false)}
         >
-          <button
-            type="button"
-            onClick={() => setIsOpen(false)}
-            className="app-modal-backdrop absolute inset-0"
-            aria-label="개인정보처리방침 닫기"
-          />
-          <section className="app-modal-surface relative max-h-[88vh] w-full max-w-4xl overflow-y-auto rounded-2xl border p-5 shadow-2xl sm:p-7">
-            <div className="flex items-start justify-between gap-4">
-              <div>
-                <p className="text-xs font-bold tracking-[0.16em] text-red-600 dark:text-red-400">
-                  PRIVACY POLICY
-                </p>
-                <h2
-                  id="privacy-policy-title"
-                  className="mt-2 text-xl font-bold text-stone-950 dark:text-stone-100 sm:text-2xl"
-                >
-                  개인정보처리방침
-                </h2>
-                <p className="mt-2 text-xs text-stone-500 dark:text-stone-400">
-                  시행일: 2026년 7월 25일
-                </p>
-              </div>
-              <IconCloseButton onClick={() => setIsOpen(false)} label="개인정보처리방침 닫기" />
-            </div>
-
-            <div className="mt-6 space-y-7 text-sm leading-7 text-stone-600 dark:text-stone-300">
+          <div className="space-y-7 text-left text-sm leading-7 text-stone-600 dark:text-stone-300">
               <section>
                 <p>
                   Law Solver 운영자(이하 “운영자”)는 「개인정보 보호법」 등 관계 법령을 준수하며,
@@ -440,19 +417,8 @@ export function PrivacyPolicyLink({ className = defaultLinkClass }: PrivacyPolic
                   받습니다. 이전 처리방침은 운영자에게 이메일로 요청하여 확인할 수 있습니다.
                 </p>
               </section>
-            </div>
-
-            <div className="mt-7 flex justify-end">
-              <button
-                type="button"
-                onClick={() => setIsOpen(false)}
-                className="app-button-secondary rounded-lg px-5 py-2.5 text-sm font-semibold"
-              >
-                닫기
-              </button>
-            </div>
-          </section>
-        </div>
+          </div>
+        </LegalDocumentModal>
       ) : null}
     </>
   );
