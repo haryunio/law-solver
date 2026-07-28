@@ -3,6 +3,7 @@ import { createId } from "./id";
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL?.trim() ?? "";
 const publishableKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY?.trim() ?? "";
+const SESSION_REFRESH_LEEWAY_SECONDS = 60;
 
 export const isPremiumBackendConfigured = Boolean(supabaseUrl && publishableKey);
 export const premiumSupabase = isPremiumBackendConfigured
@@ -297,11 +298,61 @@ function requireClient() {
   return premiumSupabase;
 }
 
-async function accessToken() {
+let sessionRefresh: Promise<Session> | null = null;
+
+function shouldRefreshSession(session: Session): boolean {
+  if (typeof session.expires_at !== "number") return false;
+  return session.expires_at <= Math.floor(Date.now() / 1000) + SESSION_REFRESH_LEEWAY_SECONDS;
+}
+
+async function refreshCurrentSession(): Promise<Session> {
+  if (sessionRefresh) return sessionRefresh;
+
+  sessionRefresh = (async () => {
+    const { data, error } = await requireClient().auth.refreshSession();
+    if (error) {
+      throw new PremiumApiError(error.message, "AUTH_SESSION_ERROR", error.status ?? 401);
+    }
+    if (!data.session) {
+      throw new PremiumApiError("로그인이 필요합니다.", "AUTH_REQUIRED", 401);
+    }
+    return data.session;
+  })();
+
+  try {
+    return await sessionRefresh;
+  } finally {
+    sessionRefresh = null;
+  }
+}
+
+async function currentSession(): Promise<Session | null> {
   const { data, error } = await requireClient().auth.getSession();
   if (error) throw new PremiumApiError(error.message, "AUTH_SESSION_ERROR");
-  if (!data.session) throw new PremiumApiError("로그인이 필요합니다.", "AUTH_REQUIRED", 401);
-  return data.session.access_token;
+  if (!data.session) return null;
+  return shouldRefreshSession(data.session) ? refreshCurrentSession() : data.session;
+}
+
+async function accessToken(forceRefresh = false) {
+  const session = forceRefresh ? await refreshCurrentSession() : await currentSession();
+  if (!session) throw new PremiumApiError("로그인이 필요합니다.", "AUTH_REQUIRED", 401);
+  return session.access_token;
+}
+
+function authenticatedFetch(
+  functionName: string,
+  path: string,
+  init: RequestInit,
+  token: string,
+) {
+  const headers = new Headers(init.headers);
+  headers.set("Authorization", `Bearer ${token}`);
+  headers.set("apikey", publishableKey);
+  if (init.body) headers.set("Content-Type", "application/json");
+  return fetch(`${supabaseUrl}/functions/v1/${functionName}${path}`, {
+    ...init,
+    headers,
+  });
 }
 
 async function apiRequest<T>(
@@ -309,15 +360,15 @@ async function apiRequest<T>(
   path = "",
   init: RequestInit = {},
 ): Promise<T> {
-  const token = await accessToken();
-  const headers = new Headers(init.headers);
-  headers.set("Authorization", `Bearer ${token}`);
-  headers.set("apikey", publishableKey);
-  if (init.body) headers.set("Content-Type", "application/json");
-  const response = await fetch(`${supabaseUrl}/functions/v1/${functionName}${path}`, {
-    ...init,
-    headers,
-  });
+  let response = await authenticatedFetch(functionName, path, init, await accessToken());
+
+  // A browser tab can resume before Supabase's visibility-based auto refresh finishes.
+  // A 401 means the Edge Function rejected the request before domain work ran, so the
+  // same request (and the same idempotency key for mutations) is safe to retry once.
+  if (response.status === 401) {
+    response = await authenticatedFetch(functionName, path, init, await accessToken(true));
+  }
+
   const payload = await response.json().catch(() => null) as ({ data?: T } & ApiErrorBody) | null;
   if (!response.ok) {
     throw new PremiumApiError(
@@ -378,9 +429,7 @@ export async function signOut() {
 
 export async function getCurrentSession() {
   if (!premiumSupabase) return null;
-  const { data, error } = await premiumSupabase.auth.getSession();
-  if (error) throw new PremiumApiError(error.message, "AUTH_SESSION_ERROR");
-  return data.session;
+  return currentSession();
 }
 
 export function onAuthStateChange(
