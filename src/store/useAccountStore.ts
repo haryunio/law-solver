@@ -38,7 +38,7 @@ interface AccountStore {
   logout: () => Promise<void>;
   purchase: (productCode: string) => Promise<void>;
   redeemPromotion: (productCode: string, promotionCode: string) => Promise<void>;
-  refreshAccount: () => Promise<void>;
+  refreshAccount: (options?: { silent?: boolean }) => Promise<void>;
   refreshMarketplace: () => Promise<void>;
   clearFeedback: () => void;
 }
@@ -70,6 +70,7 @@ const accountState = (account: AccountData) => {
 
 let unsubscribeAuth: (() => void) | null = null;
 let initialization: Promise<void> | null = null;
+let accountRefresh: Promise<void> | null = null;
 
 export const useAccountStore = create<AccountStore>((set, get) => ({
   configured: isPremiumBackendConfigured,
@@ -89,26 +90,40 @@ export const useAccountStore = create<AccountStore>((set, get) => ({
         set({ initialized: true });
         return;
       }
+
+      // Keep the Auth listener alive even if the first account request fails. Otherwise a
+      // suspended tab can miss TOKEN_REFRESHED and remain stale until a full page reload.
+      if (!unsubscribeAuth) {
+        unsubscribeAuth = onAuthStateChange((event, nextSession) => {
+          if (!nextSession) {
+            set({ ...signedOutState, isLoading: false });
+            return;
+          }
+          if (event === "INITIAL_SESSION" && initialization) return;
+          void get().refreshAccount({ silent: true });
+        });
+      }
+
       set({ isLoading: true, error: null });
       try {
+        const marketplaceRequest = listMarketplaceProducts()
+          .then((marketplaceProducts) => set({ marketplaceProducts }))
+          .catch((error: unknown) => {
+            set({
+              error: getPremiumErrorMessage(
+                error,
+                "판매 중인 상품을 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.",
+              ),
+            });
+          });
         const session = await getCurrentSession();
-        const marketplaceProducts = await listMarketplaceProducts();
-        set({ marketplaceProducts });
         if (session) {
           const account = await getAccount();
           set(accountState(account));
         } else {
           set(signedOutState);
         }
-        if (!unsubscribeAuth) {
-          unsubscribeAuth = onAuthStateChange((_event, nextSession) => {
-            if (!nextSession) {
-              set({ ...signedOutState, isLoading: false });
-              return;
-            }
-            void get().refreshAccount();
-          });
-        }
+        await marketplaceRequest;
       } catch (error) {
         set({
           error: getPremiumErrorMessage(
@@ -127,25 +142,36 @@ export const useAccountStore = create<AccountStore>((set, get) => ({
     }
   },
 
-  refreshAccount: async () => {
+  refreshAccount: async (options = {}) => {
     if (!isPremiumBackendConfigured) return;
-    set({ isLoading: true, error: null });
-    try {
-      const session = await getCurrentSession();
-      if (!session) {
-        set(signedOutState);
-        return;
+    if (accountRefresh) return accountRefresh;
+
+    accountRefresh = (async () => {
+      if (!options.silent) set({ isLoading: true });
+      set({ error: null });
+      try {
+        const session = await getCurrentSession();
+        if (!session) {
+          set(signedOutState);
+          return;
+        }
+        set(accountState(await getAccount()));
+      } catch (error) {
+        set({
+          error: getPremiumErrorMessage(
+            error,
+            "계정 정보를 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.",
+          ),
+        });
+      } finally {
+        if (!options.silent) set({ isLoading: false });
       }
-      set(accountState(await getAccount()));
-    } catch (error) {
-      set({
-        error: getPremiumErrorMessage(
-          error,
-          "계정 정보를 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.",
-        ),
-      });
+    })();
+
+    try {
+      await accountRefresh;
     } finally {
-      set({ isLoading: false });
+      accountRefresh = null;
     }
   },
 

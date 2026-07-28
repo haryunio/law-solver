@@ -38,6 +38,7 @@ License: CC BY-NC-ND
 - Premium·문제 유형 태그와 전체 문항·풀이 세션 수를 표시하는 온라인 문제 카드, 문제별 세션 목록 및 전체·오답·책갈피 재풀이 누적
 - 오프라인 CSV와 Premium 온라인 풀이·결과·오답 확인·전체 확인이 같은 컴포넌트·박스형 지문·OMR UI 사용
 - Premium 답안은 문항을 떠날 때 저장하고, 정답·해설은 `?`를 누른 현재 문항만 지연 조회
+- 장시간 유휴 탭 복귀 시 Supabase session을 자동 갱신하고, 인증 401 요청은 같은 멱등키로 한 번 재시도하며 계정 상태를 현재 화면에서 복구
 - 인증·권한·결제·네트워크 오류는 기술 원문 대신 다음 행동을 안내하는 한국어 메시지로 표시
 - 일시적인 성공·오류 안내는 메뉴와 카드 레이아웃을 밀지 않는 고정 토스트로 표시
 - Premium 비동기 페이지 전환은 실제 카드·풀이·결과 레이아웃을 닮은 스켈레톤과 버튼 스피너로 표시
@@ -70,6 +71,14 @@ Law Solver Premium은 배포·권한 경계가 다른 두 저장소로 나눕니
 프론트는 `develop`을 통합 개발 기준으로 사용하고 Premium 기능은 `feature/premium`에서 작업합니다. 서버는 `develop`에서 기능을 통합하고 검증된 상태만 `main`으로 반영합니다. 서버는 PR CI와 수동 승인형 Supabase production 배포 workflow를 사용하며 production seed/reset은 허용하지 않습니다.
 
 API·DTO·권한 계약은 서버의 `docs/API.md`, `docs/AUTHORIZATION.md`, `docs/FRONTEND_INTEGRATION.md`가 기준입니다. 계약 변경은 서버 구현과 문서를 먼저 갱신한 뒤 이 저장소의 `src/lib/premiumApi.ts`와 화면을 맞추고, 각 저장소에 독립적인 커밋으로 남깁니다. 서버 콘텐츠와 secret은 프론트 저장소로 복사하지 않습니다.
+
+### 프론트 Git·릴리즈 흐름
+
+- 작업 브랜치는 `develop`에서 분기하고, 검증 후 PR로 `develop`에 통합합니다. Premium 장기 작업은 `feature/premium`을 사용하되 해당 릴리즈 범위에 포함하기로 한 경우에만 `develop`에 병합합니다.
+- 운영 반영은 `develop`에서 `main`으로 보내는 PR로만 진행하며 `main`에 직접 커밋하거나 푸시하지 않습니다. 릴리즈와 무관한 작업 브랜치는 함께 병합하지 않습니다.
+- `npm test`와 `npm run build`를 통과한 `main` 병합 커밋에 `vX.Y.Z` 태그를 만들고 GitHub Release를 발행합니다.
+- Git 태그와 GitHub Release 이름은 모두 같은 버전 문자열만 사용합니다. 예: `v1.0.3`. 릴리즈 이름에 `Law Solver` 같은 제품명 접두사나 접미사를 붙이지 않습니다.
+- 프론트와 서버 변경은 저장소별로 별도 커밋·PR·검증·릴리즈를 진행합니다.
 
 ## 디렉터리 구조
 
