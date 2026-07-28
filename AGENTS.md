@@ -19,6 +19,16 @@
 - 두 저장소에 걸친 변경은 각각 검증하고 별도 커밋으로 남깁니다. 한 저장소의 커밋에 다른 저장소 파일을 포함하거나 두 저장소의 배포를 암묵적으로 묶지 마세요.
 - 프론트는 `develop`을 통합 기준으로 하고 Premium 작업은 `feature/premium`에서 진행합니다. 서버는 `develop`에서 통합하고 안정 상태만 `main`으로 반영하며, 서버 CI/CD는 별도 결정 전까지 수동 검증·배포를 기준으로 합니다.
 
+## Git 브랜치와 릴리즈 규칙
+
+- 프론트 작업 브랜치는 `develop`에서 분기하고 PR로 `develop`에 통합합니다. Premium 장기 작업은 `feature/premium`을 사용하며, 단기 수정 브랜치는 작업 목적이 드러나는 이름을 사용합니다.
+- 운영 `main`에는 직접 커밋하거나 푸시하지 않습니다. 검증된 `develop`만 PR로 `main`에 병합합니다.
+- 릴리즈할 때 현재 범위와 무관한 작업 브랜치를 함께 병합하지 마세요. 특히 `feature/premium`은 해당 릴리즈에 Premium 변경을 포함하기로 명시된 경우에만 `develop`에 병합합니다.
+- 프론트 릴리즈 순서는 작업 브랜치 푸시, 작업 브랜치에서 `develop`으로 PR·병합, `npm test`와 `npm run build` 확인, `develop`에서 `main`으로 PR·병합, `main` 병합 커밋 태깅과 GitHub Release 발행입니다.
+- 태그와 GitHub Release 이름은 동일한 `vX.Y.Z` 형식의 버전 문자열만 사용합니다. `Law Solver vX.Y.Z`, `Release Law Solver vX.Y.Z`처럼 제품명이나 설명을 릴리즈 이름에 붙이지 마세요.
+- 릴리즈 태그는 해당 버전의 `main` 병합 커밋을 가리켜야 합니다. 이미 발행한 태그를 이동하거나 재사용하지 말고, 명시적인 정정 요청이 있을 때만 기존 릴리즈 메타데이터를 수정합니다.
+- 서버 저장소 변경은 프론트 릴리즈에 암묵적으로 포함하지 않고 서버 저장소의 별도 브랜치·PR·검증·배포 절차를 따릅니다.
+
 ## 기술 스택
 
 - React 18 + Functional Components + Hooks

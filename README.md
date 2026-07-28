@@ -72,6 +72,14 @@ Law Solver Premium은 배포·권한 경계가 다른 두 저장소로 나눕니
 
 API·DTO·권한 계약은 서버의 `docs/API.md`, `docs/AUTHORIZATION.md`, `docs/FRONTEND_INTEGRATION.md`가 기준입니다. 계약 변경은 서버 구현과 문서를 먼저 갱신한 뒤 이 저장소의 `src/lib/premiumApi.ts`와 화면을 맞추고, 각 저장소에 독립적인 커밋으로 남깁니다. 서버 콘텐츠와 secret은 프론트 저장소로 복사하지 않습니다.
 
+### 프론트 Git·릴리즈 흐름
+
+- 작업 브랜치는 `develop`에서 분기하고, 검증 후 PR로 `develop`에 통합합니다. Premium 장기 작업은 `feature/premium`을 사용하되 해당 릴리즈 범위에 포함하기로 한 경우에만 `develop`에 병합합니다.
+- 운영 반영은 `develop`에서 `main`으로 보내는 PR로만 진행하며 `main`에 직접 커밋하거나 푸시하지 않습니다. 릴리즈와 무관한 작업 브랜치는 함께 병합하지 않습니다.
+- `npm test`와 `npm run build`를 통과한 `main` 병합 커밋에 `vX.Y.Z` 태그를 만들고 GitHub Release를 발행합니다.
+- Git 태그와 GitHub Release 이름은 모두 같은 버전 문자열만 사용합니다. 예: `v1.0.3`. 릴리즈 이름에 `Law Solver` 같은 제품명 접두사나 접미사를 붙이지 않습니다.
+- 프론트와 서버 변경은 저장소별로 별도 커밋·PR·검증·릴리즈를 진행합니다.
+
 ## 디렉터리 구조
 
 ```txt
