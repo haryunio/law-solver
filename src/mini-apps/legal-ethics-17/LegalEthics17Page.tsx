@@ -62,7 +62,7 @@ export function LegalEthics17Page() {
               1번부터 40번까지의 가답안과 문항별 핵심 해설을 정리했습니다.
             </p>
             <p className="mt-3 text-sm leading-6 text-amber-700 dark:text-amber-300">
-              자체 자료로 정리한 1차 가답안으로, 추후 발표되는 공식 정답과 다를 수 있습니다.
+              자체 자료로 정리한 1차 가답안으로, 추후 발표되는 공식 정답과 다를 수 있습니다. (2026. 8. 1. 16시 법무부 공식 가답안과 일치 확인되었습니다.)
             </p>
           </div>
         </section>
