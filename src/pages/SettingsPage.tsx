@@ -1,11 +1,17 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { AppFooter } from "../components/ui/AppFooter";
+import { CloudBackupSection } from "../components/premium/CloudBackupSection";
 import { ConfirmDialog } from "../components/ui/ConfirmDialog";
 import { DashboardHeaderTitle } from "../components/ui/DashboardHeaderTitle";
 import { ReturnLinkLabel } from "../components/ui/ReturnLinkLabel";
 import { FontFamily, useSettingsStore } from "../store/useSettingsStore";
 import { useTestStore } from "../store/useTestStore";
+import {
+  DashboardBackupValidationError,
+  parseDashboardBackupJson,
+} from "../lib/dashboardBackup";
+import { CLOUD_BACKUP_MAX_PLAINTEXT_BYTES } from "../lib/cloudBackupCrypto";
 
 type SettingsTab = "appearance" | "data";
 
@@ -50,65 +56,47 @@ export function SettingsPage() {
     const input = document.createElement("input");
     input.type = "file";
     input.accept = ".json";
-    input.onchange = (event) => {
+    input.onchange = async (event) => {
       const file = (event.target as HTMLInputElement).files?.[0];
       if (!file) return;
-
-      const reader = new FileReader();
-      reader.onload = (readerEvent) => {
-        try {
-          const content = readerEvent.target?.result as string;
-          const data = JSON.parse(content);
-          if (!Array.isArray(data) && !(data && Array.isArray(data.sessions))) {
+      try {
+        if (file.size > CLOUD_BACKUP_MAX_PLAINTEXT_BYTES) {
+          throw new DashboardBackupValidationError("백업 JSON 파일은 30MB까지 불러올 수 있습니다.");
+        }
+        const data = parseDashboardBackupJson(await file.text());
+        setDialog({
+          title: "오프라인 데이터를 불러올까요?",
+          description:
+            "현재 브라우저의 과목, 문제, 풀이내역과 오답노트가 백업 파일 내용으로 모두 덮어씌워집니다.",
+          confirmLabel: "불러오기",
+          variant: "danger",
+          onCancel: () => setDialog(null),
+          onConfirm: () => {
+            importDashboardData({
+              sessions: data.sessions,
+              subjects: data.subjects,
+              sessionSubjectMap: data.sessionSubjectMap,
+              dataModifiedAt: data.data_modified_at,
+            });
             setDialog({
-              title: "백업 파일을 확인해 주세요.",
-              description: "올바른 Law Solver 백업 JSON 형식이 아닙니다.",
+              title: "복구가 완료되었습니다.",
+              description: "백업 파일의 오프라인 데이터가 이 브라우저에 반영되었습니다.",
               confirmLabel: "확인",
+              variant: "success",
               onConfirm: () => setDialog(null),
             });
-            return;
-          }
-
-          setDialog({
-            title: "오프라인 데이터를 불러올까요?",
-            description:
-              "현재 브라우저의 과목, 문제, 풀이내역과 오답노트가 백업 파일 내용으로 모두 덮어씌워집니다.",
-            confirmLabel: "불러오기",
-            variant: "danger",
-            onCancel: () => setDialog(null),
-            onConfirm: () => {
-              if (Array.isArray(data)) {
-                importDashboardData({
-                  sessions: data,
-                  subjects: [],
-                  sessionSubjectMap: {},
-                });
-              } else {
-                importDashboardData({
-                  sessions: data.sessions,
-                  subjects: data.subjects,
-                  sessionSubjectMap: data.sessionSubjectMap,
-                });
-              }
-              setDialog({
-                title: "복구가 완료되었습니다.",
-                description: "백업 파일의 오프라인 데이터가 이 브라우저에 반영되었습니다.",
-                confirmLabel: "확인",
-                variant: "success",
-                onConfirm: () => setDialog(null),
-              });
-            },
-          });
-        } catch {
-          setDialog({
-            title: "파일을 읽지 못했습니다.",
-            description: "JSON 파일이 손상되었거나 읽을 수 없는 형식입니다.",
-            confirmLabel: "확인",
-            onConfirm: () => setDialog(null),
-          });
-        }
-      };
-      reader.readAsText(file);
+          },
+        });
+      } catch (error) {
+        setDialog({
+          title: "파일을 읽지 못했습니다.",
+          description: error instanceof DashboardBackupValidationError
+            ? error.message
+            : "JSON 파일이 손상되었거나 읽을 수 없는 형식입니다.",
+          confirmLabel: "확인",
+          onConfirm: () => setDialog(null),
+        });
+      }
     };
     input.click();
   };
@@ -297,6 +285,7 @@ export function SettingsPage() {
                   </button>
                 </article>
               </div>
+              <CloudBackupSection />
             </section>
           )}
         </div>

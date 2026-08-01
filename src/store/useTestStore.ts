@@ -28,12 +28,14 @@ interface ImportDashboardDataInput {
   sessions: TestSession[];
   subjects?: Subject[];
   sessionSubjectMap?: SessionSubjectMap;
+  dataModifiedAt?: string;
 }
 
 interface TestStore {
   sessions: TestSession[];
   subjects: Subject[];
   sessionSubjectMap: SessionSubjectMap;
+  dataUpdatedAt: string;
   createSession: (input: CreateSessionInput) => string;
   deleteSession: (sessionId: string) => void;
   updateSessionTitle: (sessionId: string, title: string) => void;
@@ -71,6 +73,8 @@ const calcScore = (questions: ParsedQuestion[]) => {
   const correct = questions.filter((q) => q.my_answer !== "" && q.my_answer === q.answer).length;
   return Math.round((correct / questions.length) * 100);
 };
+
+const modifiedNow = () => new Date().toISOString();
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === "object" && value !== null;
@@ -132,6 +136,11 @@ const normalizeDashboardData = (value: unknown): ImportDashboardDataInput => {
     sessions,
     subjects,
     sessionSubjectMap: normalizeSessionSubjectMap(state.sessionSubjectMap, sessions, subjects),
+    dataModifiedAt: typeof state.dataUpdatedAt === "string"
+      ? state.dataUpdatedAt
+      : typeof state.dataModifiedAt === "string"
+      ? state.dataModifiedAt
+      : modifiedNow(),
   };
 };
 
@@ -141,6 +150,7 @@ export const useTestStore = create<TestStore>()(
       sessions: [],
       subjects: [],
       sessionSubjectMap: {},
+      dataUpdatedAt: modifiedNow(),
       createSession: ({ title, type, orderMode, questions, subjectId }) => {
         const id = createId();
         const orderedQuestions = orderQuestions(questions, orderMode);
@@ -165,6 +175,7 @@ export const useTestStore = create<TestStore>()(
 
           return {
             sessions: [session, ...state.sessions],
+            dataUpdatedAt: modifiedNow(),
             sessionSubjectMap: shouldAssign
               ? { ...state.sessionSubjectMap, [id]: subjectId }
               : state.sessionSubjectMap,
@@ -178,6 +189,7 @@ export const useTestStore = create<TestStore>()(
           return {
             sessions: state.sessions.filter((session) => session.id !== sessionId),
             sessionSubjectMap: nextMap,
+            dataUpdatedAt: modifiedNow(),
           };
         }),
       updateSessionTitle: (sessionId, title) =>
@@ -185,6 +197,7 @@ export const useTestStore = create<TestStore>()(
           sessions: state.sessions.map((session) =>
             session.id === sessionId ? { ...session, title } : session,
           ),
+          dataUpdatedAt: modifiedNow(),
         })),
       createSubject: (name, coverPalette = "warm") => {
         const trimmedName = name.trim();
@@ -197,7 +210,7 @@ export const useTestStore = create<TestStore>()(
           created_at: new Date().toISOString(),
           cover_palette: coverPalette,
         };
-        set((state) => ({ subjects: [subject, ...state.subjects] }));
+        set((state) => ({ subjects: [subject, ...state.subjects], dataUpdatedAt: modifiedNow() }));
         return id;
       },
       renameSubject: (subjectId, name) => {
@@ -208,6 +221,7 @@ export const useTestStore = create<TestStore>()(
           subjects: state.subjects.map((subject) =>
             subject.id === subjectId ? { ...subject, name: trimmedName } : subject,
           ),
+          dataUpdatedAt: modifiedNow(),
         }));
       },
       updateSubject: (subjectId, updates) => {
@@ -224,6 +238,7 @@ export const useTestStore = create<TestStore>()(
               ...(updates.coverPalette ? { cover_palette: updates.coverPalette } : {}),
             };
           }),
+          dataUpdatedAt: modifiedNow(),
         }));
       },
       reorderSubject: (sourceSubjectId, targetSubjectId, placement = "before") =>
@@ -234,6 +249,7 @@ export const useTestStore = create<TestStore>()(
             targetSubjectId,
             placement,
           ),
+          dataUpdatedAt: modifiedNow(),
         })),
       deleteSubject: (subjectId) =>
         set((state) => {
@@ -250,6 +266,7 @@ export const useTestStore = create<TestStore>()(
               },
               {},
             ),
+            dataUpdatedAt: modifiedNow(),
           };
         }),
       assignSessionSubject: (sessionId, subjectId) =>
@@ -264,13 +281,15 @@ export const useTestStore = create<TestStore>()(
             sessionSubjectMap: shouldAssign
               ? { ...nextMap, [sessionId]: subjectId }
               : nextMap,
+            dataUpdatedAt: modifiedNow(),
           };
         }),
       getSessionSubjectId: (sessionId) => get().sessionSubjectMap[sessionId] ?? null,
       getDashboardBackupData: () => ({
         app: "law-solver",
-        version: 2,
+        version: 3,
         exported_at: new Date().toISOString(),
+        data_modified_at: get().dataUpdatedAt,
         sessions: get().sessions,
         subjects: get().subjects,
         sessionSubjectMap: get().sessionSubjectMap,
@@ -289,6 +308,7 @@ export const useTestStore = create<TestStore>()(
               solved_questions: calcSolved(nextQuestions),
             };
           }),
+          dataUpdatedAt: modifiedNow(),
         })),
       updateWrongNote: (sessionId, questionId, note) =>
         set((state) => ({
@@ -301,6 +321,7 @@ export const useTestStore = create<TestStore>()(
               ),
             };
           }),
+          dataUpdatedAt: modifiedNow(),
         })),
       toggleBookmark: (sessionId, questionId) =>
         set((state) => ({
@@ -313,6 +334,7 @@ export const useTestStore = create<TestStore>()(
               ),
             };
           }),
+          dataUpdatedAt: modifiedNow(),
         })),
       tickElapsedTime: (sessionId) =>
         set((state) => ({
@@ -321,6 +343,7 @@ export const useTestStore = create<TestStore>()(
               ? { ...session, elapsed_time: session.elapsed_time + 1 }
               : session,
           ),
+          dataUpdatedAt: modifiedNow(),
         })),
       submitSession: (sessionId) =>
         set((state) => ({
@@ -333,16 +356,35 @@ export const useTestStore = create<TestStore>()(
               status: "completed",
             };
           }),
+          dataUpdatedAt: modifiedNow(),
         })),
       getSessionById: (sessionId) => get().sessions.find((session) => session.id === sessionId),
-      resetSessions: () => set({ sessions: [], subjects: [], sessionSubjectMap: {} }),
-      importSessions: (sessions) => set({ sessions, subjects: [], sessionSubjectMap: {} }),
-      importDashboardData: (data) => set(normalizeDashboardData(data)),
+      resetSessions: () =>
+        set({ sessions: [], subjects: [], sessionSubjectMap: {}, dataUpdatedAt: modifiedNow() }),
+      importSessions: (sessions) =>
+        set({ sessions, subjects: [], sessionSubjectMap: {}, dataUpdatedAt: modifiedNow() }),
+      importDashboardData: (data) => {
+        const normalized = normalizeDashboardData(data);
+        set({
+          sessions: normalized.sessions,
+          subjects: normalized.subjects ?? [],
+          sessionSubjectMap: normalized.sessionSubjectMap ?? {},
+          dataUpdatedAt: normalized.dataModifiedAt ?? modifiedNow(),
+        });
+      },
     }),
     {
       name: "law-solver-storage",
-      version: 2,
-      migrate: (persistedState) => normalizeDashboardData(persistedState),
+      version: 3,
+      migrate: (persistedState) => {
+        const normalized = normalizeDashboardData(persistedState);
+        return {
+          sessions: normalized.sessions,
+          subjects: normalized.subjects ?? [],
+          sessionSubjectMap: normalized.sessionSubjectMap ?? {},
+          dataUpdatedAt: normalized.dataModifiedAt ?? modifiedNow(),
+        };
+      },
     },
   ),
 );
