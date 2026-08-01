@@ -74,7 +74,7 @@ API·DTO·권한 계약은 서버의 `docs/API.md`, `docs/AUTHORIZATION.md`, `do
 
 ### 프론트 Git·릴리즈 흐름
 
-- 작업 브랜치는 `develop`에서 분기하고, 검증 후 PR로 `develop`에 통합합니다. Premium 장기 작업은 `feature/premium`을 사용하되 해당 릴리즈 범위에 포함하기로 한 경우에만 `develop`에 병합합니다.
+- 문구·문서·버전처럼 작고 위험이 낮은 변경은 `develop`에 직접 커밋·푸시합니다. 상당한 기능 추가나 구조 변경은 `develop`에서 작업 브랜치를 분기하고 검증 후 PR로 통합한 다음 작업 브랜치를 삭제합니다. Premium 장기 작업은 `feature/premium`을 사용하되 해당 릴리즈 범위에 포함하기로 한 경우에만 `develop`에 병합합니다.
 - 운영 반영은 `develop`에서 `main`으로 보내는 PR로만 진행하며 `main`에 직접 커밋하거나 푸시하지 않습니다. 릴리즈와 무관한 작업 브랜치는 함께 병합하지 않습니다.
 - `npm test`와 `npm run build`를 통과한 `main` 병합 커밋에 `vX.Y.Z` 태그를 만들고 GitHub Release를 발행합니다.
 - Git 태그와 GitHub Release 이름은 모두 같은 버전 문자열만 사용합니다. 예: `v1.0.3`. 릴리즈 이름에 `Law Solver` 같은 제품명 접두사나 접미사를 붙이지 않습니다.
