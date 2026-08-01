@@ -409,7 +409,7 @@ export function AccountSubscriptionPage() {
                     </li>
                     <li className="flex items-center gap-2">
                       <span className="text-red-600 dark:text-red-400" aria-hidden="true">✓</span>
-                      오프라인 문제풀이 데이터 클라우드 백업 기능
+                      오프라인 문제 풀이 데이터 클라우드 백업 기능
                     </li>
                   </ul>
                 </div>

@@ -171,7 +171,7 @@ LBTI의 네 지표와 16개 유형은 [`lbti-framework.json`](src/mini-apps/lbti
 - `/apps/lbti/types`: 16개 전체 유형
 - `/apps/lbti/result/:typeCode`: 공유 가능한 유형별 결과
 - `/home`: 환경설정, 계정·구독, 온라인·오프라인 문제 풀이로 이동하는 서비스 홈
-- `/settings`: 테마·글꼴 설정과 오프라인 문제풀이 데이터 백업/복원/초기화
+- `/settings`: 테마·글꼴 설정과 오프라인 문제 풀이 데이터 백업/복원/초기화
 - `/account`: Supabase Auth 계정과 Premium 회원권·과목 이용권
 - `/premium`: 이용 가능한 온라인 Premium 과목
 - `/premium/courses/:courseId`: 과목별 온라인 문제 카드
@@ -209,7 +209,7 @@ LBTI의 네 지표와 16개 유형은 [`lbti-framework.json`](src/mini-apps/lbti
 | `mini_apps` | `/apps` | 미니 앱 목록 |
 | `mini_app` | `/apps/mini-app` | 개별 미니 앱 화면 |
 | `app_home` | `/home` | 서비스 홈 |
-| `settings` | `/settings` | 환경설정과 오프라인 문제풀이 데이터 관리 |
+| `settings` | `/settings` | 환경설정과 오프라인 문제 풀이 데이터 관리 |
 | `account` | `/account` | 계정 및 구독 |
 | `premium_dashboard` | `/premium` | 온라인 Premium 대시보드 |
 | `subject_dashboard` | `/dashboard` | 과목 대시보드 |
@@ -341,7 +341,7 @@ GitHub Pages 배포:
 
 ## 데이터 백업/복원
 
-`/settings`의 `오프라인 문제풀이 데이터` 탭에서 수행하는 백업/복원은 과목별이 아니라 현재 브라우저의 전체 오프라인 데이터베이스 단위입니다. 백업은 다음 데이터를 하나의 JSON으로 저장합니다.
+`/settings`의 `오프라인 문제 풀이 데이터` 탭에서 수행하는 백업/복원은 과목별이 아니라 현재 브라우저의 전체 오프라인 데이터베이스 단위입니다. 백업은 다음 데이터를 하나의 JSON으로 저장합니다.
 
 - 문제 세션과 유저 답안
 - 과목 목록

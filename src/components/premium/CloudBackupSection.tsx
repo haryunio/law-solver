@@ -177,7 +177,7 @@ export function CloudBackupSection() {
       const nextMetadata = await commitCloudBackupUpload(intent.uploadId);
       setMetadata(nextMetadata);
       resetModal();
-      setToast({ message: "오프라인 문제풀이 데이터를 안전하게 클라우드에 백업했습니다.", tone: "success" });
+      setToast({ message: "오프라인 문제 풀이 데이터를 안전하게 클라우드에 백업했습니다.", tone: "success" });
     } catch (error) {
       setModalError(
         error instanceof CloudBackupCryptoError
@@ -241,7 +241,7 @@ export function CloudBackupSection() {
       dataModifiedAt: restoredData.data_modified_at,
     });
     closeModal();
-    setToast({ message: "클라우드의 오프라인 문제풀이 데이터를 이 브라우저에 반영했습니다.", tone: "success" });
+    setToast({ message: "클라우드의 오프라인 문제 풀이 데이터를 이 브라우저에 반영했습니다.", tone: "success" });
   };
 
   const removeBackup = async () => {
@@ -287,10 +287,10 @@ export function CloudBackupSection() {
               <PremiumBadge />
             </div>
             <h2 className="mt-2 text-xl font-bold text-stone-950 dark:text-stone-100">
-              오프라인 문제풀이 데이터를 클라우드에 백업하기
+              오프라인 문제 풀이 데이터를 클라우드에 백업하기
             </h2>
             <p className="mt-1 max-w-2xl text-xs leading-5 text-stone-500 dark:text-stone-400">
-              사용자가 요청할 때만 오프라인 문제풀이 데이터를 압축·암호화해 Law Solver 클라우드 서버에 저장합니다. 비밀번호와 복호화된 내용은 Law Solver 서버로 전송되지 않으며, 본인 외에는 그 내용을 확인할 수 없습니다.
+              사용자가 요청할 때만 오프라인 문제 풀이 데이터를 압축·암호화해 Law Solver 클라우드 서버에 저장합니다. 비밀번호와 복호화된 내용은 Law Solver 서버로 전송되지 않으며, 본인 외에는 그 내용을 확인할 수 없습니다.
             </p>
           </div>
           {loading ? (
@@ -488,7 +488,7 @@ export function CloudBackupSection() {
       {deleteConfirm ? (
         <ConfirmDialog
           title="클라우드 데이터를 삭제할까요?"
-          description="서버에 보관된 암호화 데이터와 임시 업로드를 삭제합니다. 현재 브라우저의 오프라인 문제풀이 데이터는 삭제되지 않으며, 이 작업은 되돌릴 수 없습니다."
+          description="서버에 보관된 암호화 데이터와 임시 업로드를 삭제합니다. 현재 브라우저의 오프라인 문제 풀이 데이터는 삭제되지 않으며, 이 작업은 되돌릴 수 없습니다."
           confirmLabel="클라우드 데이터 삭제"
           variant="danger"
           onCancel={() => setDeleteConfirm(false)}
