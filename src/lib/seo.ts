@@ -51,6 +51,12 @@ const publicMetadata: Record<string, SeoMetadata> = {
     indexable: true,
     canonicalPath: "/apps/lbti/types/",
   },
+  "/apps/legal-ethics-17": {
+    title: "Law Solver | 제17회 법조윤리시험 가답안",
+    description: "제17회 법조윤리시험 1번부터 40번까지의 가답안과 문항별 핵심 해설을 확인하고 답안을 자동채점하세요.",
+    indexable: true,
+    canonicalPath: "/apps/legal-ethics-17/",
+  },
   "/dashboard": {
     title: "Law Solver | 대시보드",
     description: "과목별로 문제를 정리하고, 시험처럼 풀고, 바로 복습하세요.",
@@ -115,6 +121,7 @@ export const INDEXABLE_PATHS = [
   "/apps",
   "/apps/lbti",
   "/apps/lbti/types",
+  "/apps/legal-ethics-17",
   "/dashboard",
   ...framework.types.map((type) => `/apps/lbti/result/${type.code.toLowerCase()}`),
 ] as const;

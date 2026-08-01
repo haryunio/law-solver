@@ -144,6 +144,7 @@ Law Solver는 랜딩부터 문제 풀이, 결과, 오답 복기 화면까지 하
 
 | 앱 | 폴더 | 현재 상태 |
 | --- | --- | --- |
+| 제17회 법조윤리시험 가답안 | `legal-ethics-17/` | Available |
 | LBTI: 로스쿨생 MBTI 테스트 | `lbti/` | Available |
 | 조문 리콜 | `statute-recall/` | Coming Soon |
 | 스터디 플래너 | `study-planner/` | Coming Soon |
@@ -163,6 +164,7 @@ LBTI의 네 지표와 16개 유형은 [`lbti-framework.json`](src/mini-apps/lbti
 
 - `/`: 랜딩 페이지
 - `/apps`: 미니 앱 목록
+- `/apps/legal-ethics-17`: 제17회 법조윤리시험 가답안·문항별 해설·40문항 자동채점
 - `/apps/lbti`: LBTI 소개
 - `/apps/lbti/test`: 30문항 LBTI 테스트
 - `/apps/lbti/types`: 16개 전체 유형
