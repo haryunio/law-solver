@@ -32,6 +32,8 @@ describe("TermsOfServiceLink", () => {
     expect(dialog.textContent).toContain("제1장 총칙");
     expect(dialog.textContent).toContain("제13조 (Premium 회원권과 과목 이용권의 관계)");
     expect(dialog.textContent).toContain("제29조 (이전 약관의 확인)");
+    expect(dialog.textContent).toContain("AES-256-GCM");
+    expect(dialog.textContent).toContain("마지막 유효 종료일로부터 1년 뒤 자동 삭제");
     expect(dialog.textContent).not.toContain("[확인 필요");
   });
 

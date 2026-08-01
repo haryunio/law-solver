@@ -1,10 +1,13 @@
 {
   "name": "law-solver",
   "private": true,
-  "version": "1.1.1",
+  "version": "1.2.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev": "vite --host 127.0.0.1 --port 5164 --strictPort",
+    "dev:local": "vite --host 127.0.0.1 --port 5164 --strictPort",
+    "env:production": "node scripts/configure-premium-environment.mjs",
+    "dev:production": "npm run env:production && vite --mode hosted --host 127.0.0.1 --port 5174 --strictPort",
     "build": "tsc -b && vite build",
     "preview": "vite preview",
     "test": "vitest run",

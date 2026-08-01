@@ -1,6 +1,6 @@
 # law-solver
 
-오프라인 CSV 문제 풀이와 계정 기반 Premium 온라인 문제 풀이를 함께 제공하는 로스쿨 문제 풀이 웹앱입니다. 오프라인 데이터는 브라우저에만 저장하고, Premium 계정·결제·온라인 학습 데이터는 별도 비공개 Supabase 서버에서 관리합니다.
+오프라인 CSV 문제 풀이와 계정 기반 Premium 온라인 문제 풀이를 함께 제공하는 로스쿨 문제 풀이 웹앱입니다. 오프라인 데이터는 기본적으로 브라우저에 저장하며, 사용자가 Premium 클라우드 백업을 직접 실행한 경우에만 브라우저에서 암호화된 사본을 별도 비공개 Supabase 서버에 보관합니다.
 
 License: CC BY-NC-ND  
 (c) 2026 Haryun all rights reserved
@@ -31,6 +31,7 @@ License: CC BY-NC-ND
 - 오답만 다시 풀기, 전체 새로 풀기, 책갈피 문제만 다시 풀기
 - 전체 결과 CSV, 오답 결과 CSV, 오답노트 CSV 다운로드
 - 과목/문제/풀이 기록을 포함한 대시보드 JSON 백업, 복원, 초기화
+- Premium 회원용 gzip + AES-256-GCM 오프라인 전체 데이터 클라우드 백업·복구
 - 다크 모드와 글꼴 설정
 - Supabase Auth 이메일 회원가입·로그인, Premium 30일 회원권과 과목 이용권
 - 서버 마켓플레이스의 활성 상품명·가격·기간·풀이 횟수를 반영하는 구매 카드, Premium 이용 시작일·최종 종료 예정일 표시와 active Premium 만료일 뒤로 기간을 이어 붙이는 추가 구매
@@ -170,7 +171,7 @@ LBTI의 네 지표와 16개 유형은 [`lbti-framework.json`](src/mini-apps/lbti
 - `/apps/lbti/types`: 16개 전체 유형
 - `/apps/lbti/result/:typeCode`: 공유 가능한 유형별 결과
 - `/home`: 환경설정, 계정·구독, 온라인·오프라인 문제 풀이로 이동하는 서비스 홈
-- `/settings`: 테마·글꼴 설정과 오프라인 데이터 백업/복원/초기화
+- `/settings`: 테마·글꼴 설정과 오프라인 문제 풀이 데이터 백업/복원/초기화
 - `/account`: Supabase Auth 계정과 Premium 회원권·과목 이용권
 - `/premium`: 이용 가능한 온라인 Premium 과목
 - `/premium/courses/:courseId`: 과목별 온라인 문제 카드
@@ -208,7 +209,7 @@ LBTI의 네 지표와 16개 유형은 [`lbti-framework.json`](src/mini-apps/lbti
 | `mini_apps` | `/apps` | 미니 앱 목록 |
 | `mini_app` | `/apps/mini-app` | 개별 미니 앱 화면 |
 | `app_home` | `/home` | 서비스 홈 |
-| `settings` | `/settings` | 환경설정과 오프라인 데이터 관리 |
+| `settings` | `/settings` | 환경설정과 오프라인 문제 풀이 데이터 관리 |
 | `account` | `/account` | 계정 및 구독 |
 | `premium_dashboard` | `/premium` | 온라인 Premium 대시보드 |
 | `subject_dashboard` | `/dashboard` | 과목 대시보드 |
@@ -297,11 +298,21 @@ VITE_SUPABASE_PUBLISHABLE_KEY=<law-solver-server의 npm run status 출력값>
 
 ## 개발 서버 실행
 
+로컬 Supabase를 바라보는 웹은 `5164`, production Supabase를 바라보는 웹은 `5174`로 포트를 고정합니다. 두 명령은 동시에 실행할 수 있으며 포트가 사용 중이면 다른 포트로 이동하지 않고 실패합니다.
+
 ```bash
-npm run dev
+npm run dev:local
 ```
 
-기본 접속 주소는 Vite 기본값인 `http://localhost:5173`입니다.
+로컬 웹 주소는 `http://127.0.0.1:5164`입니다. 기존 `npm run dev`도 같은 로컬 웹을 실행합니다.
+
+운영 데이터를 확인하는 별도 웹은 GitHub repository variable의 공개 publishable key로 무시된 `.env.hosted.local`을 만든 뒤 실행합니다.
+
+```bash
+npm run dev:production
+```
+
+운영 확인 웹 주소는 `http://127.0.0.1:5174`입니다. 이 화면에서 구매·풀이·백업을 실행하면 production 데이터에 실제 반영됩니다. 프론트 환경에는 공개 URL과 publishable key만 들어가며 service role이나 secret key를 사용하지 않습니다.
 
 Premium 로컬 연동은 먼저 형제 저장소 `law-solver-server`에서 Supabase와 Edge Functions를 실행해야 합니다. 자세한 순서는 서버 저장소의 `docs/LOCAL_DEVELOPMENT.md`를 따릅니다.
 
@@ -330,7 +341,7 @@ GitHub Pages 배포:
 
 ## 데이터 백업/복원
 
-`/settings`의 `오프라인 데이터` 탭에서 수행하는 백업/복원은 과목별이 아니라 현재 브라우저의 전체 오프라인 데이터베이스 단위입니다. 백업은 다음 데이터를 하나의 JSON으로 저장합니다.
+`/settings`의 `오프라인 문제 풀이 데이터` 탭에서 수행하는 백업/복원은 과목별이 아니라 현재 브라우저의 전체 오프라인 데이터베이스 단위입니다. 백업은 다음 데이터를 하나의 JSON으로 저장합니다.
 
 - 문제 세션과 유저 답안
 - 과목 목록
@@ -343,8 +354,9 @@ GitHub Pages 배포:
 ```json
 {
   "app": "law-solver",
-  "version": 2,
-  "exported_at": "2026-07-01T00:00:00.000Z",
+  "version": 3,
+  "exported_at": "2026-08-01T00:00:00.000Z",
+  "data_modified_at": "2026-08-01T00:00:00.000Z",
   "sessions": [],
   "subjects": [],
   "sessionSubjectMap": {}
@@ -352,6 +364,15 @@ GitHub Pages 배포:
 ```
 
 이전 버전의 배열 형태 백업도 복원할 수 있습니다. 구형 백업을 복원하면 모든 세션은 `과목 없음`으로 들어갑니다.
+
+Premium 클라우드 백업도 같은 전체 JSON 스냅샷을 사용하되 평문을 전송하지 않습니다. 브라우저에서 gzip 압축 후 사용자가 입력한 8자 이상의 비밀번호를 PBKDF2-SHA256으로 키 파생하여 AES-256-GCM으로 암호화합니다. 서버에는 계정별 최신 암호문 하나와 수정·업로드 시각, 과목·세션·문제 수, 암호문 크기와 형식 버전만 남습니다.
+
+- 압축·암호화 최종본 최대 15MB, 원본 JSON 안전 한도 30MB
+- 백업과 복구 각각 한국시간 기준 하루 5회
+- 잘못된 비밀번호는 현재 복구 모달에 캐시한 암호문으로 다시 시도하므로 추가 다운로드를 만들지 않음
+- 복호화·구조 검증·현재/클라우드 비교와 최종 확인이 모두 끝난 경우에만 localStorage를 원자적으로 교체
+- Premium 만료 후 업로드·복구를 중지하고 마지막 유효 종료일 1년 뒤 서버 백업 자동 삭제
+- 비밀번호·암호화 키·평문은 서버로 전송하거나 저장하지 않으며 운영자가 비밀번호를 복구할 수 없음
 
 ## 테스트와 린트
 

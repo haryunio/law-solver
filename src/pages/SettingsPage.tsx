@@ -1,11 +1,17 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { AppFooter } from "../components/ui/AppFooter";
+import { CloudBackupSection } from "../components/premium/CloudBackupSection";
 import { ConfirmDialog } from "../components/ui/ConfirmDialog";
 import { DashboardHeaderTitle } from "../components/ui/DashboardHeaderTitle";
 import { ReturnLinkLabel } from "../components/ui/ReturnLinkLabel";
 import { FontFamily, useSettingsStore } from "../store/useSettingsStore";
 import { useTestStore } from "../store/useTestStore";
+import {
+  DashboardBackupValidationError,
+  parseDashboardBackupJson,
+} from "../lib/dashboardBackup";
+import { CLOUD_BACKUP_MAX_PLAINTEXT_BYTES } from "../lib/cloudBackupCrypto";
 
 type SettingsTab = "appearance" | "data";
 
@@ -50,74 +56,56 @@ export function SettingsPage() {
     const input = document.createElement("input");
     input.type = "file";
     input.accept = ".json";
-    input.onchange = (event) => {
+    input.onchange = async (event) => {
       const file = (event.target as HTMLInputElement).files?.[0];
       if (!file) return;
-
-      const reader = new FileReader();
-      reader.onload = (readerEvent) => {
-        try {
-          const content = readerEvent.target?.result as string;
-          const data = JSON.parse(content);
-          if (!Array.isArray(data) && !(data && Array.isArray(data.sessions))) {
+      try {
+        if (file.size > CLOUD_BACKUP_MAX_PLAINTEXT_BYTES) {
+          throw new DashboardBackupValidationError("백업 JSON 파일은 30MB까지 불러올 수 있습니다.");
+        }
+        const data = parseDashboardBackupJson(await file.text());
+        setDialog({
+          title: "오프라인 문제 풀이 데이터를 불러올까요?",
+          description:
+            "현재 브라우저의 오프라인 문제 풀이 데이터가 백업 파일 내용으로 모두 교체됩니다.",
+          confirmLabel: "불러오기",
+          variant: "danger",
+          onCancel: () => setDialog(null),
+          onConfirm: () => {
+            importDashboardData({
+              sessions: data.sessions,
+              subjects: data.subjects,
+              sessionSubjectMap: data.sessionSubjectMap,
+              dataModifiedAt: data.data_modified_at,
+            });
             setDialog({
-              title: "백업 파일을 확인해 주세요.",
-              description: "올바른 Law Solver 백업 JSON 형식이 아닙니다.",
+              title: "불러오기가 완료되었습니다.",
+              description: "백업 파일의 오프라인 문제 풀이 데이터가 이 브라우저에 반영되었습니다.",
               confirmLabel: "확인",
+              variant: "success",
               onConfirm: () => setDialog(null),
             });
-            return;
-          }
-
-          setDialog({
-            title: "오프라인 데이터를 불러올까요?",
-            description:
-              "현재 브라우저의 과목, 문제, 풀이내역과 오답노트가 백업 파일 내용으로 모두 덮어씌워집니다.",
-            confirmLabel: "불러오기",
-            variant: "danger",
-            onCancel: () => setDialog(null),
-            onConfirm: () => {
-              if (Array.isArray(data)) {
-                importDashboardData({
-                  sessions: data,
-                  subjects: [],
-                  sessionSubjectMap: {},
-                });
-              } else {
-                importDashboardData({
-                  sessions: data.sessions,
-                  subjects: data.subjects,
-                  sessionSubjectMap: data.sessionSubjectMap,
-                });
-              }
-              setDialog({
-                title: "복구가 완료되었습니다.",
-                description: "백업 파일의 오프라인 데이터가 이 브라우저에 반영되었습니다.",
-                confirmLabel: "확인",
-                variant: "success",
-                onConfirm: () => setDialog(null),
-              });
-            },
-          });
-        } catch {
-          setDialog({
-            title: "파일을 읽지 못했습니다.",
-            description: "JSON 파일이 손상되었거나 읽을 수 없는 형식입니다.",
-            confirmLabel: "확인",
-            onConfirm: () => setDialog(null),
-          });
-        }
-      };
-      reader.readAsText(file);
+          },
+        });
+      } catch (error) {
+        setDialog({
+          title: "파일을 읽지 못했습니다.",
+          description: error instanceof DashboardBackupValidationError
+            ? error.message
+            : "JSON 파일이 손상되었거나 읽을 수 없는 형식입니다.",
+          confirmLabel: "확인",
+          onConfirm: () => setDialog(null),
+        });
+      }
     };
     input.click();
   };
 
   const handleReset = () => {
     setDialog({
-      title: "오프라인 데이터를 초기화할까요?",
+      title: "오프라인 문제 풀이 데이터를 초기화할까요?",
       description:
-        "이 브라우저에 저장된 과목, 문제, 풀이내역과 오답노트가 모두 삭제됩니다. 이 작업은 되돌릴 수 없습니다.",
+        "이 브라우저에 저장된 오프라인 문제 풀이 데이터가 모두 삭제됩니다. 이 작업은 되돌릴 수 없습니다.",
       confirmLabel: "초기화",
       variant: "danger",
       onCancel: () => setDialog(null),
@@ -125,7 +113,7 @@ export function SettingsPage() {
         resetSessions();
         setDialog({
           title: "초기화가 완료되었습니다.",
-          description: "이 브라우저의 오프라인 학습 데이터가 삭제되었습니다.",
+          description: "이 브라우저의 오프라인 문제 풀이 데이터가 삭제되었습니다.",
           confirmLabel: "확인",
           variant: "success",
           onConfirm: () => setDialog(null),
@@ -154,7 +142,7 @@ export function SettingsPage() {
           <div className="grid grid-cols-2 gap-2" role="tablist" aria-label="환경설정 분류">
             {[
               ["appearance", "화면 설정"],
-              ["data", "오프라인 데이터"],
+              ["data", "오프라인 문제 풀이 데이터"],
             ].map(([id, label]) => (
               <button
                 key={id}
@@ -247,9 +235,9 @@ export function SettingsPage() {
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                   <div>
                     <p className="text-xs font-bold tracking-[0.14em] text-red-600 dark:text-red-400">LOCAL DATA</p>
-                    <h2 className="mt-2 text-xl font-bold text-stone-950 dark:text-stone-100">오프라인 데이터 관리</h2>
+                    <h2 className="mt-2 text-xl font-bold text-stone-950 dark:text-stone-100">오프라인 문제 풀이 데이터 관리</h2>
                     <p className="mt-1 text-xs leading-5 text-stone-500 dark:text-stone-400">
-                      오프라인 과목, 문제와 풀이 기록만 관리합니다. Premium 데이터는 포함되지 않습니다.
+                      오프라인으로 등록한 과목, 문제와 풀이 기록을 관리합니다. Premium 온라인 문제 풀이 데이터는 포함되지 않습니다.
                     </p>
                   </div>
                   <div className="app-neutral-box grid shrink-0 grid-cols-2 overflow-hidden rounded-xl text-center">
@@ -267,18 +255,18 @@ export function SettingsPage() {
 
               <div className="grid gap-4 md:grid-cols-3">
                 <article className="app-card flex flex-col rounded-2xl border p-5">
-                  <h3 className="font-bold text-stone-950 dark:text-stone-100">백업하기</h3>
+                  <h3 className="font-bold text-stone-950 dark:text-stone-100">파일로 백업하기</h3>
                   <p className="mt-1 flex-1 text-xs leading-5 text-stone-500 dark:text-stone-400">
-                    오프라인 데이터를 JSON 파일로 저장합니다.
+                    오프라인 문제 풀이 데이터를 JSON 파일로 저장합니다.
                   </p>
                   <button onClick={handleBackup} className="app-button-secondary mt-5 rounded-xl px-4 py-3 text-sm font-semibold">
-                    백업 파일 저장
+                    백업 파일로 저장
                   </button>
                 </article>
                 <article className="app-card flex flex-col rounded-2xl border p-5">
-                  <h3 className="font-bold text-stone-950 dark:text-stone-100">불러오기</h3>
+                  <h3 className="font-bold text-stone-950 dark:text-stone-100">백업 파일 불러오기</h3>
                   <p className="mt-1 flex-1 text-xs leading-5 text-stone-500 dark:text-stone-400">
-                    백업 JSON으로 현재 오프라인 데이터를 교체합니다.
+                    백업 JSON으로 현재 오프라인 문제 풀이 데이터를 교체합니다.
                   </p>
                   <button onClick={handleRestore} className="app-button-secondary mt-5 rounded-xl px-4 py-3 text-sm font-semibold">
                     백업 파일 선택
@@ -287,16 +275,17 @@ export function SettingsPage() {
                 <article className="app-card flex flex-col rounded-2xl border p-5">
                   <h3 className="font-bold text-red-700 dark:text-red-400">전체 초기화</h3>
                   <p className="mt-1 flex-1 text-xs leading-5 text-stone-500 dark:text-stone-400">
-                    이 브라우저의 오프라인 학습 데이터를 모두 삭제합니다.
+                    이 브라우저의 오프라인 문제 풀이 데이터를 모두 삭제합니다.
                   </p>
                   <button
                     onClick={handleReset}
                     className="mt-5 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700 transition-colors hover:bg-red-100 dark:border-red-900/60 dark:bg-red-950/30 dark:text-red-400 dark:hover:bg-red-950/50"
                   >
-                    오프라인 데이터 초기화
+                    문제 풀이 데이터 초기화
                   </button>
                 </article>
               </div>
+              <CloudBackupSection />
             </section>
           )}
         </div>
