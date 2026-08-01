@@ -30,6 +30,7 @@ import { ConfirmDialog } from "../ui/ConfirmDialog";
 import { IconCloseButton } from "../ui/IconCloseButton";
 import { PremiumBadge } from "../ui/PremiumBadge";
 import { Toast, type ToastTone } from "../ui/Toast";
+import { CloudBackupInfoModal } from "./CloudBackupInfoModal";
 
 type ModalMode = "upload" | "restore" | null;
 
@@ -107,6 +108,7 @@ export function CloudBackupSection() {
   const [cachedRestore, setCachedRestore] = useState<Uint8Array | null>(null);
   const [restoredData, setRestoredData] = useState<DashboardBackupData | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState(false);
+  const [isInfoOpen, setIsInfoOpen] = useState(false);
   const [toast, setToast] = useState<{ message: string; tone: ToastTone } | null>(null);
 
   const loadMetadata = async () => {
@@ -287,11 +289,18 @@ export function CloudBackupSection() {
               <PremiumBadge />
             </div>
             <h2 className="mt-2 text-xl font-bold text-stone-950 dark:text-stone-100">
-              오프라인 문제 풀이 데이터를 클라우드에 백업하기
+              클라우드에 문제 풀이 데이터 백업하기
             </h2>
             <p className="mt-1 max-w-2xl text-xs leading-5 text-stone-500 dark:text-stone-400">
-              사용자가 요청할 때만 오프라인 문제 풀이 데이터를 압축·암호화해 Law Solver 클라우드 서버에 저장합니다. 비밀번호와 복호화된 내용은 Law Solver 서버로 전송되지 않으며, 본인 외에는 그 내용을 확인할 수 없습니다.
+              Law Solver Premium 사용자는 오프라인 문제 풀이 데이터를 Law Solver 클라우드 서버에 백업하고 복구할 수 있습니다.
             </p>
+            <button
+              type="button"
+              onClick={() => setIsInfoOpen(true)}
+              className="mt-1.5 text-xs font-semibold text-red-600 underline decoration-red-200 underline-offset-4 transition-colors hover:text-red-700 dark:text-red-400 dark:decoration-red-900 dark:hover:text-red-300"
+            >
+              자세히 알아보기
+            </button>
           </div>
           {loading ? (
             <div className="w-full max-w-[220px]" role="status" aria-label="클라우드 백업 정보를 불러오는 중">
@@ -494,6 +503,10 @@ export function CloudBackupSection() {
           onCancel={() => setDeleteConfirm(false)}
           onConfirm={() => void removeBackup()}
         />
+      ) : null}
+
+      {isInfoOpen ? (
+        <CloudBackupInfoModal onClose={() => setIsInfoOpen(false)} />
       ) : null}
     </>
   );
