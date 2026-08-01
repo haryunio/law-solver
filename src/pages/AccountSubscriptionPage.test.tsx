@@ -69,7 +69,7 @@ describe("AccountSubscriptionPage Premium membership", () => {
     expect(screen.getByText("종료 예정 일자").parentElement?.textContent).toContain("2026. 8. 30.");
     expect(screen.getByText("온라인 문제 풀이 기능 사용")).toBeTruthy();
     expect(screen.getByText("Premium 전용 과목 이용권 구매 가능")).toBeTruthy();
-    expect(screen.getByText("오프라인 문제 풀이 클라우드 백업 기능")).toBeTruthy();
+    expect(screen.getByText("오프라인 문제풀이 데이터 클라우드 백업 기능")).toBeTruthy();
     expect(screen.getByRole("button", { name: "Premium 30일 연장" })).toBeTruthy();
     expect(screen.queryByText(/추가 결제하면/)).toBeNull();
   });
@@ -110,7 +110,7 @@ describe("AccountSubscriptionPage Premium membership", () => {
     expect(screen.queryByText("종료 예정 일자")).toBeNull();
     expect(screen.getByText("온라인 문제 풀이 기능 사용")).toBeTruthy();
     expect(screen.getByText("Premium 전용 과목 이용권 구매 가능")).toBeTruthy();
-    expect(screen.getByText("오프라인 문제 풀이 클라우드 백업 기능")).toBeTruthy();
+    expect(screen.getByText("오프라인 문제풀이 데이터 클라우드 백업 기능")).toBeTruthy();
     expect(screen.getByRole("button", { name: "Premium 30일 구매" })).toBeTruthy();
   });
 

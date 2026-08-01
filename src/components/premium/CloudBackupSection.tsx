@@ -47,9 +47,9 @@ const formatBytes = (value: number) => {
 const operationLabel: Record<string, string> = {
   encrypting: "압축·암호화하는 중",
   uploading: "암호화된 백업을 올리는 중",
-  downloading: "암호화된 백업을 받는 중",
-  decrypting: "백업을 복호화·검증하는 중",
-  deleting: "클라우드 백업을 삭제하는 중",
+  downloading: "클라우드 데이터를 내려받는 중",
+  decrypting: "내려받은 데이터를 복호화·검증하는 중",
+  deleting: "클라우드 데이터를 삭제하는 중",
 };
 
 function comparisonCard({
@@ -177,7 +177,7 @@ export function CloudBackupSection() {
       const nextMetadata = await commitCloudBackupUpload(intent.uploadId);
       setMetadata(nextMetadata);
       resetModal();
-      setToast({ message: "오프라인 데이터를 안전하게 클라우드에 백업했습니다.", tone: "success" });
+      setToast({ message: "오프라인 문제풀이 데이터를 안전하게 클라우드에 백업했습니다.", tone: "success" });
     } catch (error) {
       setModalError(
         error instanceof CloudBackupCryptoError
@@ -225,7 +225,7 @@ export function CloudBackupSection() {
       setModalError(
         error instanceof CloudBackupCryptoError
           ? error.message
-          : getPremiumErrorMessage(error, "클라우드 백업을 복구하지 못했습니다."),
+          : getPremiumErrorMessage(error, "클라우드 데이터를 확인하지 못했습니다."),
       );
     } finally {
       setOperation(null);
@@ -241,7 +241,7 @@ export function CloudBackupSection() {
       dataModifiedAt: restoredData.data_modified_at,
     });
     closeModal();
-    setToast({ message: "클라우드 백업을 이 브라우저의 오프라인 데이터에 반영했습니다.", tone: "success" });
+    setToast({ message: "클라우드의 오프라인 문제풀이 데이터를 이 브라우저에 반영했습니다.", tone: "success" });
   };
 
   const removeBackup = async () => {
@@ -250,7 +250,7 @@ export function CloudBackupSection() {
     try {
       await deleteCloudBackup();
       await loadMetadata();
-      setToast({ message: "클라우드 백업을 완전히 삭제했습니다.", tone: "success" });
+      setToast({ message: "클라우드 데이터를 완전히 삭제했습니다.", tone: "success" });
     } catch (error) {
       setToast({
         message: getPremiumErrorMessage(error, "클라우드 백업을 삭제하지 못했습니다."),
@@ -287,10 +287,10 @@ export function CloudBackupSection() {
               <PremiumBadge />
             </div>
             <h2 className="mt-2 text-xl font-bold text-stone-950 dark:text-stone-100">
-              클라우드에 백업하기
+              오프라인 문제풀이 데이터를 클라우드에 백업하기
             </h2>
             <p className="mt-1 max-w-2xl text-xs leading-5 text-stone-500 dark:text-stone-400">
-              사용자가 요청할 때만 오프라인 전체 데이터를 브라우저에서 압축·암호화해 최신본 하나로 보관합니다. 비밀번호와 복호화된 내용은 Law Solver 서버로 전송되지 않습니다.
+              사용자가 요청할 때만 오프라인 문제풀이 데이터를 압축·암호화해 Law Solver 클라우드 서버에 저장합니다. 비밀번호와 복호화된 내용은 Law Solver 서버로 전송되지 않으며, 본인 외에는 그 내용을 확인할 수 없습니다.
             </p>
           </div>
           {loading ? (
@@ -301,7 +301,7 @@ export function CloudBackupSection() {
             <div className="app-neutral-box shrink-0 rounded-xl border px-4 py-3 text-sm">
               <p className="text-xs text-stone-500 dark:text-stone-400">이용 상태</p>
               <p className="mt-1 font-bold text-stone-900 dark:text-stone-100">
-                {!isSignedIn ? "로그인 필요" : activePremium ? "백업·복구 가능" : "Premium 이용 기간 아님"}
+                {!isSignedIn ? "로그인 필요" : activePremium ? "클라우드 사용 가능" : "Premium 이용 기간 아님"}
               </p>
             </div>
           )}
@@ -326,7 +326,7 @@ export function CloudBackupSection() {
 
         {metadata?.backup?.deletionScheduledAt ? (
           <p className="mt-3 text-xs font-medium text-amber-700 dark:text-amber-400">
-            Premium 만료로 백업·복구가 중지되었습니다. 이 백업은 {formatDate(metadata.backup.deletionScheduledAt)} 이후 자동 삭제될 수 있습니다.
+            Premium 만료로 백업·내려받기가 중지되었습니다. 이 데이터는 {formatDate(metadata.backup.deletionScheduledAt)} 이후 자동 삭제될 수 있습니다.
           </p>
         ) : null}
 
@@ -335,7 +335,7 @@ export function CloudBackupSection() {
             <p>암호화 최종본 최대 15MB · 비밀번호 최소 8자</p>
             {metadata ? (
               <p>
-                오늘 남은 백업 {Math.max(0, uploadRemaining)}회 · 복구 {Math.max(0, restoreRemaining)}회 · 초기화 {formatDate(metadata.limits.resetsAt)}
+                오늘 남은 백업 {Math.max(0, uploadRemaining)}회 · 내려받기 {Math.max(0, restoreRemaining)}회 · 초기화 {formatDate(metadata.limits.resetsAt)}
               </p>
             ) : null}
           </div>
@@ -346,20 +346,20 @@ export function CloudBackupSection() {
                 onClick={() => setDeleteConfirm(true)}
                 disabled={Boolean(operation)}
                 className="rounded-xl border border-red-200 bg-red-50 px-4 py-2.5 text-sm font-semibold text-red-700 disabled:opacity-50 dark:border-red-900/60 dark:bg-red-950/30 dark:text-red-400"
-              >백업 삭제</button>
+              >클라우드 데이터 삭제</button>
             ) : null}
             <button
               type="button"
               onClick={() => setModalMode("restore")}
               disabled={transferDisabled || !metadata?.backup || restoreRemaining <= 0}
               className="app-button-secondary rounded-xl px-4 py-2.5 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-50"
-            >클라우드에서 복구</button>
+            >클라우드에서 내려받기</button>
             <button
               type="button"
               onClick={() => setModalMode("upload")}
               disabled={transferDisabled || uploadRemaining <= 0}
               className="app-button-primary rounded-xl px-4 py-2.5 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-50"
-            >{metadata?.backup ? "클라우드 백업 덮어쓰기" : "클라우드에 백업"}</button>
+            >{metadata?.backup ? "클라우드에 다시 백업하기" : "클라우드에 백업하기"}</button>
           </div>
         </div>
       </article>
@@ -379,8 +379,8 @@ export function CloudBackupSection() {
                   <PremiumBadge />
                   <h2 className="mt-3 text-lg font-bold text-stone-950 dark:text-stone-100">
                     {modalMode === "upload"
-                      ? metadata?.backup ? "클라우드 백업 덮어쓰기" : "새 클라우드 백업"
-                      : restoredData ? "복구할 데이터 최종 확인" : "클라우드 백업 복구"}
+                      ? metadata?.backup ? "클라우드에 다시 백업하기" : "클라우드에 백업하기"
+                      : restoredData ? "내려받은 데이터 최종 확인" : "클라우드에서 내려받기"}
                   </h2>
                 </div>
                 <IconCloseButton onClick={closeModal} label="클라우드 백업 닫기" />
@@ -404,12 +404,12 @@ export function CloudBackupSection() {
                     )
                   : restoredData
                   ? comparisonCard({
-                    label: "복구할 클라우드 데이터",
+                    label: "내려받은 클라우드 데이터",
                     ...getDashboardBackupStats(restoredData),
                   })
                   : metadata?.backup
                   ? comparisonCard({
-                    label: "복구할 클라우드 최신본",
+                    label: "내려받을 클라우드 최신본",
                     dataModifiedAt: metadata.backup.dataModifiedAt,
                     subjectCount: metadata.backup.subjectCount,
                     sessionCount: metadata.backup.sessionCount,
@@ -434,8 +434,8 @@ export function CloudBackupSection() {
                     {modalMode === "upload"
                       ? "이 비밀번호로 브라우저에서 암호화합니다. Law Solver는 비밀번호를 저장하거나 복구할 수 없습니다."
                       : cachedRestore
-                      ? "암호문은 이 대화상자의 메모리에 보관 중입니다. 비밀번호를 다시 입력해도 복구 횟수가 추가로 차감되지 않습니다."
-                      : "복구를 누르면 암호문을 한 번 내려받고 이 대화상자 메모리에만 보관합니다. 올바른 비밀번호가 있어야 내용을 확인할 수 있습니다."}
+                      ? "암호문은 이 대화상자의 메모리에 보관 중입니다. 비밀번호를 다시 입력해도 내려받기 횟수가 추가로 차감되지 않습니다."
+                      : "내려받기를 시작하면 암호문을 한 번 내려받아 이 대화상자 메모리에만 보관합니다. 올바른 비밀번호가 있어야 내용을 확인할 수 있습니다."}
                   </p>
                   {modalError ? (
                     <p role="alert" className="mt-3 rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700 dark:border-red-900/60 dark:bg-red-950/30 dark:text-red-300">
@@ -475,7 +475,7 @@ export function CloudBackupSection() {
                     <button type="submit" disabled={Boolean(operation)} className="app-button-primary min-w-[150px] rounded-xl px-4 py-2.5 text-sm font-semibold disabled:opacity-60">
                       {operation
                         ? <ButtonLoadingContent label={operationLabel[operation] ?? "처리 중"} />
-                        : modalMode === "upload" ? "암호화하여 백업" : cachedRestore ? "비밀번호 다시 확인" : "내려받아 복구"}
+                        : modalMode === "upload" ? "암호화해 백업하기" : cachedRestore ? "비밀번호 다시 확인" : "내려받고 확인하기"}
                     </button>
                   </div>
                 </form>
@@ -487,9 +487,9 @@ export function CloudBackupSection() {
 
       {deleteConfirm ? (
         <ConfirmDialog
-          title="클라우드 백업을 삭제할까요?"
-          description="서버에 보관된 암호화 백업과 임시 업로드를 삭제합니다. 현재 브라우저의 오프라인 데이터는 삭제되지 않으며, 이 작업은 되돌릴 수 없습니다."
-          confirmLabel="백업 삭제"
+          title="클라우드 데이터를 삭제할까요?"
+          description="서버에 보관된 암호화 데이터와 임시 업로드를 삭제합니다. 현재 브라우저의 오프라인 문제풀이 데이터는 삭제되지 않으며, 이 작업은 되돌릴 수 없습니다."
+          confirmLabel="클라우드 데이터 삭제"
           variant="danger"
           onCancel={() => setDeleteConfirm(false)}
           onConfirm={() => void removeBackup()}
