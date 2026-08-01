@@ -10,7 +10,7 @@ describe("CloudBackupInfoModal", () => {
   it("explains encrypted synchronization and links to both policies", () => {
     render(<CloudBackupInfoModal onClose={() => undefined} />);
 
-    expect(screen.getByText(/다른 기기 간 오프라인 문제 풀이 데이터 동기화/)).toBeTruthy();
+    expect(screen.getByText(/여러 기기 간 오프라인 문제 풀이 데이터 동기화/)).toBeTruthy();
     expect(screen.getByText(/백업 비밀번호와 복호화된 내용은 Law Solver 서버로 전송되지 않으며/)).toBeTruthy();
     expect(screen.getByRole("button", { name: "이용약관" })).toBeTruthy();
     expect(screen.getByRole("button", { name: "개인정보처리방침" })).toBeTruthy();

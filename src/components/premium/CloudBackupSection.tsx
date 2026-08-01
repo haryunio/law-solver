@@ -30,6 +30,10 @@ import { ConfirmDialog } from "../ui/ConfirmDialog";
 import { IconCloseButton } from "../ui/IconCloseButton";
 import { PremiumBadge } from "../ui/PremiumBadge";
 import { Toast, type ToastTone } from "../ui/Toast";
+import {
+  CloudBackupComparisonWarnings,
+  getCloudBackupComparisonWarnings,
+} from "./CloudBackupComparisonWarnings";
 import { CloudBackupInfoModal } from "./CloudBackupInfoModal";
 
 type ModalMode = "upload" | "restore" | null;
@@ -271,6 +275,13 @@ export function CloudBackupSection() {
   const restoreRemaining = metadata
     ? metadata.limits.dailyRestoreLimit - metadata.limits.restoresUsed
     : 0;
+  const comparisonWarnings = modalMode && metadata?.backup
+    ? getCloudBackupComparisonWarnings({
+      mode: modalMode,
+      source: modalMode === "upload" ? localStats : metadata.backup,
+      target: modalMode === "upload" ? metadata.backup : localStats,
+    })
+    : [];
 
   return (
     <>
@@ -395,8 +406,15 @@ export function CloudBackupSection() {
                 <IconCloseButton onClick={closeModal} label="클라우드 백업 닫기" />
               </div>
 
-              <div className="mt-5 grid gap-3 sm:grid-cols-2">
+              <div className="mt-5 grid gap-2 sm:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] sm:items-center">
                 {comparisonCard({ label: "현재 브라우저", ...localStats })}
+                <span
+                  aria-hidden="true"
+                  className="flex h-5 items-center justify-center text-sm font-bold text-stone-400 dark:text-stone-500 sm:h-auto sm:w-4"
+                >
+                  <span className="sm:hidden">{modalMode === "upload" ? "↓" : "↑"}</span>
+                  <span className="hidden sm:inline">{modalMode === "upload" ? "→" : "←"}</span>
+                </span>
                 {modalMode === "upload"
                   ? metadata?.backup
                     ? comparisonCard({
@@ -426,6 +444,8 @@ export function CloudBackupSection() {
                   })
                   : null}
               </div>
+
+              <CloudBackupComparisonWarnings warnings={comparisonWarnings} />
 
               {restoredData ? (
                 <>
