@@ -298,11 +298,21 @@ VITE_SUPABASE_PUBLISHABLE_KEY=<law-solver-server의 npm run status 출력값>
 
 ## 개발 서버 실행
 
+로컬 Supabase를 바라보는 웹은 `5164`, production Supabase를 바라보는 웹은 `5174`로 포트를 고정합니다. 두 명령은 동시에 실행할 수 있으며 포트가 사용 중이면 다른 포트로 이동하지 않고 실패합니다.
+
 ```bash
-npm run dev
+npm run dev:local
 ```
 
-기본 접속 주소는 Vite 기본값인 `http://localhost:5173`입니다.
+로컬 웹 주소는 `http://127.0.0.1:5164`입니다. 기존 `npm run dev`도 같은 로컬 웹을 실행합니다.
+
+운영 데이터를 확인하는 별도 웹은 GitHub repository variable의 공개 publishable key로 무시된 `.env.hosted.local`을 만든 뒤 실행합니다.
+
+```bash
+npm run dev:production
+```
+
+운영 확인 웹 주소는 `http://127.0.0.1:5174`입니다. 이 화면에서 구매·풀이·백업을 실행하면 production 데이터에 실제 반영됩니다. 프론트 환경에는 공개 URL과 publishable key만 들어가며 service role이나 secret key를 사용하지 않습니다.
 
 Premium 로컬 연동은 먼저 형제 저장소 `law-solver-server`에서 Supabase와 Edge Functions를 실행해야 합니다. 자세한 순서는 서버 저장소의 `docs/LOCAL_DEVELOPMENT.md`를 따릅니다.
 

@@ -16,6 +16,7 @@
 - 프론트는 이 저장소, 비공개 Supabase 백엔드는 형제 폴더 `../law-solver-server`에서 관리합니다.
 - API·DTO·RLS·결제·문제 콘텐츠 변경은 서버 저장소가 소유합니다. `../law-solver-server/docs/API.md`, `AUTHORIZATION.md`, `FRONTEND_INTEGRATION.md`를 먼저 갱신한 뒤 프론트 client와 UI를 맞추세요.
 - 프론트는 공개 Supabase URL과 publishable key만 사용합니다. 서버의 CSV 콘텐츠, migration용 관리자 값, `service_role`, 결제·SMTP secret을 이 저장소로 복사하지 마세요.
+- 로컬 실행 포트는 DB 대상에 따라 고정합니다. `npm run dev:local`과 기본 `npm run dev`는 로컬 Supabase를 바라보는 `127.0.0.1:5164`, `npm run dev:production`은 운영 Supabase를 바라보는 `127.0.0.1:5174`입니다. 운영용 명령은 `hosted` Vite mode와 `.env.hosted.local`을 사용하고 포트가 점유되면 임의 포트로 이동하지 않아야 합니다.
 - 두 저장소에 걸친 변경은 각각 검증하고 별도 커밋으로 남깁니다. 한 저장소의 커밋에 다른 저장소 파일을 포함하거나 두 저장소의 배포를 암묵적으로 묶지 마세요.
 - 프론트는 `develop`을 통합 기준으로 하고 Premium 작업은 `feature/premium`에서 진행합니다. 서버는 `develop`에서 통합하고 안정 상태만 `main`으로 반영하며, 서버 CI/CD는 별도 결정 전까지 수동 검증·배포를 기준으로 합니다.
 
