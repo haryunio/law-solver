@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import { Children, type ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { BrandMark } from "./BrandMark";
 
@@ -20,6 +20,8 @@ export function DashboardHeaderTitle({
   children,
 }: DashboardHeaderTitleProps) {
   const hasHeading = Boolean(title || sectionTitle || description);
+  const actionChildren = Children.toArray(children);
+  const hasSingleAction = actionChildren.length === 1;
 
   return (
     <header className="app-card mb-5 rounded-2xl border">
@@ -84,9 +86,16 @@ export function DashboardHeaderTitle({
             ) : null}
           </div>
 
-          {children ? (
-            <div className="grid w-full grid-cols-2 gap-2 pt-3 sm:mt-3 sm:flex sm:flex-wrap sm:justify-end sm:border-t sm:border-stone-200 md:mt-4 md:pt-4 lg:mt-0 lg:w-auto lg:shrink-0 lg:border-0 lg:pt-0 [&>*]:w-full sm:[&>*]:w-auto dark:border-stone-800">
-              {children}
+          {actionChildren.length > 0 ? (
+            <div
+              className={[
+                "w-full gap-2 pt-3 sm:mt-3 sm:flex sm:flex-wrap sm:justify-end sm:border-t sm:border-stone-200 md:mt-4 md:pt-4 lg:mt-0 lg:w-auto lg:shrink-0 lg:border-0 lg:pt-0 dark:border-stone-800",
+                hasSingleAction
+                  ? "flex justify-end [&>*]:w-auto"
+                  : "grid grid-cols-2 [&>*]:w-full sm:[&>*]:w-auto",
+              ].join(" ")}
+            >
+              {actionChildren}
             </div>
           ) : null}
         </div>

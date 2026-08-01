@@ -47,7 +47,7 @@ export function PrivacyPolicyLink({ className = defaultLinkClass }: PrivacyPolic
           eyebrow="PRIVACY POLICY"
           title="개인정보처리방침"
           titleId="privacy-policy-title"
-          effectiveDate="2026년 7월 25일"
+          effectiveDate="2026년 8월 1일"
           closeLabel="개인정보처리방침"
           onClose={() => setIsOpen(false)}
         >
@@ -61,8 +61,9 @@ export function PrivacyPolicyLink({ className = defaultLinkClass }: PrivacyPolic
                   <h3 className="font-bold text-stone-900 dark:text-stone-100">먼저 확인해 주세요</h3>
                   <ul className="mt-2 list-disc space-y-1 pl-5">
                     <li>
-                      오프라인 학습 데이터는 브라우저 저장소에만 저장되며 Premium 서버로 자동 전송되지
-                      않습니다.
+                      오프라인 학습 데이터는 기본적으로 브라우저에만 저장되며 Premium 서버로 자동
+                      전송되지 않습니다. Premium 회원이 클라우드 백업을 직접 실행한 경우에만 브라우저에서
+                      암호화된 사본을 서버에 보관합니다.
                     </li>
                     <li>
                       Premium 온라인 학습 데이터는 이어 풀기·서버 채점·결과 제공을 위해 계정과 연결하여
@@ -117,6 +118,20 @@ export function PrivacyPolicyLink({ className = defaultLinkClass }: PrivacyPolic
                         <td className={tableCellClass}>
                           회원 탈퇴, 삭제 요청 또는 서비스 제공 목적 달성 시까지. 법정 보존 대상 거래
                           기록은 제외
+                        </td>
+                      </tr>
+                      <tr>
+                        <td className={tableCellClass}>오프라인 클라우드 백업</td>
+                        <td className={tableCellClass}>
+                          브라우저에서 압축·암호화된 전체 백업 파일, 데이터 최종 수정·업로드 시각, 과목·풀이
+                          세션·문제 수, 암호문 크기, 백업·암호화 형식 버전, 일일 백업·복구 횟수와 전송량
+                        </td>
+                        <td className={tableCellClass}>
+                          이용자가 요청한 오프라인 데이터의 기기 간 보관·복구, 용량·횟수 제한과 장애 대응
+                        </td>
+                        <td className={tableCellClass}>
+                          이용자가 삭제하거나 회원 탈퇴할 때까지. Premium 만료 후에는 백업·복구를 중지하고
+                          마지막 유효 종료일로부터 1년이 지나면 자동 삭제
                         </td>
                       </tr>
                       <tr>
@@ -193,9 +208,27 @@ export function PrivacyPolicyLink({ className = defaultLinkClass }: PrivacyPolic
                 <p className="mt-2">
                   사용자가 직접 업로드한 CSV의 문제 본문·박스 지문·선택지·정답·해설·출처와 사용자의
                   답안, 진행 상태, 점수, 책갈피, 오답 노트, 과목·세션 정보는 현재 브라우저의
-                  localStorage에만 저장됩니다. 운영자는 이를 Premium 서버로 자동 수집하거나 동기화하지
-                  않습니다. 이용자는 환경설정에서 오프라인 데이터를 백업·복원·초기화할 수 있으며,
-                  브라우저 데이터 삭제 기능으로도 제거할 수 있습니다.
+                  localStorage에 저장됩니다. 운영자는 이를 Premium 서버로 자동 수집하거나 동기화하지
+                  않습니다. 이용자는 환경설정에서 오프라인 데이터를 JSON으로 백업·복원·초기화할 수
+                  있으며, 브라우저 데이터 삭제 기능으로도 제거할 수 있습니다.
+                </p>
+                <h4 className="mt-4 font-semibold text-stone-800 dark:text-stone-200">
+                  Premium 오프라인 클라우드 백업
+                </h4>
+                <p className="mt-2">
+                  Premium 회원이 “클라우드에 백업”을 직접 선택하면 오프라인 전체 JSON은 브라우저에서
+                  gzip 압축되고, 회원이 입력한 8자 이상의 백업 비밀번호로 AES-256-GCM 암호화된 뒤
+                  Supabase Storage에 전송됩니다. 운영자는 백업 비밀번호·암호화 키·평문을 전송받거나
+                  보관하지 않아 백업 내용을 열람하거나 분실한 비밀번호를 복구할 수 없습니다. 서버에서는
+                  암호문과 함께 수정·업로드 시각, 과목·세션·문제 수, 크기와 형식 버전 등 제1항의
+                  메타데이터를 확인할 수 있습니다.
+                </p>
+                <p className="mt-2">
+                  계정마다 최신 암호화 백업 하나만 보관하며 새 백업은 이전 파일을 교체합니다. 압축·암호화
+                  최종 파일은 15MB, 백업과 복구는 각각 하루 5회로 제한합니다. 복구 중 틀린 비밀번호를
+                  다시 입력할 수 있도록 내려받은 암호문을 현재 대화상자 메모리에만 임시 보관하며, 창을
+                  닫거나 새로고침·로그아웃하면 폐기합니다. 복호화·형식 검증이 모두 성공하고 이용자가 최종
+                  확인한 경우에만 현재 브라우저 데이터를 교체합니다.
                 </p>
                 <h4 className="mt-4 font-semibold text-stone-800 dark:text-stone-200">
                   Premium 온라인 문제 풀이
@@ -233,7 +266,7 @@ export function PrivacyPolicyLink({ className = defaultLinkClass }: PrivacyPolic
                           회원 인증, 데이터베이스·서버 함수·백업 등 Premium 인프라 운영
                         </td>
                         <td className={tableCellClass}>
-                          계정·인증, Premium 학습, 상품·이용권·거래 및 제한된 운영 로그
+                          계정·인증, Premium 학습, 상품·이용권·거래, 암호화된 오프라인 백업과 제한된 운영 로그
                         </td>
                       </tr>
                       <tr>
@@ -341,9 +374,10 @@ export function PrivacyPolicyLink({ className = defaultLinkClass }: PrivacyPolic
                   권리를 침해할 우려가 있는 경우에는 요청이 제한될 수 있으며 그 사유를 안내합니다.
                 </p>
                 <p className="mt-3">
-                  오프라인 학습 데이터는 운영자가 보유하지 않으므로 이용자가 환경설정의 “오프라인 데이터
-                  초기화” 또는 브라우저 저장 데이터 삭제 기능으로 직접 제거해야 합니다. 법정대리인이나
-                  적법한 위임을 받은 대리인도 관계 법령에 따라 권리를 행사할 수 있습니다.
+                  브라우저에만 있는 오프라인 학습 데이터는 이용자가 환경설정의 “오프라인 데이터 초기화”
+                  또는 브라우저 저장 데이터 삭제 기능으로 직접 제거해야 합니다. 클라우드에 보관한 암호화
+                  백업은 환경설정의 “백업 삭제”로 즉시 제거할 수 있습니다. 법정대리인이나 적법한 위임을
+                  받은 대리인도 관계 법령에 따라 권리를 행사할 수 있습니다.
                 </p>
               </section>
 
@@ -371,6 +405,7 @@ export function PrivacyPolicyLink({ className = defaultLinkClass }: PrivacyPolic
                   <li>정답·해설, 답안, 이메일, 인증 토큰과 결제정보의 일반 로그 기록 제한</li>
                   <li>안정적인 오류 코드와 요청 식별자를 이용한 개인정보 노출 최소화</li>
                   <li>결제 금액·권한·채점 결과에 대한 서버 검증</li>
+                  <li>오프라인 클라우드 백업의 브라우저 내 압축·AES-256-GCM 암호화와 사용자별 접근 통제</li>
                 </ul>
               </section>
 
@@ -412,7 +447,7 @@ export function PrivacyPolicyLink({ className = defaultLinkClass }: PrivacyPolic
                   12. 처리방침의 변경
                 </h3>
                 <p className="mt-3">
-                  이 방침은 2026년 7월 25일부터 시행합니다. 처리 항목, 목적, 수탁자 등 중요한 내용이
+                  이 방침은 2026년 8월 1일부터 시행합니다. 처리 항목, 목적, 수탁자 등 중요한 내용이
                   변경되면 시행 전에 서비스 화면을 통해 알기 쉽게 안내하고, 필요한 경우 별도의 동의를
                   받습니다. 이전 처리방침은 운영자에게 이메일로 요청하여 확인할 수 있습니다.
                 </p>

@@ -12,10 +12,12 @@ describe("PrivacyPolicyLink", () => {
     fireEvent.click(screen.getByRole("button", { name: "개인정보처리방침" }));
 
     const dialog = screen.getByRole("dialog");
-    expect(dialog.textContent).toContain("오프라인 학습 데이터는 브라우저 저장소에만 저장");
+    expect(dialog.textContent).toContain("오프라인 학습 데이터는 기본적으로 브라우저에만 저장");
     expect(dialog.textContent).toContain("문항별 선택·입력 답안");
     expect(dialog.textContent).toContain("Supabase 기반 서버에 저장");
     expect(dialog.textContent).toContain("Google Analytics를 통한 이용 통계 수집과는 구분");
+    expect(dialog.textContent).toContain("AES-256-GCM");
+    expect(dialog.textContent).toContain("하루 5회");
   });
 
   it("covers retention, processors, user rights, deletion, and the privacy contact", () => {
@@ -28,7 +30,7 @@ describe("PrivacyPolicyLink", () => {
     expect(dialog.textContent).toContain("정보주체의 권리와 행사 방법");
     expect(dialog.textContent).toContain("개인정보의 파기");
     expect(dialog.textContent).toContain("haryun@knu.ac.kr");
-    expect(dialog.textContent).toContain("시행일: 2026년 7월 25일");
+    expect(dialog.textContent).toContain("시행일: 2026년 8월 1일");
   });
 
   it("states that detailed learning records are excluded from Analytics", () => {

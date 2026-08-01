@@ -170,6 +170,65 @@ export interface PremiumAttemptResult {
   questions: PremiumResultQuestion[];
 }
 
+export interface CloudBackupRecord {
+  revision: number;
+  dataModifiedAt: string;
+  uploadedAt: string;
+  subjectCount: number;
+  sessionCount: number;
+  questionCount: number;
+  encryptedSizeBytes: number;
+  backupFormatVersion: number;
+  encryptionFormatVersion: number;
+  deletionScheduledAt: string | null;
+}
+
+export interface CloudBackupMetadata {
+  activePremium: boolean;
+  backup: CloudBackupRecord | null;
+  limits: {
+    maxEncryptedBytes: number;
+    dailyUploadLimit: number;
+    dailyRestoreLimit: number;
+    uploadsUsed: number;
+    restoresUsed: number;
+    resetsAt: string;
+  };
+  serverNow: string;
+}
+
+export interface CloudBackupUploadIntentInput {
+  expectedRevision: number | null;
+  dataModifiedAt: string;
+  subjectCount: number;
+  sessionCount: number;
+  questionCount: number;
+  encryptedSizeBytes: number;
+  backupFormatVersion: number;
+  encryptionFormatVersion: number;
+}
+
+export interface CloudBackupUploadIntent {
+  uploadId: string;
+  bucket: string;
+  objectPath: string;
+  token: string;
+  contentType: string;
+  expiresAt: string;
+  uploadsUsed: number;
+  uploadsRemaining: number;
+  resetsAt: string;
+}
+
+export interface CloudBackupRestoreTicket {
+  signedUrl: string;
+  expiresAt: string;
+  metadata: CloudBackupMetadata;
+  restoresUsed: number;
+  restoresRemaining: number;
+  resetsAt: string;
+}
+
 interface ApiErrorBody {
   error?: { code?: string; message?: string; requestId?: string };
 }
@@ -260,6 +319,13 @@ export function getPremiumErrorMessage(
     PROMOTION_PRODUCT_MISMATCH: "선택한 상품에 사용할 수 없는 프로모션 코드입니다.",
     PROMOTION_CODE_DISABLED: "현재 사용할 수 없는 프로모션 코드입니다.",
     ATTEMPT_LIMIT_REACHED: "이 이용권에서 시작할 수 있는 풀이 횟수를 모두 사용했습니다.",
+    PREMIUM_REQUIRED: "클라우드 백업은 Premium 이용 기간에만 백업·복구할 수 있습니다.",
+    BACKUP_DAILY_LIMIT: "오늘 사용할 수 있는 클라우드 백업 횟수를 모두 사용했습니다. 내일 다시 이용해 주세요.",
+    BACKUP_CONFLICT: "다른 기기에서 클라우드 백업이 변경되었습니다. 최신 정보를 확인해 주세요.",
+    BACKUP_UPLOAD_INVALID: "백업 업로드 시간이 지났거나 파일을 확인하지 못했습니다. 다시 시도해 주세요.",
+    BACKUP_NOT_FOUND: "저장된 클라우드 백업이 없습니다.",
+    BACKUP_STORAGE_CAPACITY: "클라우드 백업 저장 공간이 부족합니다. 잠시 후 다시 시도해 주세요.",
+    BACKUP_STORAGE_ERROR: "클라우드 백업 저장소에 연결하지 못했습니다. 잠시 후 다시 시도해 주세요.",
     PREMIUM_NOT_CONFIGURED: "Premium 서비스에 연결하지 못했습니다. 잠시 후 다시 시도해 주세요.",
     DATABASE_ERROR: "서비스가 일시적으로 원활하지 않습니다. 잠시 후 다시 시도해 주세요.",
     INTERNAL_ERROR: "일시적인 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.",
@@ -605,3 +671,81 @@ export const savePremiumWrongNote = (
     body: JSON.stringify({ note, expectedRevision }),
   },
 );
+
+export const getCloudBackupMetadata = () =>
+  apiRequest<CloudBackupMetadata>("backup-api");
+
+export const createCloudBackupUploadIntent = (input: CloudBackupUploadIntentInput) =>
+  apiRequest<CloudBackupUploadIntent>("backup-api", "/upload-intents", {
+    method: "POST",
+    body: JSON.stringify(input),
+  });
+
+export async function uploadCloudBackupObject(
+  intent: CloudBackupUploadIntent,
+  encryptedBackup: Uint8Array,
+): Promise<void> {
+  const { error } = await requireClient().storage.from(intent.bucket).uploadToSignedUrl(
+    intent.objectPath,
+    intent.token,
+    new Blob([
+      encryptedBackup.buffer.slice(
+        encryptedBackup.byteOffset,
+        encryptedBackup.byteOffset + encryptedBackup.byteLength,
+      ) as ArrayBuffer,
+    ], { type: intent.contentType }),
+    { contentType: intent.contentType, cacheControl: "0", upsert: false },
+  );
+  if (error) {
+    throw new PremiumApiError(
+      "암호화된 백업 파일을 업로드하지 못했습니다.",
+      "BACKUP_STORAGE_ERROR",
+      0,
+    );
+  }
+}
+
+export const commitCloudBackupUpload = (uploadId: string) =>
+  apiRequest<CloudBackupMetadata>(
+    "backup-api",
+    `/upload-intents/${encodeURIComponent(uploadId)}/commit`,
+    { method: "POST" },
+  );
+
+export const createCloudBackupRestoreTicket = () =>
+  apiRequest<CloudBackupRestoreTicket>("backup-api", "/restore", { method: "POST" });
+
+function browserStorageUrl(signedUrl: string): string {
+  const target = new URL(signedUrl);
+  const configuredApi = new URL(supabaseUrl);
+  const isLocalApi = configuredApi.hostname === "127.0.0.1" || configuredApi.hostname === "localhost";
+  if (isLocalApi && (target.hostname === "kong" || target.port === "8000")) {
+    target.protocol = configuredApi.protocol;
+    target.host = configuredApi.host;
+  }
+  return target.toString();
+}
+
+export async function downloadCloudBackupObject(ticket: CloudBackupRestoreTicket) {
+  const expectedSize = ticket.metadata.backup?.encryptedSizeBytes;
+  const response = await fetch(browserStorageUrl(ticket.signedUrl), { cache: "no-store" });
+  if (!response.ok) {
+    throw new PremiumApiError(
+      "암호화된 백업 파일을 내려받지 못했습니다.",
+      "BACKUP_STORAGE_ERROR",
+      response.status,
+    );
+  }
+  const declaredSize = Number(response.headers.get("content-length") ?? "0");
+  if (declaredSize > 15_000_000) {
+    throw new PremiumApiError("백업 파일 크기를 확인할 수 없습니다.", "BACKUP_UPLOAD_INVALID", 409);
+  }
+  const bytes = new Uint8Array(await response.arrayBuffer());
+  if (bytes.byteLength < 1 || bytes.byteLength > 15_000_000 || bytes.byteLength !== expectedSize) {
+    throw new PremiumApiError("백업 파일 크기가 일치하지 않습니다.", "BACKUP_UPLOAD_INVALID", 409);
+  }
+  return bytes;
+}
+
+export const deleteCloudBackup = () =>
+  apiRequest<{ deleted: true }>("backup-api", "", { method: "DELETE" });

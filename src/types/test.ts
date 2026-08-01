@@ -50,8 +50,9 @@ export type SessionSubjectMap = Record<TestSession["id"], Subject["id"]>;
 
 export interface DashboardBackupData {
   app: "law-solver";
-  version: 2;
+  version: 3;
   exported_at: string;
+  data_modified_at: string;
   sessions: TestSession[];
   subjects: Subject[];
   sessionSubjectMap: SessionSubjectMap;

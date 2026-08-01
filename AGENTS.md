@@ -4,7 +4,7 @@
 
 ## 프로젝트 개요
 
-`law-solver`는 React 기반 로스쿨 문제 풀이 앱입니다. 오프라인 CSV 문제와 설정은 브라우저에 저장하고, Premium 계정·결제·온라인 학습은 비공개 `law-solver-server` Supabase 백엔드를 사용합니다.
+`law-solver`는 React 기반 로스쿨 문제 풀이 앱입니다. 오프라인 CSV 문제와 설정은 기본적으로 브라우저에 저장하고, Premium 계정·결제·온라인 학습과 사용자가 직접 실행한 암호화 클라우드 백업은 비공개 `law-solver-server` Supabase 백엔드를 사용합니다.
 
 오프라인 데이터 저장은 브라우저 localStorage를 사용합니다.
 
@@ -16,6 +16,7 @@
 - 프론트는 이 저장소, 비공개 Supabase 백엔드는 형제 폴더 `../law-solver-server`에서 관리합니다.
 - API·DTO·RLS·결제·문제 콘텐츠 변경은 서버 저장소가 소유합니다. `../law-solver-server/docs/API.md`, `AUTHORIZATION.md`, `FRONTEND_INTEGRATION.md`를 먼저 갱신한 뒤 프론트 client와 UI를 맞추세요.
 - 프론트는 공개 Supabase URL과 publishable key만 사용합니다. 서버의 CSV 콘텐츠, migration용 관리자 값, `service_role`, 결제·SMTP secret을 이 저장소로 복사하지 마세요.
+- 로컬 실행 포트는 DB 대상에 따라 고정합니다. `npm run dev:local`과 기본 `npm run dev`는 로컬 Supabase를 바라보는 `127.0.0.1:5164`, `npm run dev:production`은 운영 Supabase를 바라보는 `127.0.0.1:5174`입니다. 운영용 명령은 `hosted` Vite mode와 `.env.hosted.local`을 사용하고 포트가 점유되면 임의 포트로 이동하지 않아야 합니다.
 - 두 저장소에 걸친 변경은 각각 검증하고 별도 커밋으로 남깁니다. 한 저장소의 커밋에 다른 저장소 파일을 포함하거나 두 저장소의 배포를 암묵적으로 묶지 마세요.
 - 프론트는 `develop`을 통합 기준으로 하고 Premium 작업은 `feature/premium`에서 진행합니다. 서버는 `develop`에서 통합하고 안정 상태만 `main`으로 반영하며, 서버 CI/CD는 별도 결정 전까지 수동 검증·배포를 기준으로 합니다.
 
@@ -112,6 +113,8 @@ GitHub Pages용 정적 파일입니다. `404.html`은 SPA 새로고침 대응용
 - 채점 결과 페이지도 대시보드와 동일한 GNB와 `app-card` 체계를 사용합니다. 상단은 정답률·풀이 시간 지표, 문제 확인, 다시 풀기의 독립 카드 3개를 2:1:1 비율로 배치하고, 전체·정답·오답·미응답·책갈피는 작은 통계표로 표시합니다. 문제 확인·다시 풀기 버튼의 높이와 글자 크기는 모바일에서도 축소하지 않습니다. 상세 분석표는 그 아래 전체 너비를 사용하며 OMR 표에는 파트 열을 포함합니다.
 - 브라우저 API 사용 시 호환성을 고려합니다. 예: `crypto.randomUUID()` 직접 호출 대신 `src/lib/id.ts`의 `createId()` 사용.
 - Premium API는 `src/lib/premiumApi.ts`를 통해 호출하고, 오프라인 `law-solver-storage`와 Supabase Auth·온라인 학습 데이터를 섞지 마세요.
+- Premium 오프라인 클라우드 백업은 자동 동기화하지 않습니다. 사용자가 명시적으로 실행할 때 `DashboardBackupData` 전체 JSON을 브라우저에서 gzip 압축하고 8자 이상 비밀번호 기반 PBKDF2-SHA256·AES-256-GCM으로 암호화한 뒤 `backup-api`의 signed Storage 경로로 전송하세요. 비밀번호·키·평문을 API, localStorage, 로그, 분석에 남기지 마세요.
+- 클라우드 백업은 암호화 최종본 15MB, 원본 JSON 30MB, 백업·복구 각각 하루 5회 정책을 UI와 서버 응답 기준으로 안내합니다. 복구 암호문은 열린 모달 메모리에만 캐시해 비밀번호 오입력을 재시도하고, 로그아웃·새로고침·모달 종료 시 버립니다. 복호화·구조 검증과 사용자 최종 확인 전에는 현재 데이터를 변경하지 마세요.
 - 개인정보 안내에서는 오프라인과 Premium 온라인 학습을 구분하세요. 사용자가 업로드한 오프라인 CSV의 문제·답안·풀이 기록은 브라우저에만 남지만, Premium 온라인 문제의 문항별 답안·진행 상태·결과·책갈피·오답 노트·재풀이 기록은 기능 제공을 위해 서버에 저장됩니다. “문제와 답안을 보내지 않는다”는 문구는 GA4 분석 전송 제한으로만 설명하고 Premium 서버 저장까지 부정하지 마세요.
 - 이용권 CTA는 `PurchaseMethodModal`을 사용해 무통장입금·토스페이먼츠·프로모션 코드를 한곳에서 표시합니다. 미구현 수단은 준비 중으로 비활성화하고, 프로모션 코드는 모달 내부 전환 뒤 `promotion-api`로 사용합니다. 성공 후 `account-api`를 새로 조회해 이용권과 결제내역을 함께 갱신하세요.
 - Premium 회원권 카드에는 현재 이용 상태와 활성 이용권의 시작 일자, 예약 연장분까지 포함한 최종 종료 예정 일자를 함께 표시합니다. 만료·취소 이용권은 기간 계산에서 제외하고, 예약 이용권만 있는 상태를 현재 이용 중으로 표시하지 마세요.
@@ -391,18 +394,19 @@ SPA 라우트 새로고침은 `public/404.html`과 `index.html`의 redirect rest
 
 ## localStorage 마이그레이션과 백업
 
-`law-solver-storage`는 Zustand persist `version: 2`를 사용합니다.
+`law-solver-storage`는 Zustand persist `version: 3`을 사용합니다.
 
 - `sessions`: 문제 세션과 답안
 - `subjects`: 사용자가 만든 과목 목록, 표지 색상, 표시 순서
 - `sessionSubjectMap`: `sessionId -> subjectId` 매핑
+- `dataUpdatedAt`: 백업 충돌 비교에 사용하는 오프라인 데이터의 마지막 변경 시각
 
 기존 v1 데이터는 `sessions`만 있었기 때문에 마이그레이션 시 `subjects: []`, `sessionSubjectMap: {}`로 보정합니다. 즉 기존 문제는 모두 `과목 없음`으로 표시됩니다.
 
 백업/복원은 특정 과목 단위가 아니라 전체 데이터베이스 단위입니다. 백업 복원은 두 형식을 모두 지원해야 합니다.
 
 - 구형: `TestSession[]`
-- 신형: `{ app, version, exported_at, sessions, subjects, sessionSubjectMap }`
+- 신형: `{ app, version, exported_at, data_modified_at, sessions, subjects, sessionSubjectMap }`
 
 복원 시 존재하지 않는 sessionId 또는 subjectId를 가리키는 매핑은 버려야 합니다.
 
