@@ -461,7 +461,7 @@ export function CloudBackupSection() {
                 <form onSubmit={modalMode === "upload" ? upload : decryptRestore} className="mt-5">
                   <p className="text-sm leading-6 text-stone-600 dark:text-stone-400">
                     {modalMode === "upload"
-                      ? "이 비밀번호로 브라우저에서 암호화합니다. Law Solver는 비밀번호를 저장하거나 복구할 수 없습니다."
+                      ? "이 비밀번호로 브라우저에서 암호화합니다. Law Solver는 비밀번호를 저장하지 않으며, 비밀번호를 잊으면 절대로 복구할 수 없습니다."
                       : cachedRestore
                       ? "암호문은 이 대화상자의 메모리에 보관 중입니다. 비밀번호를 다시 입력해도 내려받기 횟수가 추가로 차감되지 않습니다."
                       : "내려받기를 시작하면 암호문을 한 번 내려받아 이 대화상자 메모리에만 보관합니다. 올바른 비밀번호가 있어야 내용을 확인할 수 있습니다."}
@@ -504,7 +504,7 @@ export function CloudBackupSection() {
                     <button type="submit" disabled={Boolean(operation)} className="app-button-primary min-w-[150px] rounded-xl px-4 py-2.5 text-sm font-semibold disabled:opacity-60">
                       {operation
                         ? <ButtonLoadingContent label={operationLabel[operation] ?? "처리 중"} />
-                        : modalMode === "upload" ? "암호화해 백업하기" : cachedRestore ? "비밀번호 다시 확인" : "내려받고 확인하기"}
+                        : modalMode === "upload" ? "암호화하고 백업하기" : cachedRestore ? "비밀번호 다시 확인" : "내려받고 확인하기"}
                     </button>
                   </div>
                 </form>
