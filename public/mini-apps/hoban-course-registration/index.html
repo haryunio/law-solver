@@ -1,0 +1,322 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>경북대학교 수강신청 연습</title>
+    <link rel="stylesheet" href="styles.css?v=20260803l">
+  </head>
+  <body class="login-mode">
+    <div id="accessibility">
+      <a href="#content">본문 바로가기</a>
+    </div>
+
+    <nav class="challenge-gnb" aria-label="수강신청 연습 메뉴">
+      <img class="challenge-brand-mark" src="/favicon.svg" alt="" aria-hidden="true">
+      <a class="challenge-gnb-link" href="/apps" target="_top"><span aria-hidden="true">↖</span><span>Law Solver로 돌아가기</span></a>
+      <button id="challengeToggleButton" class="challenge-gnb-button" type="button">
+        <span id="challengeClock" class="challenge-clock" hidden>16:59:50</span>
+        <span id="challengeButtonLabel">챌린지 모드 시작</span>
+      </button>
+    </nav>
+
+    <section id="loginView" class="login-view" aria-label="로그인">
+      <header class="top-layout">
+        <h1 class="site-title">
+          <img src="assets/logo-red.png?v=20260803c" alt="HBU 호반대학교">
+        </h1>
+        <nav class="lang-nav" aria-label="언어">
+          <a class="active" href="#">한국어</a>
+          <a href="#">ENGLISH</a>
+        </nav>
+      </header>
+
+      <main id="content" class="login-content">
+        <div class="login-grid">
+          <aside class="login-box">
+            <div class="login-box-header">
+              <h2>온라인<br>신청</h2>
+            </div>
+            <form id="loginForm" class="login-box-body">
+              <label>
+                <span>학번</span>
+                <input id="studentNoInput" class="form-control" type="text" autocomplete="username" placeholder="아무거나 입력">
+              </label>
+              <label>
+                <span>통합정보시스템 ID</span>
+                <input id="userIdInput" class="form-control" type="text" placeholder="아무거나 입력">
+              </label>
+              <label>
+                <span>비밀번호</span>
+                <input id="passwordInput" class="form-control" type="password" autocomplete="current-password" placeholder="아무거나 입력">
+              </label>
+              <label class="radio-row">
+                <input type="radio" name="reqGubun" checked>
+                <span>수강신청</span>
+              </label>
+              <button class="login-button" type="submit">로그인</button>
+              <ul class="login-links">
+                <li><a href="#">학번/통합정보시스템ID 찾기</a></li>
+                <li><a href="#">비밀번호 찾기</a></li>
+              </ul>
+            </form>
+          </aside>
+
+          <section class="inform-box" aria-label="공지사항">
+            <h2 class="main-title">2026학년도 2학기 수강신청 안내</h2>
+            <div class="notice-title">2026학년도 2학기 수강신청</div>
+            <p class="notice-line">○ 신청기간: 2026. 8. 11.(화) 10:00 ~ 8. 13.(목) 17:59</p>
+            <p class="notice-red">※ 최대 수강허용인원까지 신청하여 수강 여석이 0인 상태에서 강좌 삭제자가 발생하는 강좌의 경우, 일정시간 경과 후 수강신청할 수 있도록 합니다.</p>
+            <table class="notice-table">
+              <thead>
+                <tr>
+                  <th>구 분</th>
+                  <th>일 정</th>
+                  <th>방 법</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>수강정원<br><strong>초과하지 않은 과목</strong><br>신청</td>
+                  <td>6. 4.(목) 12:00 ~ 6. 5.(금) 17:59<br>※ 로그인 가능시간: 6. 4.(목) 11:40</td>
+                  <td>수강신청과 동일하게 진행</td>
+                </tr>
+                <tr>
+                  <td>수강신청한<br><strong>기존 과목 삭제</strong></td>
+                  <td>6. 4.(목) 12:00 ~ 6. 5.(금) 17:59</td>
+                  <td>수강신청 사이트에서 삭제</td>
+                </tr>
+              </tbody>
+            </table>
+          </section>
+        </div>
+      </main>
+
+      <footer class="site-footer login-footer">
+        <div class="footer-inner">
+          <p class="footer-policy"><strong>개인정보처리방침</strong><span>----</span>본 사이트에서 제공되는 정보에 대한 무단 수집을 거부하며, 위반시 정보통신망법에 의해 처벌됨을 유념하시기 바랍니다.</p>
+          <address class="footer-contact">
+            <span>1234 수강시 호반구 호반대로 1234 (호반대학교)</span>
+            <span>학교 안내전화 1234-1234</span>
+            <span>당직실 1234-1234</span>
+            <span>정보화본부 IT서비스팀 1234-1234</span>
+          </address>
+          <small>COPYRIGHT(C) HOBAN UNIVERSITY. ALL RIGHTS RESERVED.</small>
+          <button class="go-to-top-button" type="button" aria-label="페이지 맨 위로 이동"><span aria-hidden="true">↑</span>TOP</button>
+        </div>
+      </footer>
+    </section>
+
+    <section id="sugangView" class="sugang-view" aria-label="수강신청" hidden>
+      <header class="sugang-topbar">
+        <div class="topbar-inner">
+          <img src="assets/logo-red.png?v=20260803c" alt="HBU 호반대학교">
+          <div class="topbar-utils">
+            <span>한국어</span>
+            <span id="clock">--:--</span>
+            <strong><span id="userName">김호반</span>(<span id="studentNo">20260012345</span>) 님 반갑습니다.</strong>
+            <button id="logoutButton" type="button">로그아웃</button>
+          </div>
+        </div>
+      </header>
+
+      <main class="sugang-panel">
+        <h1>수강신청</h1>
+
+        <section class="term-bar" aria-label="신청 구분">
+          <button class="term-select" type="button">수강신청 연도학기</button>
+          <button class="term-current" type="button">2026학년도 2학기</button>
+          <div class="term-message">2026학년도 2학기 수강신청입니다.</div>
+        </section>
+
+        <section class="student-summary" aria-label="학생 정보">
+          <dl>
+            <div>
+              <dt>학번</dt>
+              <dd id="summaryStudentNo">20260012345</dd>
+            </div>
+            <div>
+              <dt>성명</dt>
+              <dd id="summaryName">김호반</dd>
+            </div>
+            <div>
+              <dt>소속</dt>
+              <dd>법학전문대학원 법학과</dd>
+            </div>
+            <div>
+              <dt>수강신청<br>가능학점</dt>
+              <dd id="availableCredits">21</dd>
+            </div>
+            <div>
+              <dt>수강신청학점</dt>
+              <dd id="appliedCredits">0</dd>
+            </div>
+          </dl>
+        </section>
+
+        <section class="search-strip" aria-label="과목 검색">
+          <label class="course-code-field">
+            <span>*강좌번호</span>
+            <input id="courseCodeInput" type="text" inputmode="text" autocomplete="off">
+          </label>
+          <div class="captcha-field">
+            <label for="captchaInput">*자동입력방지<br>문자</label>
+            <div class="captcha-challenge">
+              <canvas id="captchaCanvas" width="130" height="34" aria-label="자동입력방지 문자"></canvas>
+              <button id="refreshCaptchaButton" class="refresh-button" type="button" title="새로고침">↻</button>
+            </div>
+            <input id="captchaInput" type="text" maxlength="4" autocomplete="off" placeholder="왼쪽/상단 이미지 4자리 입력">
+            <button id="confirmButton" class="outline-button" type="button">확인</button>
+            <button id="queryButton" class="danger-button" type="button">조회</button>
+          </div>
+        </section>
+
+        <section class="tab-row" aria-label="검색 방식">
+          <button class="tab active" type="button">과목 검색</button>
+          <button class="tab ghost" type="button">꾸러미신청목록</button>
+        </section>
+
+        <section class="grid-section">
+          <h2>교과목목록 <span>[<b id="searchCount">0</b>건]</span></h2>
+          <div class="grid-note">
+            <span class="star">★</span>
+            <p>수강신청의 [신청]을 500회 이상 클릭 시 수강꾸러미목록에서 해당 과목이 삭제됩니다.<br>교과구분변경은 이수 후 통합정보시스템에서 변경 가능합니다.</p>
+          </div>
+          <div class="grid-wrap">
+            <table class="data-grid" aria-label="교과목목록">
+              <colgroup>
+                <col class="w-no">
+                <col class="w-action">
+                <col class="w-code">
+                <col class="w-name">
+                <col class="w-section">
+                <col class="w-category">
+                <col class="w-credit">
+                <col class="w-repeat">
+                <col class="w-repeat">
+                <col class="w-time">
+                <col class="w-capacity">
+                <col class="w-capacity">
+                <col class="w-prof">
+              </colgroup>
+              <thead>
+                <tr>
+                  <th>No.</th>
+                  <th>신청</th>
+                  <th>교과목코드</th>
+                  <th>교과목명</th>
+                  <th>분반</th>
+                  <th>교과구분</th>
+                  <th>학점</th>
+                  <th>재이수년도</th>
+                  <th>재이수학기</th>
+                  <th>강의시간</th>
+                  <th>제한인원</th>
+                  <th>수강인원</th>
+                  <th>담당교수</th>
+                </tr>
+              </thead>
+              <tbody id="resultBody"></tbody>
+            </table>
+            <div id="resultEmpty" class="empty-state">조회된 데이터가 없습니다.</div>
+          </div>
+        </section>
+
+        <section class="grid-section registered-section">
+          <h2>수강신청목록 <span>[<b id="registeredCount">0</b>건]</span></h2>
+          <div class="grid-wrap registered">
+            <table class="data-grid" aria-label="수강신청목록">
+              <colgroup>
+                <col class="w-no">
+                <col class="w-action">
+                <col class="w-code">
+                <col class="w-name">
+                <col class="w-section">
+                <col class="w-category">
+                <col class="w-credit">
+                <col class="w-repeat">
+                <col class="w-repeat">
+                <col class="w-time">
+                <col class="w-capacity">
+                <col class="w-date">
+              </colgroup>
+              <thead>
+                <tr>
+                  <th>No.</th>
+                  <th>삭제</th>
+                  <th>교과목코드</th>
+                  <th>교과목명</th>
+                  <th>분반</th>
+                  <th>교과구분</th>
+                  <th>학점</th>
+                  <th>재이수년도</th>
+                  <th>재이수학기</th>
+                  <th>강의시간</th>
+                  <th>제한인원</th>
+                  <th>신청일자</th>
+                </tr>
+              </thead>
+              <tbody id="registeredBody"></tbody>
+            </table>
+            <div id="registeredEmpty" class="empty-state">조회된 데이터가 없습니다.</div>
+          </div>
+        </section>
+      </main>
+
+      <footer class="site-footer sugang-footer">
+        <div class="footer-inner">
+          <p class="footer-policy"><strong>개인정보처리방침</strong><span>----</span>본 사이트에서 제공되는 정보에 대한 무단 수집을 거부하며, 위반시 정보통신망법에 의해 처벌됨을 유념하시기 바랍니다.</p>
+          <address class="footer-contact">
+            <span>1234 수강시 호반구 호반대로 1234 (호반대학교)</span>
+            <span>학교 안내전화 1234-1234</span>
+            <span>당직실 1234-1234</span>
+            <span>정보화본부 IT서비스팀 1234-1234</span>
+          </address>
+          <small>COPYRIGHT(C) HOBAN UNIVERSITY. ALL RIGHTS RESERVED.</small>
+          <button class="go-to-top-button" type="button" aria-label="페이지 맨 위로 이동"><span aria-hidden="true">↑</span>TOP</button>
+        </div>
+      </footer>
+
+      <div id="loadingOverlay" class="loading-overlay" aria-hidden="true">
+        <div class="spinner"></div>
+        <span>Loading</span>
+      </div>
+    </section>
+
+    <div id="challengeResultModal" class="challenge-modal" role="dialog" aria-modal="true" aria-labelledby="challengeResultTitle" hidden>
+      <div class="challenge-modal-surface">
+        <header class="challenge-modal-header">
+          <p>CHALLENGE RESULT</p>
+          <h2 id="challengeResultTitle">챌린지 결과</h2>
+        </header>
+        <div class="challenge-result-wrap">
+          <table class="challenge-result-table">
+            <thead>
+              <tr>
+                <th>과목코드</th>
+                <th>과목</th>
+                <th>담당교수</th>
+                <th>신청 시간</th>
+              </tr>
+            </thead>
+            <tbody id="challengeResultBody"></tbody>
+            <tfoot id="challengeResultSummary" hidden>
+              <tr>
+                <th colspan="3" scope="row">올클리어 시간</th>
+                <td><strong id="challengeAllClearTime">00:00:00.000</strong></td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+        <div class="challenge-modal-actions">
+          <a class="challenge-modal-link" href="/apps" target="_top"><span aria-hidden="true">↖</span><span>Law Solver로 돌아가기</span></a>
+          <button id="challengeEndButton" class="challenge-modal-secondary" type="button">챌린지 종료하기</button>
+          <button id="challengeReplayButton" class="challenge-modal-primary" type="button">다시 하기</button>
+        </div>
+      </div>
+    </div>
+
+    <script src="data/courses-data.js?v=20260803"></script>
+    <script src="app.js?v=20260803j"></script>
+  </body>
+</html>

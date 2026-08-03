@@ -28,6 +28,7 @@ describe("SEO metadata", () => {
     expect(getSeoMetadata("/apps").title).toBe("Law Solver | 미니 앱");
     expect(getSeoMetadata("/apps/lbti/types").title).toBe("Law Solver | LBTI");
     expect(getSeoMetadata("/apps/legal-ethics-17").title).toBe("Law Solver | 제17회 법조윤리시험 가답안");
+    expect(getSeoMetadata("/apps/hoban-course-registration").title).toBe("Law Solver | 수강신청 연습");
     expect(getSeoMetadata("/dashboard").title).toBe("Law Solver | 대시보드");
     expect(getSeoMetadata("/result/private-session").title).toBe("Law Solver | 문제 풀이");
   });
@@ -55,6 +56,7 @@ describe("SEO metadata", () => {
     expect(INDEXABLE_PATHS).toContain("/dashboard");
     expect(INDEXABLE_PATHS).toContain("/apps/lbti/result/tcod");
     expect(INDEXABLE_PATHS).toContain("/apps/legal-ethics-17");
+    expect(INDEXABLE_PATHS).toContain("/apps/hoban-course-registration");
     expect(INDEXABLE_PATHS).not.toContain("/apps/lbti/test");
     expect(new Set(INDEXABLE_PATHS).size).toBe(INDEXABLE_PATHS.length);
   });
