@@ -53,7 +53,7 @@ const publicMetadata: Record<string, SeoMetadata> = {
   },
   "/apps/legal-ethics-17": {
     title: "Law Solver | 제17회 법조윤리시험 가답안",
-    description: "제17회 법조윤리시험 1번부터 40번까지의 가답안과 문항별 핵심 해설을 확인하고 답안을 자동채점하세요.",
+    description: "제17회 법조윤리시험 가답안과 문항별 해설을 확인하고 답안을 자동채점하세요.",
     indexable: true,
     canonicalPath: "/apps/legal-ethics-17/",
   },

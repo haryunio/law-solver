@@ -21,6 +21,12 @@ describe("mini app catalog", () => {
     });
   });
 
+  it("keeps app descriptions at 40 characters or fewer", () => {
+    miniApps.forEach((app) => {
+      expect([...app.description].length).toBeLessThanOrEqual(40);
+    });
+  });
+
   it("marks the course registration practice app as Premium-only", () => {
     expect(miniApps.find((app) => app.id === "hoban-course-registration")?.premium).toBe(true);
   });
