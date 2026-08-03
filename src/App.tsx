@@ -14,6 +14,7 @@ import { AppHomePage } from "./pages/AppHomePage";
 import { PremiumDashboardPage } from "./pages/PremiumDashboardPage";
 import { SettingsPage } from "./pages/SettingsPage";
 import { PageViewTracker } from "./components/analytics/PageViewTracker";
+import { MiniAppEntryScrollReset } from "./components/navigation/MiniAppEntryScrollReset";
 import { RouteMetadata } from "./components/seo/RouteMetadata";
 import { LbtiHomePage } from "./mini-apps/lbti/LbtiHomePage";
 import { LbtiResultPage } from "./mini-apps/lbti/LbtiResultPage";
@@ -87,6 +88,7 @@ export default function App() {
       <AccountWatcher />
       <RouteMetadata />
       <PageViewTracker />
+      <MiniAppEntryScrollReset />
       <Routes>
         <Route path="/" element={<LandingPage />} />
         <Route path="/apps" element={<SideAppsPage />} />

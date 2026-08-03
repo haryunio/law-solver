@@ -4,6 +4,7 @@ export interface MiniAppDefinition {
   /** 영문 kebab-case 고유 ID. 폴더명과 localStorage namespace에 함께 사용합니다. */
   id: string;
   name: string;
+  /** `/apps` 카드에 표시하는 40자 이하의 설명입니다. */
   description: string;
   status: MiniAppStatus;
   /** 목록에서 사용하는 짧은 텍스트 아이콘입니다. */

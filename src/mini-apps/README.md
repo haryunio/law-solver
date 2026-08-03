@@ -29,7 +29,7 @@ src/mini-apps/
 ## 새 앱 추가 순서
 
 1. `src/mini-apps/<app-id>/`를 만들고 `README.md`에 문제, 대상 사용자, MVP, 제외 범위, 데이터 구조를 먼저 적습니다.
-2. `manifest.ts`를 만들고 `MiniAppDefinition`을 `satisfies`로 검증합니다.
+2. `manifest.ts`를 만들고 `MiniAppDefinition`을 `satisfies`로 검증합니다. `/apps` 카드에 표시되는 `description`은 공백과 문장부호를 포함해 40자 이하로 작성합니다.
 3. `catalog.ts`에 manifest를 추가합니다. 기획 단계에서는 `coming-soon`으로 두고 `route`는 설정하지 않습니다.
 4. 구현 파일은 앱 폴더 안에 둡니다. 두 앱 이상에서 재사용되는 UI만 `src/components/ui/`, 도메인과 무관한 순수 유틸만 `src/lib/`로 올립니다.
 5. 출시할 때 `AppPage.tsx`와 `/apps/<app-id>` 라우트를 추가하고 manifest에 `route`와 출시 상태를 설정합니다.
@@ -44,6 +44,7 @@ src/mini-apps/
 - 미니 앱 데이터는 현재 Law Solver JSON 백업에 자동 포함되지 않습니다. 백업 범위를 넓히려면 기존/신형 백업 호환성과 복원 검증을 함께 설계합니다.
 - 앱끼리 서로의 store, component, 내부 lib를 직접 import하지 않습니다. 공용화가 필요하면 의존 방향을 검토한 뒤 루트 공통 영역으로 이동합니다.
 - 사용자 입력, 학습 기록, 앱 내부 ID를 URL이나 GA4에 보내지 않습니다.
+- 모든 manifest의 `description` 40자 제한은 `catalog.test.ts`에서 함께 검증합니다.
 - 서버와 비밀키가 없는 현재 구조를 유지합니다. 브라우저에 공개되면 안 되는 값은 미니 앱 코드에 넣지 않습니다.
 - `/apps` 목록은 랜딩과 동일한 `LandingHeader`, `LandingFooter`, `landing-page`, `landing-container`를 사용합니다. 개별 앱 화면도 기존 디자인 시스템과 접근성 규칙을 따릅니다.
 

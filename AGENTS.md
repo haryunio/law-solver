@@ -141,7 +141,7 @@ GitHub Pages용 정적 파일입니다. `404.html`은 SPA 새로고침 대응용
 
 - 앱 폴더는 `src/mini-apps/<app-id>/`에 만들고 영문 kebab-case를 사용합니다. 폴더명, manifest `id`, URL slug, 저장 namespace를 일치시키세요.
 - 모든 앱은 `manifest.ts`와 앱별 `README.md`에서 시작합니다. README에 목표, MVP, 제외 범위, 데이터 구조, 출시 조건을 구현 전에 기록하세요.
-- `/apps` 카드의 이름, 설명, 아이콘, 상태, route는 페이지에 하드코딩하지 말고 앱의 manifest와 `catalog.ts`에서 관리하세요.
+- `/apps` 카드의 이름, 설명, 아이콘, 상태, route는 페이지에 하드코딩하지 말고 앱의 manifest와 `catalog.ts`에서 관리하세요. 카드 설명은 공백과 문장부호를 포함해 40자 이하로 작성합니다.
 - 앱 전용 component, lib, store, type은 앱 폴더 안에 둡니다. 두 앱 이상이 실제로 공유하는 UI만 `src/components/ui/`, 도메인과 무관한 순수 유틸만 `src/lib/`로 이동하세요.
 - 앱끼리 서로의 내부 파일을 직접 import하지 마세요. 공통 계약이 필요하면 루트 공통 영역에 작은 타입 또는 API를 정의합니다.
 - 전역 테마·글꼴은 `useSettingsStore`를 재사용할 수 있지만, 미니 앱이 `useTestStore`의 문제 세션을 직접 수정해서는 안 됩니다. 기존 데이터를 사용할 때는 읽기 전용 selector나 명시적인 공유 API를 먼저 설계하세요.
