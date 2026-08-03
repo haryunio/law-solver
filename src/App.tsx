@@ -20,6 +20,7 @@ import { LbtiResultPage } from "./mini-apps/lbti/LbtiResultPage";
 import { LbtiTestPage } from "./mini-apps/lbti/LbtiTestPage";
 import { LbtiTypesPage } from "./mini-apps/lbti/LbtiTypesPage";
 import { LegalEthics17Page } from "./mini-apps/legal-ethics-17/LegalEthics17Page";
+import { HobanCourseRegistrationPage } from "./mini-apps/hoban-course-registration/HobanCourseRegistrationPage";
 import { useAccountStore } from "./store/useAccountStore";
 import { PremiumCoursePage } from "./pages/PremiumCoursePage";
 import { PremiumSolvePage } from "./pages/PremiumSolvePage";
@@ -89,6 +90,7 @@ export default function App() {
       <Routes>
         <Route path="/" element={<LandingPage />} />
         <Route path="/apps" element={<SideAppsPage />} />
+        <Route path="/apps/hoban-course-registration" element={<HobanCourseRegistrationPage />} />
         <Route path="/apps/legal-ethics-17" element={<LegalEthics17Page />} />
         <Route path="/apps/lbti" element={<LbtiHomePage />} />
         <Route path="/apps/lbti/test" element={<LbtiTestPage />} />

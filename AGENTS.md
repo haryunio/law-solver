@@ -50,7 +50,7 @@
 src/App.tsx
 ```
 
-라우팅과 테마/폰트·계정 watcher를 담당합니다. Premium 온라인 라우트는 `/premium`, `/premium/courses/:courseId`, `/premium/courses/:courseId/problem-sets/:problemSetId`, `/premium/attempts/:attemptId`, `/premium/results/:attemptId`, `/premium/wrong/:attemptId`, `/premium/review/:attemptId`이며 동적 ID를 메타데이터나 분석에 보내지 않습니다. 출시된 미니 앱은 `/apps/:appId` 아래에 추가하며 현재 `/apps/lbti`와 `/apps/legal-ethics-17`을 제공합니다.
+라우팅과 테마/폰트·계정 watcher를 담당합니다. Premium 온라인 라우트는 `/premium`, `/premium/courses/:courseId`, `/premium/courses/:courseId/problem-sets/:problemSetId`, `/premium/attempts/:attemptId`, `/premium/results/:attemptId`, `/premium/wrong/:attemptId`, `/premium/review/:attemptId`이며 동적 ID를 메타데이터나 분석에 보내지 않습니다. 출시된 미니 앱은 `/apps/:appId` 아래에 추가하며 현재 `/apps/lbti`, `/apps/legal-ethics-17`, `/apps/hoban-course-registration`을 제공합니다.
 
 ```txt
 src/pages/
@@ -153,6 +153,7 @@ GitHub Pages용 정적 파일입니다. `404.html`은 SPA 새로고침 대응용
 - 첫 번째 미니 앱은 `src/mini-apps/lbti/`의 `LBTI: 로스쿨생 MBTI 테스트`입니다. 지표·유형은 `data/lbti-framework.json`, 28개 기본 채점 문항·1개 가점 문항·1개 보조 문항은 `data/questions.ko.json`, 제품 범위는 `docs/PRODUCT_PLAN.md`, 작성 기준은 `docs/CONTENT_GUIDE.md`를 단일 원본으로 사용합니다.
 - LBTI 소개·테스트·결과·전체 유형 화면과 채점 로직은 모두 `src/mini-apps/lbti/` 안에 둡니다. 결과 공유 URL에는 유형 코드만 사용하고 답변, 축 점수, 진행률이나 내부 ID를 넣지 마세요.
 - `src/mini-apps/legal-ethics-17/`은 제17회 법조윤리시험 가답안·해설·40문항 자동채점을 제공하는 단일 페이지 앱입니다. 문항 번호·가답안·쟁점·해설은 `data.ts`를 단일 원본으로 사용하고, 공식 정답 발표 뒤 수정할 때에는 `data.test.ts`의 정답 배열도 함께 갱신하세요. 사용자가 입력한 답안은 저장하거나 분석으로 전송하지 않습니다.
+- `src/mini-apps/hoban-course-registration/`은 활성 Premium 회원만 접근할 수 있도록 React 라우트에서 `useAccountStore` 상태를 확인한 뒤 `public/mini-apps/hoban-course-registration/`의 정적 페이지를 전체 화면 iframe으로 실행합니다. 비로그인 또는 Premium 비활성 사용자는 계정 화면으로 안내하는 프론트 모달을 표시하고 `/apps` 카드에는 공통 `PremiumBadge`를 사용합니다. 이 접근 제어는 서버 권한 검증이 아닌 간단한 프론트 진입 제어입니다. `sugang-master`의 기본 화면·이미지·강좌 데이터를 기반으로 하되 프로젝트 전용 중앙 GNB와 10초 챌린지 모드를 제공합니다. 챌린지는 `16:59:50`부터 카운트다운해 `17:00:00`에 로그인을 열고, 정각부터 각 과목 신청 성공까지의 누적 시간을 밀리초 단위로 현재 페이지 메모리에만 기록합니다. 결과에는 분반 포함 전체 과목코드, 담당교수와 마지막 과목 기준 올클리어 시간을 표시합니다.
 - 앱 페이지뷰와 행동 이벤트는 `src/lib/analytics.ts`의 정적 허용값으로만 추가합니다. 사용자가 작성한 내용, 학습 기록, 시간·점수·진행률, 앱 내부 ID를 GA4에 보내지 마세요.
 - 출시 전 앱별 로직/migration 테스트, `npm test`, `npm run build`, SPA 새로고침을 확인하세요.
 
@@ -363,7 +364,7 @@ GA4 관리 화면의 향상된 측정에서 `브라우저 방문 기록 이벤�
 
 Search Console은 도메인 속성 `lawsolver.haryun.io`를 기준으로 사용합니다. `src/lib/seo.ts`가 검색 노출 정책의 단일 출처이며, `RouteMetadata`가 React Router 이동에 맞춰 title, description, canonical, robots, Open Graph와 Twitter 메타데이터를 반영합니다.
 
-색인 대상은 랜딩, 과목 대시보드, 미니 앱 목록, 제17회 법조윤리시험 가답안, LBTI 소개, 전체 유형 목록과 16개 유형별 결과입니다. 서비스 홈, 환경설정, 계정·구독, Premium 대시보드, LBTI 질문 응답, 과목별 문제 대시보드, 풀이·결과·리뷰, 알 수 없는 경로에는 `noindex`를 적용하고 사이트맵에 넣지 않습니다. 동적 학습 ID, 사용자가 입력한 제목이나 문제 내용은 메타데이터, canonical, 소셜 태그와 사이트맵에 넣지 마세요.
+색인 대상은 랜딩, 과목 대시보드, 미니 앱 목록, 호반대학교 수강신청 연습, 제17회 법조윤리시험 가답안, LBTI 소개, 전체 유형 목록과 16개 유형별 결과입니다. 서비스 홈, 환경설정, 계정·구독, Premium 대시보드, LBTI 질문 응답, 과목별 문제 대시보드, 풀이·결과·리뷰, 알 수 없는 경로에는 `noindex`를 적용하고 사이트맵에 넣지 않습니다. 동적 학습 ID, 사용자가 입력한 제목이나 문제 내용은 메타데이터, canonical, 소셜 태그와 사이트맵에 넣지 마세요.
 
 `vite.config.ts`의 SEO artifact 플러그인은 빌드 후 다음을 생성합니다.
 

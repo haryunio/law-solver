@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { LandingFooter } from "../components/ui/LandingFooter";
 import { LandingHeader } from "../components/ui/LandingHeader";
+import { PremiumBadge } from "../components/ui/PremiumBadge";
 import { miniApps } from "../mini-apps/catalog";
 import type { MiniAppDefinition, MiniAppStatus } from "../mini-apps/types";
 
@@ -26,13 +27,17 @@ function MiniAppCard({ app }: { app: MiniAppDefinition }) {
           <span className="rounded-full border border-stone-200 bg-stone-100 px-2.5 py-1 text-[10px] font-bold tracking-[0.1em] text-stone-500 dark:border-stone-700 dark:bg-stone-800 dark:text-stone-400">
             {statusLabels[app.status]}
           </span>
+          {app.premium ? <PremiumBadge /> : null}
         </div>
         <p className="mt-2.5 text-sm leading-6 text-stone-600 dark:text-stone-400">{app.description}</p>
       </div>
     </div>
   );
 
-  const cardClass = "app-card relative overflow-hidden rounded-3xl border p-5 sm:p-6";
+  const cardClass = [
+    "app-card relative overflow-hidden rounded-3xl border p-5 sm:p-6",
+    app.premium ? "app-premium-card" : "",
+  ].join(" ");
   if (app.route && !isComingSoon) {
     return (
       <Link

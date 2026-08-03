@@ -1,4 +1,5 @@
 import { focusTimerApp } from "./focus-timer/manifest";
+import { hobanCourseRegistrationApp } from "./hoban-course-registration/manifest";
 import { legalEthics17App } from "./legal-ethics-17/manifest";
 import { lbtiApp } from "./lbti/manifest";
 import { statuteRecallApp } from "./statute-recall/manifest";
@@ -7,6 +8,7 @@ import type { MiniAppDefinition } from "./types";
 
 /** `/apps`에 노출되는 순서입니다. 새 앱은 manifest를 만든 뒤 이 배열에 추가합니다. */
 export const miniApps: readonly MiniAppDefinition[] = [
+  hobanCourseRegistrationApp,
   legalEthics17App,
   lbtiApp,
   statuteRecallApp,
