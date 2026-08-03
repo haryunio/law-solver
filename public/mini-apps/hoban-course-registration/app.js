@@ -205,6 +205,13 @@
     return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}.${String(millis).padStart(3, "0")}`;
   }
 
+  function formatChallengeTimeGap(milliseconds) {
+    const duration = Math.max(0, Math.floor(milliseconds));
+    const seconds = Math.floor(duration / 1000);
+    const millis = duration % 1000;
+    return `+${String(seconds).padStart(2, "0")}.${String(millis).padStart(3, "0")}`;
+  }
+
   function isChallengeLoginOpen() {
     return !state.challenge.active || getChallengeNow() >= state.challenge.opensAt;
   }
@@ -286,18 +293,21 @@
 
     if (completedCourses.length === 0) {
       const emptyRow = document.createElement("tr");
-      emptyRow.innerHTML = '<td class="challenge-result-empty" colspan="4">신청한 과목이 없습니다.</td>';
+      emptyRow.innerHTML = '<td class="challenge-result-empty" colspan="5">신청한 과목이 없습니다.</td>';
       challengeResultBody.appendChild(emptyRow);
       return;
     }
 
-    completedCourses.forEach((course) => {
+    completedCourses.forEach((course, index) => {
+      const previousElapsedMs = index === 0 ? 0 : completedCourses[index - 1].challengeElapsedMs;
+      const timeGapMs = course.challengeElapsedMs - previousElapsedMs;
       const row = document.createElement("tr");
       row.innerHTML = `
         <td>${escapeHtml(course.courseCode)}</td>
         <td>${escapeHtml(course.courseName)}</td>
         <td>${escapeHtml(course.professor || "-")}</td>
         <td><strong>${formatChallengeDuration(course.challengeElapsedMs)}</strong></td>
+        <td><strong>${formatChallengeTimeGap(timeGapMs)}</strong></td>
       `;
       challengeResultBody.appendChild(row);
     });
