@@ -33,6 +33,18 @@ body {
   letter-spacing: 0;
 }
 
+.login-view,
+.sugang-view {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.login-view > .site-footer,
+.sugang-view > .site-footer {
+  margin-top: auto;
+}
+
 body::before,
 body::after {
   content: "";
