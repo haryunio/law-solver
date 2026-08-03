@@ -57,6 +57,12 @@ const publicMetadata: Record<string, SeoMetadata> = {
     indexable: true,
     canonicalPath: "/apps/legal-ethics-17/",
   },
+  "/apps/hoban-course-registration": {
+    title: "Law Solver | 수강신청 연습",
+    description: "호반대학교 수강신청 화면에서 강좌번호 조회와 수강신청 순서를 실제처럼 연습해 보세요.",
+    indexable: true,
+    canonicalPath: "/apps/hoban-course-registration/",
+  },
   "/dashboard": {
     title: "Law Solver | 대시보드",
     description: "과목별로 문제를 정리하고, 시험처럼 풀고, 바로 복습하세요.",
@@ -122,6 +128,7 @@ export const INDEXABLE_PATHS = [
   "/apps/lbti",
   "/apps/lbti/types",
   "/apps/legal-ethics-17",
+  "/apps/hoban-course-registration",
   "/dashboard",
   ...framework.types.map((type) => `/apps/lbti/result/${type.code.toLowerCase()}`),
 ] as const;

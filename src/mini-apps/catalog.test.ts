@@ -20,4 +20,8 @@ describe("mini app catalog", () => {
       if (app.route) expect(app.route).toBe(`/apps/${app.id}`);
     });
   });
+
+  it("marks the course registration practice app as Premium-only", () => {
+    expect(miniApps.find((app) => app.id === "hoban-course-registration")?.premium).toBe(true);
+  });
 });

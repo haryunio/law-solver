@@ -10,6 +10,8 @@ export interface MiniAppDefinition {
   icon: string;
   /** 아이콘 표면의 Tailwind 색상 클래스만 둡니다. 크기와 배치는 목록 화면이 소유합니다. */
   iconClass: string;
+  /** 활성 Premium 회원만 접근할 수 있는 앱입니다. 프론트 라우트 진입 제어와 목록 배지에 사용합니다. */
+  premium?: boolean;
   /** 출시된 앱만 설정합니다. 예: /apps/lbti */
   route?: `/apps/${string}`;
 }

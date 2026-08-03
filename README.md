@@ -19,6 +19,7 @@ License: CC BY-NC-ND
 
 - 랜딩 페이지, 미니 앱 목록, 과목 목록, 과목별 문제 풀이 대시보드
 - LBTI 30문항 테스트, 유형 계산, 공유 가능한 16개 결과 페이지와 전체 유형 탐색
+- 호반대학교 수강신청 화면에서 강좌번호 조회·신청 순서와 10초 챌린지 기록 연습
 - 과목 추가/편집/삭제, 5종 표지 색상 선택, 드래그 순서 변경, 문제별 과목 배정, `과목 없음` 기본 폴더
 - OX, 5지선다, 단답형 CSV 업로드
 - 번호 순서, 챕터별 랜덤, 전체 랜덤 풀이 순서 선택
@@ -102,6 +103,7 @@ API·DTO·권한 계약은 서버의 `docs/API.md`, `docs/AUTHORIZATION.md`, `do
 │   │   └── upload/                     # CSV 업로드 UI
 │   ├── mini-apps/                       # 앱별 독립 기능, manifest, 개발 문서
 │   │   ├── catalog.ts                   # /apps 노출 목록과 순서
+│   │   ├── hoban-course-registration/   # 호반대학교 수강신청 연습
 │   │   ├── lbti/                        # LBTI: 로스쿨생 MBTI 테스트
 │   │   ├── statute-recall/              # 조문 리콜
 │   │   ├── study-planner/               # 스터디 플래너
@@ -145,6 +147,7 @@ Law Solver는 랜딩부터 문제 풀이, 결과, 오답 복기 화면까지 하
 
 | 앱 | 폴더 | 현재 상태 |
 | --- | --- | --- |
+| 호반대학교 수강신청 연습 | `hoban-course-registration/` | Beta |
 | 제17회 법조윤리시험 가답안 | `legal-ethics-17/` | Available |
 | LBTI: 로스쿨생 MBTI 테스트 | `lbti/` | Available |
 | 조문 리콜 | `statute-recall/` | Coming Soon |
@@ -165,6 +168,7 @@ LBTI의 네 지표와 16개 유형은 [`lbti-framework.json`](src/mini-apps/lbti
 
 - `/`: 랜딩 페이지
 - `/apps`: 미니 앱 목록
+- `/apps/hoban-course-registration`: 호반대학교 수강신청 강좌 조회·신청·삭제 및 10초 챌린지 연습
 - `/apps/legal-ethics-17`: 제17회 법조윤리시험 가답안·문항별 해설·40문항 자동채점
 - `/apps/lbti`: LBTI 소개
 - `/apps/lbti/test`: 30문항 LBTI 테스트
@@ -252,7 +256,7 @@ GA4 데이터 스트림의 향상된 측정에서 `브라우저 방문 기록 �
 
 운영 도메인은 Search Console 도메인 속성 `lawsolver.haryun.io`를 기준으로 관리합니다. 검색에 노출할 공개 URL과 개인 학습 화면을 분리하며, 관련 정책은 `src/lib/seo.ts`가 단일 출처입니다.
 
-- 색인 대상: 랜딩, 과목 대시보드, 미니 앱 목록, LBTI 소개, 16개 유형 목록, 16개 유형별 결과
+- 색인 대상: 랜딩, 과목 대시보드, 미니 앱 목록, 호반대학교 수강신청 연습, 제17회 법조윤리시험 가답안, LBTI 소개, 16개 유형 목록, 16개 유형별 결과
 - 색인 제외: 서비스 홈, 환경설정, 계정·구독, Premium 대시보드, LBTI 응답 화면, 과목별 문제 대시보드, 풀이, 채점 결과와 리뷰, 알 수 없는 경로
 - `src/components/seo/RouteMetadata.tsx`가 React Router 이동 시 title, description, canonical, robots, Open Graph와 Twitter 메타데이터를 갱신합니다.
 - 메인 title은 `Law Solver`이며 세부 화면은 `Law Solver | 대시보드`처럼 브랜드명 뒤에 1뎁스 기능명만 붙입니다.
