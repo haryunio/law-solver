@@ -55,7 +55,7 @@ License: CC BY-NC-ND
 - Vite
 - Tailwind CSS
 - React Router
-- Zustand + localStorage persist
+- Zustand + IndexedDB persist
 - Supabase JavaScript Client
 - Papa Parse
 - Google Analytics 4 (`gtag.js`)
@@ -139,7 +139,7 @@ Law Solver는 랜딩부터 문제 풀이, 결과, 오답 복기 화면까지 하
 
 공통 디자인 클래스는 색상, 테두리, 그림자와 상태 표현만 담당합니다. 위치와 크기 같은 레이아웃은 각 화면의 컴포넌트가 소유해, 공통 스타일 변경이 CBT 버튼이나 카드 배치를 덮어쓰지 않도록 합니다. 랜딩의 문제 풀이 예시는 실제 CBT의 상단 제어, 문제 카드, OMR, 하단 이동 구조를 축소해 보여 줍니다.
 
-디자인 리팩터링은 기존 라우트, 화면 배치, 사용자 흐름과 localStorage 데이터 구조를 변경하지 않는 것을 원칙으로 합니다.
+디자인 리팩터링은 기존 라우트, 화면 배치, 사용자 흐름과 브라우저 저장 데이터 구조를 변경하지 않는 것을 원칙으로 합니다.
 
 ## 미니 앱 구조
 
@@ -191,7 +191,11 @@ LBTI의 네 지표와 16개 유형은 [`lbti-framework.json`](src/mini-apps/lbti
 - `/wrong/:sessionId`: 오답 확인 및 오답노트 작성
 - `/review/:sessionId`: 전체 문항 또는 책갈피 문항 확인
 
-세션, 과목, 세션-과목 매핑 데이터는 `law-solver-storage` 키로 localStorage에 저장됩니다. 환경설정은 `law-solver-settings` 키로 저장됩니다.
+세션, 과목, 세션-과목 매핑 데이터는 IndexedDB의 `law-solver-offline` 데이터베이스, `persisted-state` object store에 `law-solver-storage` 키로 저장됩니다. 환경설정은 기존처럼 `law-solver-settings` 키로 localStorage에 저장됩니다.
+
+IndexedDB 전환 전 localStorage의 `law-solver-storage`에 저장된 v1~v3 데이터는 앱 시작 시 자동 이전합니다. IndexedDB transaction 완료, 재조회, Zustand hydration과 정규화된 최종 저장까지 모두 성공한 뒤에만 기존 localStorage 원본을 제거합니다. 이전에 실패하면 기존 원본을 보존하고 데이터 화면 대신 재시도 안내를 표시합니다.
+
+일반 변경은 짧게 모아 직렬 저장하되 답안·책갈피·제출 변경은 즉시 flush하고, 탭을 숨기거나 닫을 때도 남은 변경의 저장을 바로 시작합니다. 각 IndexedDB snapshot에는 내부 revision을 두어 오래된 다른 탭의 예약 쓰기가 최신 데이터나 복원 결과를 덮어쓰지 못하게 합니다. 파일·클라우드 복원과 전체 초기화는 직전 변경을 먼저 저장한 뒤 교체본을 한 번만 기록하며, 교체 저장이 실패하면 기존 메모리와 영구 저장본을 유지합니다. 마이그레이션 후 localStorage를 지우기 직전에도 원본이 그 사이 변경되지 않았는지 다시 확인합니다.
 
 `과목 없음`은 실제 과목 객체로 저장하지 않습니다. 세션-과목 매핑이 없는 세션을 `과목 없음`으로 표시합니다.
 
@@ -248,7 +252,7 @@ LBTI의 네 지표와 16개 유형은 [`lbti-framework.json`](src/mini-apps/lbti
 - LBTI 질문별 응답, 축별 점수, 진행률과 소요시간
 - 과목명, 세션명, CSV 파일명
 - `subjectId`, `sessionId`, 문항 ID를 포함한 식별자
-- localStorage에 저장된 학습 데이터 원본
+- IndexedDB에 저장된 오프라인 학습 데이터 원본
 
 GA4 데이터 스트림의 향상된 측정에서 `브라우저 방문 기록 이벤트에 따른 페이지 변경`은 꺼야 합니다. 이 설정이 켜져 있으면 수동 `page_view`와 중복 집계될 수 있습니다. 배포 후 DebugView에서 이벤트가 한 번씩 발생하는지 확인하고, 보고서에서 세부 구분값을 사용하려면 `page_type`, `question_type`, `solve_entry`, `navigation_method`, `review_type`, `retry_type`, `failure_type`, `lbti_type`을 이벤트 범위 맞춤 측정기준으로 등록합니다. `solve_completed`는 주요 이벤트로 지정할 수 있습니다.
 
@@ -374,7 +378,7 @@ Premium 클라우드 백업도 같은 전체 JSON 스냅샷을 사용하되 평�
 - 압축·암호화 최종본 최대 15MB, 원본 JSON 안전 한도 30MB
 - 백업과 복구 각각 한국시간 기준 하루 5회
 - 잘못된 비밀번호는 현재 복구 모달에 캐시한 암호문으로 다시 시도하므로 추가 다운로드를 만들지 않음
-- 복호화·구조 검증·현재/클라우드 비교와 최종 확인이 모두 끝난 경우에만 localStorage를 원자적으로 교체
+- 복호화·구조 검증·현재/클라우드 비교와 최종 확인 및 IndexedDB 저장이 모두 끝난 경우에만 현재 데이터를 원자적으로 교체
 - Premium 만료 후 업로드·복구를 중지하고 마지막 유효 종료일 1년 뒤 서버 백업 자동 삭제
 - 비밀번호·암호화 키·평문은 서버로 전송하거나 저장하지 않으며 운영자가 비밀번호를 복구할 수 없음
 
@@ -440,7 +444,7 @@ CSV의 큰따옴표로 감싼 셀 안에 실제 줄바꿈이 있으면 해당 �
 
 ## 현재 알려진 제한사항 / TODO
 
-- 오프라인 CSV 문제와 풀이 기록은 브라우저 localStorage에만 저장됩니다. 브라우저 데이터 삭제, 다른 기기 사용, 시크릿 모드에서는 유지되지 않을 수 있습니다.
+- 오프라인 CSV 문제와 풀이 기록은 브라우저 로컬 저장소(기본적으로 IndexedDB)에만 저장됩니다. IndexedDB를 지원하지 않지만 기존 localStorage 데이터가 있는 환경에서는 원본 보호를 위해 기존 방식을 유지하며, 브라우저 데이터 삭제, 다른 기기 사용, 시크릿 모드에서는 유지되지 않을 수 있습니다.
 - Premium 온라인 문제의 콘텐츠와 사용자별 답안·진행 상태·결과·책갈피·오답 노트·재풀이 기록은 온라인 기능 제공을 위해 Supabase 기반 서버에 저장되며 오프라인 JSON 백업 범위에는 포함되지 않습니다.
 - 오프라인의 중요한 풀이 기록은 대시보드 JSON 백업 또는 CSV 다운로드로 별도 보관해야 합니다. Premium 문제와 풀이 결과는 콘텐츠 보호를 위해 CSV 다운로드를 제공하지 않습니다.
 - Premium 기능은 비공개 `law-solver-server`와 공개 Supabase 연결값이 설정된 환경에서만 동작합니다.

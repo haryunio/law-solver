@@ -1,4 +1,5 @@
 import { IconCloseButton } from "./IconCloseButton";
+import { ButtonLoadingContent } from "./AsyncLoading";
 
 type ConfirmVariant = "default" | "danger" | "success";
 
@@ -8,8 +9,10 @@ interface ConfirmDialogProps {
   confirmLabel?: string;
   cancelLabel?: string;
   variant?: ConfirmVariant;
-  onConfirm: () => void;
+  onConfirm: () => void | Promise<void>;
   onCancel?: () => void;
+  pending?: boolean;
+  pendingLabel?: string;
 }
 
 const variantClass = {
@@ -26,13 +29,16 @@ export function ConfirmDialog({
   variant = "default",
   onConfirm,
   onCancel,
+  pending = false,
+  pendingLabel = "처리 중",
 }: ConfirmDialogProps) {
   const hasCancel = Boolean(onCancel);
 
   return (
     <div className="fixed inset-0 z-[60]">
       <button
-        onClick={onCancel ?? onConfirm}
+        onClick={pending ? undefined : onCancel ?? onConfirm}
+        disabled={pending}
         className="app-modal-backdrop absolute inset-0"
         aria-label="대화상자 닫기"
       />
@@ -42,7 +48,11 @@ export function ConfirmDialog({
             <h2 className="min-w-0 flex-1 text-base font-semibold text-stone-900 dark:text-stone-100">
               {title}
             </h2>
-            <IconCloseButton onClick={onCancel ?? onConfirm} label="대화상자 닫기" />
+            <IconCloseButton
+              onClick={pending ? () => undefined : onCancel ?? onConfirm}
+              disabled={pending}
+              label="대화상자 닫기"
+            />
           </div>
 
           {description ? (
@@ -56,20 +66,22 @@ export function ConfirmDialog({
               <button
                 type="button"
                 onClick={onCancel}
-                className="app-button-secondary rounded-lg px-4 py-2.5 text-sm font-semibold"
+                disabled={pending}
+                className="app-button-secondary rounded-lg px-4 py-2.5 text-sm font-semibold disabled:opacity-50"
               >
                 {cancelLabel}
               </button>
             ) : null}
             <button
               type="button"
-              onClick={onConfirm}
+              onClick={() => void onConfirm()}
+              disabled={pending}
               className={[
-                "rounded-lg px-4 py-2.5 text-sm font-semibold text-white transition",
+                "rounded-lg px-4 py-2.5 text-sm font-semibold text-white transition disabled:opacity-60",
                 variantClass[variant],
               ].join(" ")}
             >
-              {confirmLabel}
+              {pending ? <ButtonLoadingContent label={pendingLabel} /> : confirmLabel}
             </button>
           </div>
         </section>
