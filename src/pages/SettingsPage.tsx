@@ -12,6 +12,7 @@ import {
   parseDashboardBackupJson,
 } from "../lib/dashboardBackup";
 import { CLOUD_BACKUP_MAX_PLAINTEXT_BYTES } from "../lib/cloudBackupCrypto";
+import { getOfflineDataStorageMessage } from "../lib/offlineDataStorage";
 
 type SettingsTab = "appearance" | "data";
 
@@ -34,6 +35,7 @@ const fontOptions: Array<{ id: FontFamily; label: string; className: string }> =
 export function SettingsPage() {
   const [activeTab, setActiveTab] = useState<SettingsTab>("appearance");
   const [dialog, setDialog] = useState<DialogState | null>(null);
+  const [dataOperation, setDataOperation] = useState<"restore" | "reset" | null>(null);
   const { darkMode, toggleDarkMode, fontFamily, setFontFamily } = useSettingsStore();
   const sessions = useTestStore((state) => state.sessions);
   const subjects = useTestStore((state) => state.subjects);
@@ -71,20 +73,32 @@ export function SettingsPage() {
           confirmLabel: "불러오기",
           variant: "danger",
           onCancel: () => setDialog(null),
-          onConfirm: () => {
-            importDashboardData({
-              sessions: data.sessions,
-              subjects: data.subjects,
-              sessionSubjectMap: data.sessionSubjectMap,
-              dataModifiedAt: data.data_modified_at,
-            });
-            setDialog({
-              title: "불러오기가 완료되었습니다.",
-              description: "백업 파일의 오프라인 문제 풀이 데이터가 이 브라우저에 반영되었습니다.",
-              confirmLabel: "확인",
-              variant: "success",
-              onConfirm: () => setDialog(null),
-            });
+          onConfirm: async () => {
+            setDataOperation("restore");
+            try {
+              await importDashboardData({
+                sessions: data.sessions,
+                subjects: data.subjects,
+                sessionSubjectMap: data.sessionSubjectMap,
+                dataModifiedAt: data.data_modified_at,
+              });
+              setDialog({
+                title: "불러오기가 완료되었습니다.",
+                description: "백업 파일의 오프라인 문제 풀이 데이터가 이 브라우저에 반영되었습니다.",
+                confirmLabel: "확인",
+                variant: "success",
+                onConfirm: () => setDialog(null),
+              });
+            } catch (error) {
+              setDialog({
+                title: "데이터를 저장하지 못했습니다.",
+                description: `${getOfflineDataStorageMessage(error)} 기존 데이터는 변경하지 않았습니다.`,
+                confirmLabel: "확인",
+                onConfirm: () => setDialog(null),
+              });
+            } finally {
+              setDataOperation(null);
+            }
           },
         });
       } catch (error) {
@@ -109,15 +123,27 @@ export function SettingsPage() {
       confirmLabel: "초기화",
       variant: "danger",
       onCancel: () => setDialog(null),
-      onConfirm: () => {
-        resetSessions();
-        setDialog({
-          title: "초기화가 완료되었습니다.",
-          description: "이 브라우저의 오프라인 문제 풀이 데이터가 삭제되었습니다.",
-          confirmLabel: "확인",
-          variant: "success",
-          onConfirm: () => setDialog(null),
-        });
+      onConfirm: async () => {
+        setDataOperation("reset");
+        try {
+          await resetSessions();
+          setDialog({
+            title: "초기화가 완료되었습니다.",
+            description: "이 브라우저의 오프라인 문제 풀이 데이터가 삭제되었습니다.",
+            confirmLabel: "확인",
+            variant: "success",
+            onConfirm: () => setDialog(null),
+          });
+        } catch (error) {
+          setDialog({
+            title: "초기화하지 못했습니다.",
+            description: `${getOfflineDataStorageMessage(error)} 기존 데이터는 변경하지 않았습니다.`,
+            confirmLabel: "확인",
+            onConfirm: () => setDialog(null),
+          });
+        } finally {
+          setDataOperation(null);
+        }
       },
     });
   };
@@ -302,6 +328,8 @@ export function SettingsPage() {
           variant={dialog.variant}
           onConfirm={dialog.onConfirm}
           onCancel={dialog.onCancel}
+          pending={Boolean(dataOperation)}
+          pendingLabel={dataOperation === "reset" ? "초기화하는 중" : "저장하는 중"}
         />
       ) : null}
     </div>

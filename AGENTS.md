@@ -6,10 +6,11 @@
 
 `law-solver`는 React 기반 로스쿨 문제 풀이 앱입니다. 오프라인 CSV 문제와 설정은 기본적으로 브라우저에 저장하고, Premium 계정·결제·온라인 학습과 사용자가 직접 실행한 암호화 클라우드 백업은 비공개 `law-solver-server` Supabase 백엔드를 사용합니다.
 
-오프라인 데이터 저장은 브라우저 localStorage를 사용합니다.
+오프라인 문제 풀이 데이터는 브라우저 IndexedDB를 사용합니다. 환경설정과 미니 앱별 로컬 데이터는 기존 localStorage를 사용합니다.
 
-- 세션 저장 key: `law-solver-storage`
-- 환경설정 저장 key: `law-solver-settings`
+- 오프라인 DB/object store/key: `law-solver-offline` / `persisted-state` / `law-solver-storage`
+- 레거시 세션 저장 key: `law-solver-storage` (첫 정상 접속 시 IndexedDB로 안전 이전 후 삭제)
+- 환경설정 저장 key: `law-solver-settings` (localStorage)
 
 ## 연관 저장소와 변경 경계
 
@@ -112,8 +113,8 @@ GitHub Pages용 정적 파일입니다. `404.html`은 SPA 새로고침 대응용
 - 과목 목록과 문제 대시보드의 상단 GNB는 `src/components/ui/DashboardHeaderTitle.tsx`를 사용합니다. 모바일에서도 브랜드명은 `Law Solver` 전체를 표시하고, 제목의 계층 구분에는 `|` 문자가 아니라 컴포넌트의 얇은 시각 구분선을 사용합니다. 모바일에서만 액션을 2열 전체 너비로 표시하고, `sm` 이상에서는 텍스트 너비의 버튼을 우측 정렬합니다. GNB가 두 줄인 `sm`·`md` 구간에서는 액션 영역의 가로 구분선 위아래에 각각 해당 구간의 카드 패딩과 같은 여백을 적용하며, 한 줄이 되는 `lg`부터 구분선과 추가 여백을 제거합니다.
 - 채점 결과 페이지도 대시보드와 동일한 GNB와 `app-card` 체계를 사용합니다. 상단은 정답률·풀이 시간 지표, 문제 확인, 다시 풀기의 독립 카드 3개를 2:1:1 비율로 배치하고, 전체·정답·오답·미응답·책갈피는 작은 통계표로 표시합니다. 문제 확인·다시 풀기 버튼의 높이와 글자 크기는 모바일에서도 축소하지 않습니다. 상세 분석표는 그 아래 전체 너비를 사용하며 OMR 표에는 파트 열을 포함합니다.
 - 브라우저 API 사용 시 호환성을 고려합니다. 예: `crypto.randomUUID()` 직접 호출 대신 `src/lib/id.ts`의 `createId()` 사용.
-- Premium API는 `src/lib/premiumApi.ts`를 통해 호출하고, 오프라인 `law-solver-storage`와 Supabase Auth·온라인 학습 데이터를 섞지 마세요.
-- Premium 오프라인 클라우드 백업은 자동 동기화하지 않습니다. 사용자가 명시적으로 실행할 때 `DashboardBackupData` 전체 JSON을 브라우저에서 gzip 압축하고 8자 이상 비밀번호 기반 PBKDF2-SHA256·AES-256-GCM으로 암호화한 뒤 `backup-api`의 signed Storage 경로로 전송하세요. 비밀번호·키·평문을 API, localStorage, 로그, 분석에 남기지 마세요.
+- Premium API는 `src/lib/premiumApi.ts`를 통해 호출하고, IndexedDB의 오프라인 `law-solver-storage`와 Supabase Auth·온라인 학습 데이터를 섞지 마세요.
+- Premium 오프라인 클라우드 백업은 자동 동기화하지 않습니다. 사용자가 명시적으로 실행할 때 `DashboardBackupData` 전체 JSON을 브라우저에서 gzip 압축하고 8자 이상 비밀번호 기반 PBKDF2-SHA256·AES-256-GCM으로 암호화한 뒤 `backup-api`의 signed Storage 경로로 전송하세요. 비밀번호·키·평문을 API, IndexedDB, localStorage, 로그, 분석에 남기지 마세요.
 - 클라우드 백업은 암호화 최종본 15MB, 원본 JSON 30MB, 백업·복구 각각 하루 5회 정책을 UI와 서버 응답 기준으로 안내합니다. 복구 암호문은 열린 모달 메모리에만 캐시해 비밀번호 오입력을 재시도하고, 로그아웃·새로고침·모달 종료 시 버립니다. 복호화·구조 검증과 사용자 최종 확인 전에는 현재 데이터를 변경하지 마세요.
 - 개인정보 안내에서는 오프라인과 Premium 온라인 학습을 구분하세요. 사용자가 업로드한 오프라인 CSV의 문제·답안·풀이 기록은 브라우저에만 남지만, Premium 온라인 문제의 문항별 답안·진행 상태·결과·책갈피·오답 노트·재풀이 기록은 기능 제공을 위해 서버에 저장됩니다. “문제와 답안을 보내지 않는다”는 문구는 GA4 분석 전송 제한으로만 설명하고 Premium 서버 저장까지 부정하지 마세요.
 - 이용권 CTA는 `PurchaseMethodModal`을 사용해 무통장입금·토스페이먼츠·프로모션 코드를 한곳에서 표시합니다. 미구현 수단은 준비 중으로 비활성화하고, 프로모션 코드는 모달 내부 전환 뒤 `promotion-api`로 사용합니다. 성공 후 `account-api`를 새로 조회해 이용권과 결제내역을 함께 갱신하세요.
@@ -130,7 +131,7 @@ GitHub Pages용 정적 파일입니다. `404.html`은 SPA 새로고침 대응용
 - CSV 헤더 호환성은 `src/lib/csv.ts`의 `normalize`, `getValue` 흐름을 기준으로 확장합니다.
 - 새 문제 등록은 CSV 파일을 첫 입력으로 배치합니다. 파일 선택 시 확장자를 제거하고 특수문자를 공백으로 바꾼 파일명을 세션 제목으로 제안하며, 선택지 헤더와 정답 값으로 5지선다·OX·단답형을 판별할 수 있을 때만 문제 타입을 자동 변경합니다. 판별 실패 시 사용자의 현재 선택을 유지합니다.
 - 문제·보기·선지·해설에 포함된 제한적 HTML은 `src/components/ui/RichTextContent.tsx`로 렌더링합니다. 표·줄바꿈·문단·목록·기본 강조와 셀 병합만 허용하고, 스크립트·외부 콘텐츠·폼·이벤트 속성·임의 스타일은 제거합니다. HTML이 없는 일반 텍스트의 CRLF·LF·Unicode 줄 구분자는 명시적인 줄바꿈 요소로 변환합니다. 문제 본문과 선지는 한국어 문자 간 좌우맞춤을 사용합니다. 표에는 강제 최소 너비나 별도 가로 스크롤을 적용하지 않고 문제 카드 너비에 맞추며, 표 내부 글자는 모바일 12px·데스크톱 13px을 기준으로 합니다. 문제 문자열을 `dangerouslySetInnerHTML`로 직접 주입하지 마세요.
-- localStorage 데이터 구조를 바꿀 때는 기존 사용자 데이터와 마이그레이션 영향을 고려합니다.
+- IndexedDB 또는 localStorage 데이터 구조를 바꿀 때는 기존 사용자 데이터와 마이그레이션 영향을 고려합니다.
 - `과목 없음`은 저장되는 subject가 아니라 세션-과목 매핑이 없는 상태입니다. `NO_SUBJECT_ID`는 라우팅/UI용 sentinel로만 사용하세요.
 - GA4 이벤트는 페이지 컴포넌트에서 `window.gtag`를 직접 호출하지 말고 `src/lib/analytics.ts`의 `trackEvent`, `trackPageView`를 사용하세요.
 - 새 GA4 이벤트나 파라미터를 추가할 때는 `AnalyticsEventMap`에 타입을 먼저 정의하고 README, AGENTS, 개인정보처리방침을 함께 갱신하세요.
@@ -191,7 +192,7 @@ GitHub Pages용 정적 파일입니다. `404.html`은 SPA 새로고침 대응용
 - 일시적인 성공·오류·경고 안내는 페이지 안에 배너를 삽입하지 말고 `src/components/ui/Toast.tsx`를 사용합니다. Toast는 `document.body` 포털과 `position: fixed`로 렌더링해 메뉴·카드 위치를 바꾸지 않으며, 치명적인 데이터 없음 상태만 기존 전체 화면 empty state로 표시합니다.
 - Premium 비동기 화면은 단일 텍스트 로딩 카드나 빈 화면 대신 `AsyncLoading.tsx`, `PremiumLoadingStates.tsx`의 공통 스피너·스켈레톤을 사용합니다. 스켈레톤은 도착 화면의 카드 수와 대략적인 높이를 유지해 레이아웃 이동을 줄이고 `role=status`의 한국어 진행 안내를 제공하세요. 버튼 작업은 기존 너비 안에서 인라인 스피너를 표시하고, 풀이 제출·중단처럼 화면 전체를 잠가야 하는 작업만 고정 오버레이를 사용합니다. `prefers-reduced-motion`과 `app-focus-page`에서는 로딩 애니메이션을 정지합니다.
 - 탭 전환처럼 문서 높이가 달라지는 화면에서도 중앙 정렬 UI가 흔들리지 않도록 최상위 `html`의 `scrollbar-gutter: stable`을 유지합니다.
-- 디자인 전용 작업에서 Zustand store, localStorage 스키마, CSV 파서, 채점 로직을 함께 수정하지 않습니다.
+- 디자인 전용 작업에서 Zustand store, IndexedDB/localStorage 스키마, CSV 파서, 채점 로직을 함께 수정하지 않습니다.
 - 공통 스타일을 추가할 때 기존 `app-*` 클래스나 UI 컴포넌트를 먼저 확장하고 페이지마다 긴 스타일 문자열을 복제하지 않습니다.
 - 테마형 드롭다운은 `src/components/ui/ThemeSelect.tsx`를 사용합니다. 문제 편집, 새 문제 등록, 재풀이 설정 등 앱의 모든 드롭다운은 네이티브 `<select>` 대신 이 컴포넌트를 사용하며, 바깥 클릭, Escape, 방향키, Home/End, Enter/Space 조작을 유지합니다. 화살표는 고정 크기 박스의 중심축에서만 회전하도록 유지합니다.
 - 활성 문제 풀이 화면은 `app-focus-page`를 사용합니다. 이 범위에서는 그라디언트, hover 이동·축소, 위치/크기 transition, animation, smooth scroll을 추가하지 않습니다. 기본 CTA는 단색 red-600, hover는 red-700을 사용하며 색상·테두리 전환만 90ms로 짧게 허용합니다.
@@ -278,7 +279,7 @@ npm run lint
 ## 수정 시 주의할 파일과 패턴
 
 - `src/lib/csv.ts`: CSV 업로드/다운로드, Excel 인코딩, 샘플 CSV와 직접 연결됩니다. 헤더 호환성을 깨지 않게 조심하세요.
-- `src/types/test.ts`: localStorage에 저장되는 세션 구조와 연결됩니다. 필드 변경 시 기존 저장 데이터 호환성을 검토하세요.
+- `src/types/test.ts`: IndexedDB에 저장되는 세션 구조와 연결됩니다. 필드 변경 시 기존 저장 데이터 호환성을 검토하세요.
 - `src/store/useTestStore.ts`: 세션 생성, 과목 CRUD, 세션-과목 매핑, 답안 저장, 오답노트, 북마크, 백업/복원 동작의 중심입니다.
 - `src/components/cbt/CbtSolveScreen.tsx`: 풀이 UX, 타이머, OMR, 단답형 입력, 정답 보기, 책갈피 기능이 모여 있습니다.
 - `src/lib/analytics.ts`: GA4 측정 ID, 이벤트 타입, 운영 도메인 제한, 페이지 경로 정규화가 들어 있습니다. 동적 ID나 학습 성과 데이터가 전송되지 않도록 주의하세요.
@@ -352,7 +353,7 @@ GA4는 Google 태그 직접 설치 방식을 사용합니다. `index.html`에서
 - LBTI 질문별 응답, 축별 점수, 진행률, 소요시간
 - 과목명, 세션명, CSV 파일명
 - subject/session/question ID 또는 이를 유추할 수 있는 값
-- localStorage 원본 데이터
+- IndexedDB와 localStorage의 사용자 데이터 원본
 
 `question_completed`는 답변한 문항을 떠날 때 기록하며 동일한 풀이 방문에서 문항당 한 번만 전송합니다. 답변한 현재 문항은 다른 문항으로 이동하거나 제출·일시 중단할 때 기록합니다. 이 중복 방지 규칙을 유지하세요.
 
@@ -393,9 +394,9 @@ SPA 라우트 새로고침은 `public/404.html`과 `index.html`의 redirect rest
 
 검색에 노출하는 공개 하위 경로는 빌드 시 별도 HTML 앱 셸을 생성하므로 404 fallback에 의존하지 않습니다. Search Console용 `robots.txt`와 `sitemap.xml`도 같은 빌드 단계에서 생성됩니다.
 
-## localStorage 마이그레이션과 백업
+## IndexedDB 마이그레이션과 백업
 
-`law-solver-storage`는 Zustand persist `version: 3`을 사용합니다.
+오프라인 문제 풀이 데이터는 IndexedDB의 `law-solver-offline` 데이터베이스와 `persisted-state` object store에 저장하며, `law-solver-storage`는 Zustand persist `version: 3`을 사용합니다.
 
 - `sessions`: 문제 세션과 답안
 - `subjects`: 사용자가 만든 과목 목록, 표지 색상, 표시 순서
@@ -403,6 +404,8 @@ SPA 라우트 새로고침은 `public/404.html`과 `index.html`의 redirect rest
 - `dataUpdatedAt`: 백업 충돌 비교에 사용하는 오프라인 데이터의 마지막 변경 시각
 
 기존 v1 데이터는 `sessions`만 있었기 때문에 마이그레이션 시 `subjects: []`, `sessionSubjectMap: {}`로 보정합니다. 즉 기존 문제는 모두 `과목 없음`으로 표시됩니다.
+
+레거시 localStorage 데이터는 IndexedDB가 비어 있을 때만 복사합니다. IndexedDB transaction commit, readback, hydration, 정규화된 v3 저장이 모두 성공한 뒤 localStorage 원본을 삭제하세요. IndexedDB가 이미 있으면 수정 시각을 비교해 더 최근인 레거시 v3 snapshot을 먼저 이전하고, 삭제 직전에도 레거시 원본이 그 사이 바뀌지 않았는지 다시 검증하세요. 초기화는 빈 v3 snapshot을 저장해 레거시 데이터가 다시 살아나지 않게 합니다. 비동기 hydration 전에는 오프라인 데이터 소비 라우트를 렌더링하지 않고, 일반 변경은 직렬화·병합 저장하되 답안·책갈피·제출은 즉시 flush하며 복원과 초기화는 영구 저장 성공을 기다린 뒤 완료 처리하세요. 탭별 전체 snapshot 쓰기는 IndexedDB revision을 비교해 오래된 탭이 최신 데이터를 덮어쓰지 못하게 하며, 충돌 시 해당 탭을 새로고침하도록 안내합니다. IndexedDB가 일시적으로 실패했고 유효한 레거시 원본도 없으면 빈 localStorage로 전환하지 말고 hydration 오류를 표시하세요.
 
 백업/복원은 특정 과목 단위가 아니라 전체 데이터베이스 단위입니다. 백업 복원은 두 형식을 모두 지원해야 합니다.
 
@@ -430,7 +433,7 @@ PR에는 다음을 포함하는 것을 권장합니다.
 - 사용자 흐름 영향
 - 실행한 검증 명령어와 결과
 - 스크린샷 또는 화면 변경 설명
-- localStorage 데이터 구조 변경 여부
+- IndexedDB/localStorage 데이터 구조 변경 여부
 - 배포 설정 변경 여부
 
 ## 작업 원칙

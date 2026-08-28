@@ -4,6 +4,13 @@ import { reorderSubjects, SubjectDropPlacement } from "../lib/subject";
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import {
+  createOfflineDataStorage,
+  getOfflineDataStorageMessage,
+  OFFLINE_DATA_STORAGE_KEY,
+  OfflineDataStorageError,
+  type OfflineDataStorageBackend,
+} from "../lib/offlineDataStorage";
+import {
   AnswerValue,
   DashboardBackupData,
   NO_SUBJECT_ID,
@@ -29,6 +36,13 @@ interface ImportDashboardDataInput {
   subjects?: Subject[];
   sessionSubjectMap?: SessionSubjectMap;
   dataModifiedAt?: string;
+}
+
+export interface PersistedTestState {
+  sessions: TestSession[];
+  subjects: Subject[];
+  sessionSubjectMap: SessionSubjectMap;
+  dataUpdatedAt: string;
 }
 
 interface TestStore {
@@ -60,9 +74,9 @@ interface TestStore {
   tickElapsedTime: (sessionId: string) => void;
   submitSession: (sessionId: string) => void;
   getSessionById: (sessionId: string) => TestSession | undefined;
-  resetSessions: () => void;
-  importSessions: (sessions: TestSession[]) => void;
-  importDashboardData: (data: ImportDashboardDataInput) => void;
+  resetSessions: () => Promise<void>;
+  importSessions: (sessions: TestSession[]) => Promise<void>;
+  importDashboardData: (data: ImportDashboardDataInput) => Promise<void>;
 }
 
 const calcSolved = (questions: ParsedQuestion[]) =>
@@ -144,8 +158,45 @@ const normalizeDashboardData = (value: unknown): ImportDashboardDataInput => {
   };
 };
 
+const persistedTestState = ({
+  sessions,
+  subjects,
+  sessionSubjectMap,
+  dataUpdatedAt,
+}: Pick<TestStore, "sessions" | "subjects" | "sessionSubjectMap" | "dataUpdatedAt">): PersistedTestState => ({
+  sessions,
+  subjects,
+  sessionSubjectMap,
+  dataUpdatedAt,
+});
+
+export const offlineDataStorage = createOfflineDataStorage<PersistedTestState>();
+
+const flushImportantOfflineChange = () => {
+  queueMicrotask(() => void offlineDataStorage.flush().catch(() => undefined));
+};
+
+export type OfflineDataInitializationStatus =
+  | { phase: "idle" | "loading"; backend: null; message: null }
+  | { phase: "ready"; backend: OfflineDataStorageBackend; message: null }
+  | { phase: "error"; backend: null; message: string };
+
+let hydrationError: unknown = null;
+let initializationPromise: Promise<void> | null = null;
+let initializationStatus: OfflineDataInitializationStatus = {
+  phase: "idle",
+  backend: null,
+  message: null,
+};
+const initializationListeners = new Set<() => void>();
+
+const updateInitializationStatus = (status: OfflineDataInitializationStatus) => {
+  initializationStatus = status;
+  initializationListeners.forEach((listener) => listener());
+};
+
 export const useTestStore = create<TestStore>()(
-  persist(
+  persist<TestStore, [], [], PersistedTestState>(
     (set, get) => ({
       sessions: [],
       subjects: [],
@@ -294,7 +345,7 @@ export const useTestStore = create<TestStore>()(
         subjects: get().subjects,
         sessionSubjectMap: get().sessionSubjectMap,
       }),
-      updateAnswer: (sessionId, questionId, answer) =>
+      updateAnswer: (sessionId, questionId, answer) => {
         set((state) => ({
           sessions: state.sessions.map((session) => {
             if (session.id !== sessionId || session.status === "completed") return session;
@@ -309,7 +360,9 @@ export const useTestStore = create<TestStore>()(
             };
           }),
           dataUpdatedAt: modifiedNow(),
-        })),
+        }));
+        flushImportantOfflineChange();
+      },
       updateWrongNote: (sessionId, questionId, note) =>
         set((state) => ({
           sessions: state.sessions.map((session) => {
@@ -323,7 +376,7 @@ export const useTestStore = create<TestStore>()(
           }),
           dataUpdatedAt: modifiedNow(),
         })),
-      toggleBookmark: (sessionId, questionId) =>
+      toggleBookmark: (sessionId, questionId) => {
         set((state) => ({
           sessions: state.sessions.map((session) => {
             if (session.id !== sessionId) return session;
@@ -335,7 +388,9 @@ export const useTestStore = create<TestStore>()(
             };
           }),
           dataUpdatedAt: modifiedNow(),
-        })),
+        }));
+        flushImportantOfflineChange();
+      },
       tickElapsedTime: (sessionId) =>
         set((state) => ({
           sessions: state.sessions.map((session) =>
@@ -345,7 +400,7 @@ export const useTestStore = create<TestStore>()(
           ),
           dataUpdatedAt: modifiedNow(),
         })),
-      submitSession: (sessionId) =>
+      submitSession: (sessionId) => {
         set((state) => ({
           sessions: state.sessions.map((session) => {
             if (session.id !== sessionId) return session;
@@ -357,25 +412,57 @@ export const useTestStore = create<TestStore>()(
             };
           }),
           dataUpdatedAt: modifiedNow(),
-        })),
+        }));
+        flushImportantOfflineChange();
+      },
       getSessionById: (sessionId) => get().sessions.find((session) => session.id === sessionId),
-      resetSessions: () =>
-        set({ sessions: [], subjects: [], sessionSubjectMap: {}, dataUpdatedAt: modifiedNow() }),
-      importSessions: (sessions) =>
-        set({ sessions, subjects: [], sessionSubjectMap: {}, dataUpdatedAt: modifiedNow() }),
-      importDashboardData: (data) => {
+      resetSessions: async () => {
+        const next = {
+          sessions: [],
+          subjects: [],
+          sessionSubjectMap: {},
+          dataUpdatedAt: modifiedNow(),
+        } satisfies PersistedTestState;
+        await offlineDataStorage.writeDurably(OFFLINE_DATA_STORAGE_KEY, {
+          state: next,
+          version: 3,
+        });
+        set(next);
+      },
+      importSessions: async (sessions) => {
+        const next = {
+          sessions,
+          subjects: [],
+          sessionSubjectMap: {},
+          dataUpdatedAt: modifiedNow(),
+        } satisfies PersistedTestState;
+        await offlineDataStorage.writeDurably(OFFLINE_DATA_STORAGE_KEY, {
+          state: next,
+          version: 3,
+        });
+        set(next);
+      },
+      importDashboardData: async (data) => {
         const normalized = normalizeDashboardData(data);
-        set({
+        const next = {
           sessions: normalized.sessions,
           subjects: normalized.subjects ?? [],
           sessionSubjectMap: normalized.sessionSubjectMap ?? {},
           dataUpdatedAt: normalized.dataModifiedAt ?? modifiedNow(),
+        } satisfies PersistedTestState;
+        await offlineDataStorage.writeDurably(OFFLINE_DATA_STORAGE_KEY, {
+          state: next,
+          version: 3,
         });
+        set(next);
       },
     }),
     {
-      name: "law-solver-storage",
+      name: OFFLINE_DATA_STORAGE_KEY,
       version: 3,
+      storage: offlineDataStorage.storage,
+      skipHydration: true,
+      partialize: persistedTestState,
       migrate: (persistedState) => {
         const normalized = normalizeDashboardData(persistedState);
         return {
@@ -385,6 +472,74 @@ export const useTestStore = create<TestStore>()(
           dataUpdatedAt: normalized.dataModifiedAt ?? modifiedNow(),
         };
       },
+      merge: (persistedState, currentState) => {
+        const normalized = normalizeDashboardData(persistedState);
+        return {
+          ...currentState,
+          sessions: normalized.sessions,
+          subjects: normalized.subjects ?? [],
+          sessionSubjectMap: normalized.sessionSubjectMap ?? {},
+          dataUpdatedAt: normalized.dataModifiedAt ?? modifiedNow(),
+        };
+      },
+      onRehydrateStorage: () => (_state, error) => {
+        hydrationError = error ?? null;
+      },
     },
   ),
 );
+
+export const subscribeOfflineDataInitialization = (listener: () => void) => {
+  initializationListeners.add(listener);
+  return () => {
+    initializationListeners.delete(listener);
+  };
+};
+
+export const getOfflineDataInitializationStatus = () => initializationStatus;
+
+export const persistCurrentOfflineData = async () => {
+  await offlineDataStorage.writeDurably(OFFLINE_DATA_STORAGE_KEY, {
+    state: persistedTestState(useTestStore.getState()),
+    version: 3,
+  });
+};
+
+export const initializeOfflineData = () => {
+  if (initializationStatus.phase === "ready") return Promise.resolve();
+  if (initializationPromise) return initializationPromise;
+  updateInitializationStatus({ phase: "loading", backend: null, message: null });
+  initializationPromise = (async () => {
+    const backend = await offlineDataStorage.prepare();
+    hydrationError = null;
+    await useTestStore.persist.rehydrate();
+    if (hydrationError || !useTestStore.persist.hasHydrated()) {
+      throw hydrationError ?? new Error("Offline data hydration did not finish");
+    }
+    try {
+      await persistCurrentOfflineData();
+    } catch (error) {
+      if (!(error instanceof OfflineDataStorageError) || error.code !== "WRITE_CONFLICT") {
+        throw error;
+      }
+      hydrationError = null;
+      await useTestStore.persist.rehydrate();
+      if (hydrationError || !useTestStore.persist.hasHydrated()) {
+        throw hydrationError ?? error;
+      }
+    }
+    await offlineDataStorage.finalizeLegacyMigration();
+    updateInitializationStatus({ phase: "ready", backend, message: null });
+  })().catch((error) => {
+    updateInitializationStatus({
+      phase: "error",
+      backend: null,
+      message: getOfflineDataStorageMessage(error),
+    });
+    initializationPromise = null;
+    throw error;
+  });
+  return initializationPromise;
+};
+
+export const flushOfflineData = () => offlineDataStorage.flush();
