@@ -208,7 +208,7 @@ export function PrivacyPolicyLink({ className = defaultLinkClass }: PrivacyPolic
                 <p className="mt-2">
                   사용자가 직접 업로드한 CSV의 문제 본문·박스 지문·선택지·정답·해설·출처와 사용자의
                   답안, 진행 상태, 점수, 책갈피, 오답 노트, 과목·세션 정보는 현재 브라우저의
-                  localStorage에 저장됩니다. 운영자는 이를 Premium 서버로 자동 수집하거나 동기화하지
+                  브라우저 로컬 저장소(기본적으로 IndexedDB)에 저장됩니다. 운영자는 이를 Premium 서버로 자동 수집하거나 동기화하지
                   않습니다. 이용자는 환경설정에서 오프라인 데이터를 JSON으로 백업·복원·초기화할 수
                   있으며, 브라우저 데이터 삭제 기능으로도 제거할 수 있습니다.
                 </p>

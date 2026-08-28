@@ -25,6 +25,7 @@ import {
 import { useAccountStore } from "../../store/useAccountStore";
 import { useTestStore } from "../../store/useTestStore";
 import type { DashboardBackupData } from "../../types/test";
+import { getOfflineDataStorageMessage } from "../../lib/offlineDataStorage";
 import { ButtonLoadingContent, SkeletonBlock } from "../ui/AsyncLoading";
 import { ConfirmDialog } from "../ui/ConfirmDialog";
 import { IconCloseButton } from "../ui/IconCloseButton";
@@ -54,6 +55,7 @@ const operationLabel: Record<string, string> = {
   uploading: "암호화된 백업을 올리는 중",
   downloading: "클라우드 데이터를 내려받는 중",
   decrypting: "내려받은 데이터를 복호화·검증하는 중",
+  applying: "이 브라우저에 저장하는 중",
   deleting: "클라우드 데이터를 삭제하는 중",
 };
 
@@ -238,16 +240,24 @@ export function CloudBackupSection() {
     }
   };
 
-  const applyRestore = () => {
+  const applyRestore = async () => {
     if (!restoredData) return;
-    importDashboardData({
-      sessions: restoredData.sessions,
-      subjects: restoredData.subjects,
-      sessionSubjectMap: restoredData.sessionSubjectMap,
-      dataModifiedAt: restoredData.data_modified_at,
-    });
-    closeModal();
-    setToast({ message: "클라우드의 오프라인 문제 풀이 데이터를 이 브라우저에 반영했습니다.", tone: "success" });
+    setModalError(null);
+    setOperation("applying");
+    try {
+      await importDashboardData({
+        sessions: restoredData.sessions,
+        subjects: restoredData.subjects,
+        sessionSubjectMap: restoredData.sessionSubjectMap,
+        dataModifiedAt: restoredData.data_modified_at,
+      });
+      resetModal();
+      setToast({ message: "클라우드의 오프라인 문제 풀이 데이터를 이 브라우저에 반영했습니다.", tone: "success" });
+    } catch (error) {
+      setModalError(`${getOfflineDataStorageMessage(error)} 기존 데이터는 변경하지 않았습니다.`);
+    } finally {
+      setOperation(null);
+    }
   };
 
   const removeBackup = async () => {
@@ -453,9 +463,16 @@ export function CloudBackupSection() {
                     복호화와 구조 검증이 완료되었습니다. 적용하면 현재 브라우저의 과목, 문제, 풀이 내역과 오답노트가 위 클라우드 데이터로 한 번에 교체됩니다.
                   </p>
                   <div className="mt-5 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-                    <button type="button" onClick={closeModal} className="app-button-secondary rounded-xl px-4 py-2.5 text-sm font-semibold">취소</button>
-                    <button type="button" onClick={applyRestore} className="app-button-primary rounded-xl px-4 py-2.5 text-sm font-semibold">이 데이터로 교체</button>
+                    <button type="button" onClick={closeModal} disabled={Boolean(operation)} className="app-button-secondary rounded-xl px-4 py-2.5 text-sm font-semibold disabled:opacity-50">취소</button>
+                    <button type="button" onClick={() => void applyRestore()} disabled={Boolean(operation)} className="app-button-primary min-w-[150px] rounded-xl px-4 py-2.5 text-sm font-semibold disabled:opacity-60">
+                      {operation === "applying"
+                        ? <ButtonLoadingContent label="이 브라우저에 저장하는 중" />
+                        : "이 데이터로 교체"}
+                    </button>
                   </div>
+                  {modalError ? (
+                    <p role="alert" className="mt-3 text-sm font-medium text-red-600 dark:text-red-400">{modalError}</p>
+                  ) : null}
                 </>
               ) : (
                 <form onSubmit={modalMode === "upload" ? upload : decryptRestore} className="mt-5">
