@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 import { PremiumAttemptListSkeleton } from "../components/premium/PremiumLoadingStates";
 import { ButtonLoadingContent } from "../components/ui/AsyncLoading";
@@ -6,13 +6,14 @@ import { AppFooter } from "../components/ui/AppFooter";
 import { DashboardHeaderTitle } from "../components/ui/DashboardHeaderTitle";
 import { ReturnLinkLabel } from "../components/ui/ReturnLinkLabel";
 import { Toast } from "../components/ui/Toast";
+import { PremiumLoadError } from "../components/premium/PremiumLoadError";
+import { usePremiumResource } from "../hooks/usePremiumResource";
 import {
   createPremiumAttempt,
   getPremiumErrorMessage,
   listPremiumProblemSetAttempts,
   listPremiumProblemSets,
   type PremiumAttemptSummary,
-  type PremiumProblemSetSummary,
 } from "../lib/premiumApi";
 import { formatElapsedTime } from "../lib/time";
 
@@ -115,51 +116,30 @@ export function PremiumProblemSetSessionsPage() {
   const location = useLocation();
   const navigate = useNavigate();
   const routeTitle = (location.state as { problemSetTitle?: string } | null)?.problemSetTitle;
-  const [problemSet, setProblemSet] = useState<PremiumProblemSetSummary | null>(null);
-  const [attempts, setAttempts] = useState<PremiumAttemptSummary[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
   const [isStarting, setIsStarting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (!courseId || !problemSetId) {
-      setError("문제 정보를 찾을 수 없습니다. 문제 목록에서 다시 선택해 주세요.");
-      setIsLoading(false);
-      return;
-    }
-
-    let cancelled = false;
-    setIsLoading(true);
-    void Promise.all([
+  const load = useCallback(async () => {
+    if (!courseId || !problemSetId) throw new Error("Missing problem set");
+    const [problemSets, attempts] = await Promise.all([
       listPremiumProblemSets(courseId),
       listPremiumProblemSetAttempts(problemSetId),
-    ])
-      .then(([problemSets, nextAttempts]) => {
-        if (cancelled) return;
-        setProblemSet(problemSets.find((item) => item.id === problemSetId) ?? null);
-        setAttempts(nextAttempts);
-      })
-      .catch((cause: unknown) => {
-        if (!cancelled) {
-          setError(getPremiumErrorMessage(
-            cause,
-            "풀이 세션을 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.",
-          ));
-        }
-      })
-      .finally(() => {
-        if (!cancelled) setIsLoading(false);
-      });
-
-    return () => {
-      cancelled = true;
-    };
+    ]);
+    const problemSet = problemSets.find((item) => item.id === problemSetId);
+    if (!problemSet) throw new Error("Problem set unavailable");
+    return { problemSet, attempts };
   }, [courseId, problemSetId]);
+  const { data, error: loadError, isLoading, reload } = usePremiumResource(
+    `${courseId}/${problemSetId}`,
+    load,
+    "풀이 세션을 불러오지 못했습니다. 다시 시도하거나 문제 목록에서 선택해 주세요.",
+  );
+  const problemSet = data?.problemSet;
+  const attempts = data?.attempts ?? [];
 
   const coursePath = useMemo(() => `/premium/courses/${courseId ?? ""}`, [courseId]);
 
   const startNewAttempt = async () => {
-    if (!problemSetId || isStarting) return;
+    if (!problemSetId || !problemSet || isLoading || isStarting) return;
     setIsStarting(true);
     setError(null);
     try {
@@ -187,7 +167,7 @@ export function PremiumProblemSetSessionsPage() {
           <button
             type="button"
             onClick={() => void startNewAttempt()}
-            disabled={!problemSet || isStarting}
+            disabled={!problemSet || isLoading || isStarting}
             className="app-button-primary app-button-primary-standalone rounded-xl px-3 py-2 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-60 sm:px-4"
           >
             {isStarting
@@ -204,6 +184,8 @@ export function PremiumProblemSetSessionsPage() {
 
         {isLoading ? (
           <PremiumAttemptListSkeleton />
+        ) : loadError ? (
+          <PremiumLoadError message={loadError} onRetry={reload} backTo={coursePath} />
         ) : attempts.length > 0 ? (
           <div className="space-y-2.5">
             {attempts.map((attempt) => <AttemptListItem key={attempt.id} attempt={attempt} />)}

@@ -135,7 +135,7 @@ describe("CloudBackupSection durable restore", () => {
 
     fireEvent.click(replace);
 
-    expect((await screen.findByRole("alert")).textContent).toMatch(/저장 공간이 부족/);
+    await waitFor(() => expect(screen.getAllByRole("alert").some((alert) => /저장 공간이 부족/.test(alert.textContent ?? ""))).toBe(true));
     expect(screen.getByRole("heading", { name: "내려받은 데이터 최종 확인" })).toBeTruthy();
     expect(screen.queryByText(/이 브라우저에 반영했습니다/)).toBeNull();
   });

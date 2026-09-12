@@ -1,6 +1,9 @@
 import { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { IconCloseButton } from "../components/ui/IconCloseButton";
+import { CsvGuideDialog } from "../components/landing/CsvGuideDialog";
+import { LandingFeatureCard } from "../components/landing/LandingFeatureCard";
+import { LandingServiceFeatures } from "../components/landing/LandingServiceFeatures";
+import { LandingSolvePreview } from "../components/landing/LandingSolvePreview";
 import { LandingFooter } from "../components/ui/LandingFooter";
 import { LandingHeader } from "../components/ui/LandingHeader";
 
@@ -55,33 +58,6 @@ const steps = [
   },
 ];
 
-const csvGuides = [
-  {
-    title: "OX",
-    description: "정답에는 O 또는 X를 입력합니다.",
-    header: "번호,챕터,문제,정답,해설,출처",
-    example: "1,채권각론,임대차가 끝난 뒤에도 보증금반환채권의 소멸시효는 진행한다.,X,목적물을 점유하는 동안에는 소멸시효가 진행하지 않습니다.,대법원 판례",
-  },
-  {
-    title: "5지선다",
-    description: "선택지 다섯 개를 작성하고 정답에는 1부터 5까지의 번호를 입력합니다.",
-    header: "번호,챕터,문제,선택지1,선택지2,선택지3,선택지4,선택지5,정답,해설,출처",
-    example: "1,민법총칙,통정허위표시에 관한 설명으로 옳은 것은?,항상 유효하다,선의의 제3자에게 대항할 수 없다,취소해야 무효다,착오와 같다,사기와 같다,2,당사자 사이에서는 무효입니다.,민법 제108조",
-  },
-  {
-    title: "5지선다 · 박스형",
-    description: "박스1부터 박스7까지 필요한 만큼 열을 추가하세요. 입력한 순서대로 ㄱ. ㄴ. ㄷ. 보기로 표시되며, 선택지1~5에는 보기의 조합이나 개수를 적습니다.",
-    header: "번호,챕터,문제,박스1,박스2,박스3,선택지1,선택지2,선택지3,선택지4,선택지5,정답,해설,출처",
-    example: "1,형법총론,옳은 것을 모두 고른 것은?,고의가 있어야 한다.,위법성이 조각될 수 있다.,책임능력이 필요하다.,ㄱ,ㄴ,ㄱ·ㄷ,ㄴ·ㄷ,ㄱ·ㄴ·ㄷ,5,세 보기 모두 옳습니다.,형법 기본서",
-  },
-  {
-    title: "단답형",
-    description: "문제의 빈칸에 들어갈 답을 정답 열에 그대로 입력합니다. 현재는 띄어쓰기까지 포함해 입력값이 일치해야 정답으로 처리됩니다.",
-    header: "번호,챕터,문제,정답,해설,출처",
-    example: "1,매매,타인의 권리를 매매한 매도인이 권리를 이전할 수 없을 때 매수인은 계약을 ____할 수 있다.,해제,민법 제570조에 따른 해제권입니다.,민법 제570조",
-  },
-];
-
 export function LandingPage() {
   const [isCsvGuideOpen, setIsCsvGuideOpen] = useState(false);
   const location = useLocation();
@@ -91,22 +67,6 @@ export function LandingPage() {
       setIsCsvGuideOpen(true);
     }
   }, [location.search]);
-
-  useEffect(() => {
-    if (!isCsvGuideOpen) return;
-
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") setIsCsvGuideOpen(false);
-    };
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    window.addEventListener("keydown", handleKeyDown);
-
-    return () => {
-      document.body.style.overflow = previousOverflow;
-      window.removeEventListener("keydown", handleKeyDown);
-    };
-  }, [isCsvGuideOpen]);
 
   return (
     <div className="landing-page min-h-screen overflow-hidden text-stone-950 transition-colors duration-300 dark:text-stone-50">
@@ -122,21 +82,21 @@ export function LandingPage() {
             <div className="landing-fade-up">
               <div className="landing-eyebrow">
                 <span className="landing-pulse-dot" />
-                오프라인 문제는, 내 브라우저에 안전하게
+                로스쿨 공부를 위한 문제 풀이 공간
               </div>
 
               <h1 className="landing-hero-title mt-7 max-w-3xl">
-                <span className="block">직접 만든 문제,</span>
-                <span className="landing-gradient-text block">나만의 문제집으로</span>
+                <span className="block">오늘 공부할 문제,</span>
+                <span className="landing-gradient-text block">풀이부터 복습까지</span>
               </h1>
 
               <p className="landing-hero-copy mt-7 max-w-xl text-base leading-7 text-stone-600 sm:text-[17px] sm:leading-8 dark:text-stone-300">
-                OX, 5지선다, 단답형 문제를 직접 만들고 실제 시험처럼 풀어 보세요. 채점부터 오답 복습까지 한곳에서 이어집니다.
+                직접 만든 CSV 문제와 Premium 온라인 문제를 같은 화면에서 풀어 보세요. 채점 후에는 오답과 책갈피를 모아 다시 공부할 수 있어요.
               </p>
 
               <div className="mt-9 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
                 <Link to="/home" className="landing-primary-cta">
-                  문제 풀러 가요! <span className="landing-arrow" aria-hidden="true">→</span>
+                  문제 풀이 시작하기 <span className="landing-arrow" aria-hidden="true">→</span>
                 </Link>
                 <a href="#how-it-works" className="landing-secondary-cta">
                   사용법 먼저 보기 <span aria-hidden="true">↓</span>
@@ -159,60 +119,7 @@ export function LandingPage() {
             </div>
 
             <div className="landing-hero-visual landing-fade-up landing-delay-1" aria-label="실제 Law Solver 문제 풀이 화면 미리보기">
-              <div className="landing-cbt-shell">
-                <div className="landing-cbt-topbar">
-                  <div>
-                    <span>타이머</span>
-                    <strong>24:18</strong>
-                  </div>
-                  <b>민법 (채권각론)</b>
-                  <div className="landing-cbt-top-actions">
-                    <span>일시 중단</span>
-                    <span>제출 및 종료</span>
-                  </div>
-                </div>
-
-                <div className="landing-cbt-layout">
-                  <div className="landing-cbt-card">
-                    <div className="landing-cbt-content">
-                      <div className="landing-cbt-meta">
-                        <div>
-                          <span>1번 / 총 50문항</span>
-                          <span>챕터 · 채권각론</span>
-                        </div>
-                        <div className="landing-cbt-icons" aria-hidden="true"><i>?</i><i>★</i></div>
-                      </div>
-                      <h2>
-                        주택임대차보호법에 따른 임대차에서 그 기간이 끝난 후 임차인이 보증금을 반환받기 위해 목적물을 점유하고 있는 경우에도 여전히 보증금반환채권에 대한 소멸시효는 진행한다고 보아야 한다.
-                      </h2>
-                      <div className="landing-cbt-options" aria-label="답안 선택 미리보기">
-                        <div><span>O</span></div>
-                        <div className="is-selected">
-                          <span>X</span>
-                          <b>다음 문제로 <em>›</em></b>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="landing-cbt-footer">
-                      <span>‹ 이전 문제</span>
-                      <span>다음 문제 ›</span>
-                    </div>
-                  </div>
-
-                  <aside className="landing-cbt-omr">
-                    <div><strong>OMR</strong><span>1/50</span></div>
-                    <div className="landing-cbt-omr-table">
-                      <p><b>번호</b><b>내 답</b></p>
-                      {[1, 2, 3, 4, 5, 6].map((item) => (
-                        <p key={item} className={item === 1 ? "is-current" : ""}>
-                          <span>{item}</span><span>{item === 1 ? "X" : "-"}</span>
-                        </p>
-                      ))}
-                    </div>
-                    <button type="button" tabIndex={-1}>CSV 다운로드</button>
-                  </aside>
-                </div>
-              </div>
+              <LandingSolvePreview />
             </div>
           </div>
         </section>
@@ -221,9 +128,9 @@ export function LandingPage() {
           <div className="landing-container grid grid-cols-2 gap-px overflow-hidden rounded-2xl border border-stone-200 bg-stone-200 md:grid-cols-4 dark:border-stone-800 dark:bg-stone-800">
             {[
               ["3", "가지 문제 유형"],
-              ["CSV", "간편 업로드"],
-              ["즉시", "채점과 오답 확인"],
-              ["100%", "내 기기에 저장"],
+              ["CSV", "내 문제로 공부"],
+              ["온라인", "Premium 문제 풀이"],
+              ["복습", "오답과 책갈피"],
             ].map(([value, label]) => (
               <div key={label} className="bg-white/90 px-5 py-6 text-center dark:bg-stone-900/90">
                 <strong className="text-2xl font-bold tracking-tight text-red-600 dark:text-red-500">{value}</strong>
@@ -238,7 +145,7 @@ export function LandingPage() {
             <div className="mx-auto max-w-2xl text-center">
               <p className="landing-section-label">HOW IT WORKS</p>
               <h2 className="landing-section-title">문제 만들기부터 오답 정리까지<br className="hidden sm:block" /> 한 흐름으로 이어져요</h2>
-              <p className="landing-section-copy">설치나 회원가입 없이, 준비한 문제만 있으면 바로 시작할 수 있어요.</p>
+              <p className="landing-section-copy">오프라인 문제 풀이는 회원가입 없이 시작할 수 있어요. 엑셀에서 문제를 정리한 뒤 CSV 파일로 저장해 주세요.</p>
             </div>
 
             <div className="mt-14 grid gap-4 md:grid-cols-2 lg:grid-cols-4">
@@ -270,12 +177,12 @@ export function LandingPage() {
                 <div className="relative z-10 max-w-md">
                   <p className="landing-focus-label">FOCUS MODE</p>
                   <h2 className="landing-bento-title mt-4 text-3xl text-white sm:text-4xl">공부 흐름을<br />끊지 않는 풀이 화면</h2>
-                  <p className="mt-5 leading-7 text-red-50/80">문제, 선택지, OMR, 타이머에만 집중하세요. 답안과 책갈피는 자동으로 저장됩니다.</p>
+                  <p className="mt-5 leading-7 text-red-50/80">문제, 선택지, OMR, 타이머를 한 화면에서 확인하세요. 오프라인 문제와 온라인 문제 모두 익숙한 화면에서 풀 수 있어요.</p>
                 </div>
                 <div className="landing-focus-card" aria-hidden="true">
                   <div className="landing-focus-meta">
                     <span>8번 / 총 50문항</span>
-                    <span>챕터 · 채권총론</span>
+                    <span>채권총론</span>
                     <i>★</i>
                   </div>
                   <p>채무불이행 책임은 채무자의 귀책사유가 있어야 성립한다.</p>
@@ -291,23 +198,33 @@ export function LandingPage() {
               </article>
 
               <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-1">
-                <article className="landing-bento-card landing-feature-card landing-feature-card-compact">
-                  <div>
-                    <p className="landing-feature-eyebrow">RETRY WRONG</p>
-                    <h3 className="mt-2 text-xl font-semibold tracking-tight">틀린 문제는 바로 한 번 더</h3>
-                    <p className="mt-1 text-sm leading-6 text-stone-600 dark:text-stone-400">오답만 모아 확인하고 다시 풀면서 기억을 단단하게 만들어요.</p>
-                  </div>
-                  <span className="landing-feature-icon" aria-hidden="true">↻</span>
-                </article>
-                <article className="landing-bento-card landing-feature-card landing-feature-card-compact">
-                  <div>
-                    <p className="landing-feature-eyebrow">EXPORT &amp; BACKUP</p>
-                    <h3 className="mt-2 text-xl font-semibold tracking-tight">학습 기록은 내 방식대로 보관</h3>
-                    <p className="mt-1 text-sm leading-6 text-stone-600 dark:text-stone-400">풀이 결과는 CSV로, 전체 데이터는 JSON으로 간편하게 백업해요.</p>
-                  </div>
-                  <span className="landing-feature-icon is-download" aria-hidden="true">⇩</span>
-                </article>
+                <LandingFeatureCard
+                  label="RETRY WRONG"
+                  title="틀린 문제는 바로 한 번 더"
+                  description="오답과 책갈피 문제를 모아 다시 풀어 보세요. 헷갈렸던 이유는 오답 노트에 남길 수 있어요."
+                  icon="↻"
+                  compact
+                />
+                <LandingFeatureCard
+                  label="OFFLINE FILE BACKUP"
+                  title="내 문제와 기록은 파일로 보관"
+                  description="직접 올린 CSV 문제와 풀이 기록은 현재 브라우저에 저장돼요. 결과는 CSV로, 전체 오프라인 데이터는 JSON으로 백업할 수 있어요."
+                  icon="⇩"
+                  compact
+                />
               </div>
+            </div>
+          </div>
+        </section>
+
+        <section aria-labelledby="study-tools-title" className="landing-section !pt-0">
+          <div className="landing-container">
+            <div className="mx-auto max-w-2xl text-center">
+              <p className="landing-section-label">MORE TOOLS</p>
+              <h2 id="study-tools-title" className="landing-section-title">온라인 문제부터 미니 앱까지</h2>
+            </div>
+            <div className="mt-10 sm:mt-12">
+              <LandingServiceFeatures />
             </div>
           </div>
         </section>
@@ -320,10 +237,10 @@ export function LandingPage() {
               <div className="relative z-10 mx-auto max-w-2xl text-center">
                 <p className="text-xs font-bold tracking-[0.18em] text-red-200 sm:text-sm">READY TO SOLVE?</p>
                 <h2 className="landing-final-title mt-4 text-white">오늘 공부할 문제,<br />지금 바로 풀어볼까요?</h2>
-                <p className="landing-final-copy mx-auto mt-5 max-w-xl leading-7 text-red-50/80">CSV가 없어도 괜찮아요. 샘플 파일로 Law Solver의 풀이 방식을 먼저 경험해 보세요.</p>
+                <p className="landing-final-copy mx-auto mt-5 max-w-xl leading-7 text-red-50/80">내 CSV로 시작하거나 이용 가능한 온라인 문제를 골라 보세요. 샘플 파일로 풀이 화면을 먼저 살펴봐도 좋아요.</p>
                 <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
                   <Link to="/home" className="landing-primary-cta is-light">
-                    문제 풀러 가요! <span className="landing-arrow" aria-hidden="true">→</span>
+                    문제 풀이 시작하기 <span className="landing-arrow" aria-hidden="true">→</span>
                   </Link>
                   <button type="button" onClick={() => setIsCsvGuideOpen(true)} className="landing-final-guide-button">샘플 CSV 받기</button>
                 </div>
@@ -335,48 +252,7 @@ export function LandingPage() {
 
       <LandingFooter />
 
-      {isCsvGuideOpen ? (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="csv-guide-title">
-          <button onClick={() => setIsCsvGuideOpen(false)} className="app-modal-backdrop absolute inset-0" aria-label="CSV 가이드 바깥 영역 닫기" />
-          <div className="landing-modal relative max-h-[88vh] w-full max-w-4xl overflow-y-auto rounded-3xl border border-stone-200 bg-white p-6 shadow-2xl sm:p-8 dark:border-stone-700 dark:bg-stone-900">
-            <IconCloseButton onClick={() => setIsCsvGuideOpen(false)} label="CSV 가이드 닫기" className="absolute right-4 top-4" />
-            <p className="landing-section-label">CSV STARTER GUIDE</p>
-            <h2 id="csv-guide-title" className="mt-2 pr-10 text-2xl font-bold tracking-tight text-stone-950 dark:text-white">문제 파일은 이렇게 만들어요</h2>
-            <p className="mt-2 text-sm leading-6 text-stone-600 dark:text-stone-400">첫 줄에 아래 헤더를 넣고, 둘째 줄부터 문제를 한 줄씩 작성해 주세요.</p>
-
-            <div className="mt-6 grid gap-3 md:grid-cols-2">
-              {csvGuides.map((guide) => (
-                <div key={guide.title} className="rounded-2xl border border-stone-200 bg-stone-50 p-4 dark:border-stone-700 dark:bg-stone-800/70">
-                  <p className="font-semibold text-red-600 dark:text-red-400">{guide.title}</p>
-                  <p className="mt-2 text-sm leading-6 text-stone-600 dark:text-stone-400">{guide.description}</p>
-                  <p className="mt-3 text-xs font-semibold text-stone-500 dark:text-stone-400">헤더</p>
-                  <code className="mt-1 block overflow-x-auto whitespace-nowrap rounded-lg bg-white px-3 py-2.5 font-mono text-xs text-stone-700 dark:bg-stone-900 dark:text-stone-300">{guide.header}</code>
-                  <p className="mt-3 text-xs font-semibold text-stone-500 dark:text-stone-400">작성 예시</p>
-                  <code className="mt-1 block overflow-x-auto whitespace-nowrap rounded-lg bg-white px-3 py-2.5 font-mono text-xs text-stone-700 dark:bg-stone-900 dark:text-stone-300">{guide.example}</code>
-                </div>
-              ))}
-            </div>
-
-            <div className="mt-6">
-              <p className="font-semibold text-stone-900 dark:text-stone-100">바로 써볼 수 있는 샘플</p>
-              <div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
-                {[
-                  ["OX 문제", "/samples/OX_sample.csv"],
-                  ["5지선다", "/samples/5지선다_sample.csv"],
-                  ["박스형 5지선다", "/samples/5지선다_box_sample.csv"],
-                  ["단답형", "/samples/단답형_sample.csv"],
-                ].map(([label, href]) => (
-                  <a key={href} className="landing-sample-link" href={href} download>{label} <span>↓</span></a>
-                ))}
-              </div>
-            </div>
-
-            <div className="mt-6 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm leading-6 text-amber-900 dark:border-amber-900/60 dark:bg-amber-950/30 dark:text-amber-200">
-              <strong>기억해 주세요.</strong> 데이터는 서버가 아닌 현재 브라우저에 저장됩니다. 중요한 문제와 기록은 CSV 또는 전체 백업으로 보관해 주세요.
-            </div>
-          </div>
-        </div>
-      ) : null}
+      {isCsvGuideOpen ? <CsvGuideDialog onClose={() => setIsCsvGuideOpen(false)} /> : null}
     </div>
   );
 }
