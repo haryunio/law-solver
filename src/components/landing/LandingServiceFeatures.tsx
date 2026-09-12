@@ -9,7 +9,7 @@ const availableMiniApps = miniApps.flatMap((app) => (
 
 export function LandingServiceFeatures() {
   return (
-    <div className="mt-5 grid gap-5 lg:grid-cols-3">
+    <div className="grid gap-5 lg:grid-cols-3">
       <LandingFeatureCard
         label="ONLINE STUDY"
         title="준비된 온라인 문제로 바로 공부"

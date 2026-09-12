@@ -214,7 +214,18 @@ export function LandingPage() {
                 />
               </div>
             </div>
-            <LandingServiceFeatures />
+          </div>
+        </section>
+
+        <section aria-labelledby="study-tools-title" className="landing-section !pt-0">
+          <div className="landing-container">
+            <div className="mx-auto max-w-2xl text-center">
+              <p className="landing-section-label">MORE TOOLS</p>
+              <h2 id="study-tools-title" className="landing-section-title">온라인 문제부터 미니 앱까지</h2>
+            </div>
+            <div className="mt-10 sm:mt-12">
+              <LandingServiceFeatures />
+            </div>
           </div>
         </section>
 
