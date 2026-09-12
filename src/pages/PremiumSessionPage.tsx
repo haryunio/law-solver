@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { useParams } from "react-router-dom";
 import { PremiumResultSkeleton } from "../components/premium/PremiumLoadingStates";
 import {
@@ -6,12 +6,13 @@ import {
   type SessionPageAdapter,
 } from "../components/session/SessionPageContext";
 import { Toast } from "../components/ui/Toast";
+import { PremiumLoadError } from "../components/premium/PremiumLoadError";
+import { usePremiumResource } from "../hooks/usePremiumResource";
 import {
   getPremiumErrorMessage,
   getPremiumResult,
   retryPremiumAttempt,
   savePremiumWrongNote,
-  type PremiumAttemptResult,
 } from "../lib/premiumApi";
 import { premiumResultToTestSession } from "../lib/premiumSession";
 import { ResultPage } from "./ResultPage";
@@ -22,33 +23,16 @@ type PremiumSessionView = "result" | "wrong" | "review";
 
 export function PremiumSessionPage({ view }: { view: PremiumSessionView }) {
   const { attemptId } = useParams();
-  const [result, setResult] = useState<PremiumAttemptResult | null>(null);
   const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (!attemptId) {
-      setError("풀이 결과를 찾을 수 없습니다. 온라인 과목에서 풀이 기록을 다시 확인해 주세요.");
-      return;
-    }
-
-    let cancelled = false;
-    void getPremiumResult(attemptId)
-      .then((data) => {
-        if (!cancelled) setResult(data);
-      })
-      .catch((cause: unknown) => {
-        if (!cancelled) {
-          setError(getPremiumErrorMessage(
-            cause,
-            "채점 결과를 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.",
-          ));
-        }
-      });
-
-    return () => {
-      cancelled = true;
-    };
+  const load = useCallback(async () => {
+    if (!attemptId) throw new Error("Missing attempt");
+    return getPremiumResult(attemptId);
   }, [attemptId]);
+  const { data: result, error: loadError, reload, setData: setResult } = usePremiumResource(
+    attemptId ?? "",
+    load,
+    "채점 결과를 불러오지 못했습니다. 다시 시도하거나 온라인 과목에서 풀이 기록을 확인해 주세요.",
+  );
 
   const session = useMemo(
     () => result ? premiumResultToTestSession(result) : null,
@@ -98,17 +82,16 @@ export function PremiumSessionPage({ view }: { view: PremiumSessionView }) {
         }
       },
     };
-  }, [result, session]);
+  }, [result, session, setResult]);
 
   if (!adapter) {
-    if (!error) {
+    if (!loadError) {
       return <PremiumResultSkeleton review={view !== "result"} />;
     }
     return (
       <div className="app-page flex min-h-screen items-center justify-center px-4">
-        <Toast message={error} onDismiss={() => setError(null)} />
-        <div className="app-card max-w-lg rounded-2xl border p-6 text-center text-sm text-stone-600 dark:text-stone-300">
-          {error}
+        <div className="w-full max-w-lg">
+          <PremiumLoadError message={loadError} onRetry={reload} backTo="/premium" />
         </div>
       </div>
     );

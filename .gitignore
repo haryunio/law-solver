@@ -8,4 +8,3 @@ coverage
 *.tsbuildinfo
 vite.config.js
 vite.config.d.ts
-GEMINI.md

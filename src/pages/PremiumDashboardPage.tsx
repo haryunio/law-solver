@@ -102,7 +102,7 @@ export function PremiumDashboardPage() {
           <div className="app-card rounded-2xl border p-6 text-center">
             <PremiumBadge />
             <h2 className="mt-4 text-xl font-bold text-stone-950 dark:text-stone-100">Premium 회원권이 필요합니다</h2>
-            <p className="mt-2 text-sm text-stone-600 dark:text-stone-300">로컬 결제로 30일 회원권을 발급한 뒤 과목 이용권을 구매해 주세요.</p>
+            <p className="mt-2 text-sm text-stone-600 dark:text-stone-300">계정 화면에서 Premium 회원권과 과목 이용권을 등록해 주세요.</p>
             <Link to="/account?tab=premium" className="app-button-primary app-button-primary-standalone mt-5 inline-flex rounded-xl px-5 py-3 text-sm font-semibold">
               Premium 회원권 구매
             </Link>
@@ -152,7 +152,7 @@ export function PremiumDashboardPage() {
               <div className="app-card mt-4 rounded-2xl border p-6 text-center text-sm text-stone-600 dark:text-stone-300">
                 {didLoadFail
                   ? "온라인 과목을 표시하지 못했습니다. 잠시 후 페이지를 새로고침해 주세요."
-                  : "활성 과목 이용권이 없습니다. 과목 이용권 관리에서 법조윤리 패키지를 구매해 주세요."}
+                  : "이용 중인 과목이 없습니다. 과목 이용권 관리에서 원하는 과목을 선택해 주세요."}
               </div>
             ) : null}
           </>

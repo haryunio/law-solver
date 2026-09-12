@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { LegalDocumentModal } from "./LegalDocumentModal";
 
 type LegalItem = {
@@ -567,17 +567,6 @@ interface TermsOfServiceLinkProps {
 
 export function TermsOfServiceLink({ className = defaultLinkClass }: TermsOfServiceLinkProps) {
   const [isOpen, setIsOpen] = useState(false);
-
-  useEffect(() => {
-    if (!isOpen) return;
-
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") setIsOpen(false);
-    };
-
-    document.addEventListener("keydown", handleKeyDown);
-    return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [isOpen]);
 
   return (
     <>

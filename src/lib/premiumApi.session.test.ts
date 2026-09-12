@@ -31,6 +31,30 @@ afterEach(() => {
 });
 
 describe("Premium session recovery", () => {
+  it("preserves a mutation body and idempotency key across a single 401 retry", async () => {
+    const api = await loadConfiguredApi();
+    const valid = session("valid-token", Math.floor(Date.now() / 1_000) + 3_600);
+    vi.spyOn(api.premiumSupabase!.auth, "getSession").mockResolvedValue({ data: { session: valid }, error: null });
+    const refresh = vi.spyOn(api.premiumSupabase!.auth, "refreshSession").mockResolvedValue({ data: { session: valid, user: valid.user }, error: null });
+    const fetchMock = vi.fn().mockImplementation(() => Promise.resolve(new Response(
+      JSON.stringify({ error: { code: "UNAUTHORIZED", message: "expired" } }), { status: 401 },
+    )));
+    vi.stubGlobal("fetch", fetchMock);
+    await expect(api.createPremiumAttempt("set-id")).rejects.toMatchObject({ status: 401 });
+    expect(refresh).toHaveBeenCalledTimes(1);
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    const first = fetchMock.mock.calls[0]?.[1] as RequestInit;
+    const retry = fetchMock.mock.calls[1]?.[1] as RequestInit;
+    expect(retry.body).toBe(first.body);
+    expect(JSON.parse(String(first.body))).toMatchObject({ problemSetId: "set-id", idempotencyKey: expect.stringMatching(/^web-attempt-/) });
+  });
+
+  it.each(["not an envelope", 42, [], null, { wrong: true }])("rejects malformed public responses safely: %j", async (payload) => {
+    const api = await loadConfiguredApi();
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response(JSON.stringify(payload), { status: 200 })));
+    await expect(api.listMarketplaceProducts()).rejects.toMatchObject({ code: "INVALID_RESPONSE" });
+  });
+
   it("refreshes a nearly expired session before calling an Edge Function", async () => {
     const api = await loadConfiguredApi();
     const staleSession = session("stale-token", Math.floor(Date.now() / 1_000) + 10);

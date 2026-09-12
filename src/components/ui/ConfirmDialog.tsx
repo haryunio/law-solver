@@ -1,5 +1,7 @@
+import { useId } from "react";
 import { IconCloseButton } from "./IconCloseButton";
-import { ButtonLoadingContent } from "./AsyncLoading";
+import { Button } from "./Button";
+import { Dialog } from "./Dialog";
 
 type ConfirmVariant = "default" | "danger" | "success";
 
@@ -15,12 +17,6 @@ interface ConfirmDialogProps {
   pendingLabel?: string;
 }
 
-const variantClass = {
-  default: "app-button-primary",
-  danger: "bg-red-600 hover:bg-red-700 dark:bg-red-600 dark:hover:bg-red-700",
-  success: "bg-emerald-600 hover:bg-emerald-700 dark:bg-emerald-600 dark:hover:bg-emerald-700",
-} as const;
-
 export function ConfirmDialog({
   title,
   description,
@@ -33,59 +29,52 @@ export function ConfirmDialog({
   pendingLabel = "처리 중",
 }: ConfirmDialogProps) {
   const hasCancel = Boolean(onCancel);
+  const titleId = useId();
+  const descriptionId = useId();
+  const close = pending ? undefined : onCancel ?? (() => void onConfirm());
 
   return (
-    <div className="fixed inset-0 z-[60]">
-      <button
-        onClick={pending ? undefined : onCancel ?? onConfirm}
-        disabled={pending}
-        className="app-modal-backdrop absolute inset-0"
-        aria-label="대화상자 닫기"
-      />
-      <div className="absolute left-1/2 top-1/2 w-[92vw] max-w-[28rem] -translate-x-1/2 -translate-y-1/2">
-        <section className="app-modal-surface rounded-2xl border p-5 shadow-2xl">
-          <div className="flex items-start justify-between gap-4">
-            <h2 className="min-w-0 flex-1 text-base font-semibold text-stone-900 dark:text-stone-100">
-              {title}
-            </h2>
-            <IconCloseButton
-              onClick={pending ? () => undefined : onCancel ?? onConfirm}
-              disabled={pending}
-              label="대화상자 닫기"
-            />
-          </div>
-
-          {description ? (
-            <p className="mt-4 w-full whitespace-pre-wrap text-sm leading-6 text-stone-600 dark:text-stone-400">
-              {description}
-            </p>
-          ) : null}
-
-          <div className="mt-5 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-            {hasCancel ? (
-              <button
-                type="button"
-                onClick={onCancel}
-                disabled={pending}
-                className="app-button-secondary rounded-lg px-4 py-2.5 text-sm font-semibold disabled:opacity-50"
-              >
-                {cancelLabel}
-              </button>
-            ) : null}
-            <button
-              type="button"
-              onClick={() => void onConfirm()}
-              disabled={pending}
-              className={[
-                "rounded-lg px-4 py-2.5 text-sm font-semibold text-white transition disabled:opacity-60",
-                variantClass[variant],
-              ].join(" ")}
-            >
-              {pending ? <ButtonLoadingContent label={pendingLabel} /> : confirmLabel}
-            </button>
-          </div>
-        </section>
+    <Dialog
+      labelledBy={titleId}
+      describedBy={description ? descriptionId : undefined}
+      onClose={close}
+      surfaceClassName="max-h-[calc(100dvh-2rem)] max-w-[28rem] overflow-y-auto rounded-2xl border p-5"
+    >
+      <div className="flex items-start justify-between gap-4">
+        <h2 id={titleId} className="min-w-0 flex-1 text-base font-semibold text-stone-900 dark:text-stone-100">
+          {title}
+        </h2>
+        <IconCloseButton
+          onClick={() => close?.()}
+          disabled={pending}
+          label="대화상자 닫기"
+        />
       </div>
-    </div>
+
+      {description ? (
+        <p id={descriptionId} className="mt-4 w-full whitespace-pre-wrap text-sm leading-6 text-stone-600 dark:text-stone-400">
+          {description}
+        </p>
+      ) : null}
+
+      <div className="mt-5 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+        {hasCancel ? (
+          <Button
+            onClick={onCancel}
+            disabled={pending}
+          >
+            {cancelLabel}
+          </Button>
+        ) : null}
+        <Button
+          variant={variant === "default" ? "primary" : variant}
+          onClick={() => void onConfirm()}
+          pending={pending}
+          pendingLabel={pendingLabel}
+        >
+          {confirmLabel}
+        </Button>
+      </div>
+    </Dialog>
   );
 }

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { LegalDocumentModal } from "./LegalDocumentModal";
 
 const externalLinkClass =
@@ -20,17 +20,6 @@ interface PrivacyPolicyLinkProps {
 
 export function PrivacyPolicyLink({ className = defaultLinkClass }: PrivacyPolicyLinkProps) {
   const [isOpen, setIsOpen] = useState(false);
-
-  useEffect(() => {
-    if (!isOpen) return;
-
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") setIsOpen(false);
-    };
-
-    document.addEventListener("keydown", handleKeyDown);
-    return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [isOpen]);
 
   return (
     <>
