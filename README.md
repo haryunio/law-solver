@@ -5,6 +5,15 @@
 License: CC BY-NC-ND  
 (c) 2026 Haryun all rights reserved
 
+## 개발 문서
+
+- [구조와 데이터 흐름](docs/ARCHITECTURE.md): 라우트, 저장 경계, Premium client와 학습 adapter
+- [디자인 시스템](docs/DESIGN_SYSTEM.md): 토큰, 버튼, 모달, 접근성, 적용 예시
+- [개발과 유지보수](docs/MAINTENANCE.md): 실행 명령, 변경 위치, 검증과 두 저장소 병합
+- [에이전트 지침](AGENTS.md): 작업 시 지켜야 할 프로젝트 규칙
+
+`npm run verify`로 테스트와 빌드를 한 번에 실행합니다. `develop` push와 `develop`, `main` 대상 PR에서 같은 검증을 실행하며, 운영 Pages 배포도 검증 성공 후 진행합니다.
+
 ## Screenshots
 
 | 문제풀이 페이지 | 힌트 보기 |
@@ -72,7 +81,7 @@ Law Solver Premium은 배포·권한 경계가 다른 두 저장소로 나눕니
 
 프론트는 `develop`을 통합 개발 기준으로 사용하고 Premium 기능은 `feature/premium`에서 작업합니다. 서버는 `develop`에서 기능을 통합하고 검증된 상태만 `main`으로 반영합니다. 서버는 PR CI와 수동 승인형 Supabase production 배포 workflow를 사용하며 production seed/reset은 허용하지 않습니다.
 
-API·DTO·권한 계약은 서버의 `docs/API.md`, `docs/AUTHORIZATION.md`, `docs/FRONTEND_INTEGRATION.md`가 기준입니다. 계약 변경은 서버 구현과 문서를 먼저 갱신한 뒤 이 저장소의 `src/lib/premiumApi.ts`와 화면을 맞추고, 각 저장소에 독립적인 커밋으로 남깁니다. 서버 콘텐츠와 secret은 프론트 저장소로 복사하지 않습니다.
+API와 DTO, 권한 계약은 서버의 `docs/API.md`, `docs/AUTHORIZATION.md`, `docs/FRONTEND_INTEGRATION.md`가 기준입니다. 계약 변경은 서버 구현과 문서를 먼저 갱신한 뒤 이 저장소의 `src/lib/premiumApi.ts`와 화면을 맞추고, 각 저장소에 독립적인 커밋으로 남깁니다. 서버 콘텐츠와 secret은 프론트 저장소로 복사하지 않습니다.
 
 ### 프론트 Git·릴리즈 흐름
 
@@ -87,12 +96,14 @@ API·DTO·권한 계약은 서버의 `docs/API.md`, `docs/AUTHORIZATION.md`, `do
 ```txt
 .
 ├── .github/workflows/deploy-pages.yml  # GitHub Pages 자동 배포 워크플로우
-├── docs/                               # README 스크린샷 이미지
+├── docs/                               # 구조, 디자인, 유지보수 문서와 화면 이미지
 ├── public/
 │   ├── 404.html                        # GitHub Pages SPA redirect
 │   └── CNAME                           # 커스텀 도메인: lawsolver.haryun.io
 ├── samples/                            # 업로드 테스트용 샘플 CSV
 ├── src/
+│   ├── app/                            # 라우트, 지연 로딩, 전역 watcher, 오류 복구
+│   ├── hooks/                          # 리소스 조회 상태와 재시도
 │   ├── components/
 │   │   ├── analytics/                  # React Router 페이지뷰 추적
 │   │   ├── seo/                        # 라우트별 title, canonical, robots 메타데이터
@@ -112,7 +123,7 @@ API·DTO·권한 계약은 서버의 `docs/API.md`, `docs/AUTHORIZATION.md`, `do
 │   ├── pages/                          # 라우트 단위 화면
 │   ├── store/                          # Zustand stores
 │   ├── types/                          # 공유 타입
-│   ├── App.tsx                         # 라우팅 및 테마 watcher
+│   ├── App.tsx                         # 전역 watcher, 메타데이터와 라우트 조합
 │   └── main.tsx                        # React entry
 ├── index.html                          # Vite HTML entry, GA4 태그, OG meta, SPA redirect restore
 ├── tailwind.config.ts
@@ -193,7 +204,7 @@ LBTI의 네 지표와 16개 유형은 [`lbti-framework.json`](src/mini-apps/lbti
 
 세션, 과목, 세션-과목 매핑 데이터는 IndexedDB의 `law-solver-offline` 데이터베이스, `persisted-state` object store에 `law-solver-storage` 키로 저장됩니다. 환경설정은 기존처럼 `law-solver-settings` 키로 localStorage에 저장됩니다.
 
-IndexedDB 전환 전 localStorage의 `law-solver-storage`에 저장된 v1~v3 데이터는 앱 시작 시 자동 이전합니다. IndexedDB transaction 완료, 재조회, Zustand hydration과 정규화된 최종 저장까지 모두 성공한 뒤에만 기존 localStorage 원본을 제거합니다. 이전에 실패하면 기존 원본을 보존하고 데이터 화면 대신 재시도 안내를 표시합니다.
+IndexedDB 전환 전 localStorage의 `law-solver-storage`에 저장된 v1~v3 데이터는 환경설정이나 오프라인 학습 화면에 처음 들어갈 때 자동 이전합니다. IndexedDB transaction 완료, 재조회, Zustand hydration과 정규화된 최종 저장까지 모두 성공한 뒤에만 기존 localStorage 원본을 제거합니다. 이전에 실패하면 기존 원본을 보존하고 데이터 화면 대신 재시도 안내를 표시합니다.
 
 일반 변경은 짧게 모아 직렬 저장하되 답안·책갈피·제출 변경은 즉시 flush하고, 탭을 숨기거나 닫을 때도 남은 변경의 저장을 바로 시작합니다. 각 IndexedDB snapshot에는 내부 revision을 두어 오래된 다른 탭의 예약 쓰기가 최신 데이터나 복원 결과를 덮어쓰지 못하게 합니다. 파일·클라우드 복원과 전체 초기화는 직전 변경을 먼저 저장한 뒤 교체본을 한 번만 기록하며, 교체 저장이 실패하면 기존 메모리와 영구 저장본을 유지합니다. 마이그레이션 후 localStorage를 지우기 직전에도 원본이 그 사이 변경되지 않았는지 다시 확인합니다.
 
@@ -341,7 +352,7 @@ npm run preview
 GitHub Pages 배포:
 
 - `.github/workflows/deploy-pages.yml`이 `main` 브랜치 push 또는 수동 실행(`workflow_dispatch`) 시 동작합니다.
-- 워크플로우는 운영 Supabase 공개 연결값을 검증하고 `npm ci`, `npm run build` 후 `dist`를 Pages artifact로 업로드합니다.
+- 워크플로우는 운영 Supabase 공개 연결값을 검증하고 `npm ci`, `npm run verify` 후 `dist`를 Pages artifact로 업로드합니다.
 - `public/CNAME`에 `lawsolver.haryun.io`가 설정되어 있습니다.
 - `public/404.html`과 `index.html`의 redirect restore 스크립트로 GitHub Pages에서 SPA 라우트 새로고침 404를 우회합니다.
 - 검색에 노출하는 공개 하위 경로는 `vite.config.ts`가 별도 `index.html`을 만들어 직접 요청도 200으로 응답합니다.
@@ -453,7 +464,10 @@ CSV의 큰따옴표로 감싼 셀 안에 실제 줄바꿈이 있으면 해당 �
 - `npm run lint`는 아직 제공되지 않습니다. 린트 도입이 필요하면 별도 설정이 필요합니다.
 - `public/CNAME`은 `lawsolver.haryun.io` 기준입니다. GitHub 기본 도메인(`https://haryunio.github.io/law-solver/`)으로만 운영할 경우 CNAME과 Vite base 설정을 함께 점검해야 합니다.
 
-## 확인한 명령어
+## 검증 명령
 
-- `npm test`: 통과, 16개 테스트 파일 / 60개 테스트
-- `npm run build`: 통과
+- `npm run verify`: 전체 테스트, TypeScript 검사와 배포 빌드
+- `npm test -- <test-file>`: 변경 영역의 회귀 테스트
+- `npm run preview`: 마지막 빌드의 브라우저 확인
+
+실제 실행 결과는 해당 PR의 CI에서 확인합니다. 수동 검증과 저장소별 병합 순서는 [유지보수 문서](docs/MAINTENANCE.md)를 따릅니다.

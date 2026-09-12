@@ -18,6 +18,8 @@ import {
 import { premiumAttemptToTestSession } from "../lib/premiumSession";
 import type { AnswerValue } from "../types/test";
 
+type PendingChange<T> = { value: T };
+
 export function PremiumSolvePage() {
   const { attemptId } = useParams();
   const navigate = useNavigate();
@@ -29,11 +31,14 @@ export function PremiumSolvePage() {
   const displayedAttemptRef = useRef<PremiumAttempt | null>(null);
   const serverAttemptRef = useRef<PremiumAttempt | null>(null);
   const pendingMutationsRef = useRef<Promise<void>>(Promise.resolve());
-  const dirtyAnswersRef = useRef(new Map<string, string>());
+  const dirtyAnswersRef = useRef(new Map<string, PendingChange<string>>());
+  const dirtyBookmarksRef = useRef(new Map<string, PendingChange<boolean>>());
+  const mutationErrorRef = useRef<unknown>(null);
   const actionInProgressRef = useRef(false);
 
   const replaceAttempt = useCallback((nextAttempt: PremiumAttempt) => {
     dirtyAnswersRef.current.clear();
+    dirtyBookmarksRef.current.clear();
     displayedAttemptRef.current = nextAttempt;
     serverAttemptRef.current = nextAttempt;
     setAttempt(nextAttempt);
@@ -85,11 +90,11 @@ export function PremiumSolvePage() {
     ));
     if (!attemptId) return;
     try {
-      replaceAttempt(await getPremiumAttempt(attemptId));
+      mergeServerAttempt(await getPremiumAttempt(attemptId));
     } catch {
       // The original mutation error is more actionable than a follow-up refresh failure.
     }
-  }, [attemptId, replaceAttempt]);
+  }, [attemptId, mergeServerAttempt]);
 
   const enqueueMutation = useCallback((
     request: (serverAttempt: PremiumAttempt) => Promise<PremiumAttempt>,
@@ -97,10 +102,13 @@ export function PremiumSolvePage() {
     pendingMutationsRef.current = pendingMutationsRef.current
       .then(async () => {
         const current = serverAttemptRef.current;
-        if (!current || current.status !== "in_progress") return;
+        if (!current || current.status !== "in_progress") throw new Error("Attempt is not active");
         mergeServerAttempt(await request(current));
       })
-      .catch(recoverFromMutationError);
+      .catch(async (cause: unknown) => {
+        mutationErrorRef.current = cause;
+        await recoverFromMutationError(cause);
+      });
   }, [mergeServerAttempt, recoverFromMutationError]);
 
   useEffect(() => {
@@ -112,6 +120,7 @@ export function PremiumSolvePage() {
     let cancelled = false;
     void getPremiumAttempt(attemptId)
       .then(async (data) => {
+        if (cancelled) return null;
         if (data.status === "submitted") {
           navigate(`/premium/results/${data.id}`, { replace: true });
           return null;
@@ -127,6 +136,7 @@ export function PremiumSolvePage() {
         if (cancelled) return;
         try {
           const latestAttempt = await getPremiumAttempt(attemptId);
+          if (cancelled) return;
           if (latestAttempt.status === "in_progress") {
             replaceAttempt(latestAttempt);
             return;
@@ -153,9 +163,10 @@ export function PremiumSolvePage() {
   );
 
   const handleAnswerChange = useCallback((questionId: string, answer: AnswerValue) => {
+    if (actionInProgressRef.current) return;
     const answerValue = String(answer);
     setError(null);
-    dirtyAnswersRef.current.set(questionId, answerValue);
+    dirtyAnswersRef.current.set(questionId, { value: answerValue });
     updateDisplayedAttempt((current) => ({
       ...current,
       questions: current.questions.map((question) =>
@@ -165,19 +176,40 @@ export function PremiumSolvePage() {
   }, [updateDisplayedAttempt]);
 
   const handleQuestionLeave = useCallback((questionId: string) => {
-    const answer = dirtyAnswersRef.current.get(questionId);
-    if (answer === undefined) return;
-    dirtyAnswersRef.current.delete(questionId);
-    enqueueMutation((current) =>
-      savePremiumAnswer(current.id, questionId, answer, current.revision)
-    );
+    const change = dirtyAnswersRef.current.get(questionId);
+    if (!change) return;
+    enqueueMutation(async (current) => {
+      const saved = await savePremiumAnswer(current.id, questionId, change.value, current.revision);
+      // Compare the edit identity, including when a learner changes A to B and back to A.
+      if (dirtyAnswersRef.current.get(questionId) === change) dirtyAnswersRef.current.delete(questionId);
+      return saved;
+    });
   }, [enqueueMutation]);
 
-  const flushDirtyAnswers = useCallback(() => {
+  const saveBookmark = useCallback((questionId: string, change: PendingChange<boolean>) => {
+    enqueueMutation(async (current) => {
+      const saved = await setPremiumBookmark(current.id, questionId, change.value, current.revision);
+      if (dirtyBookmarksRef.current.get(questionId) === change) dirtyBookmarksRef.current.delete(questionId);
+      return saved;
+    });
+  }, [enqueueMutation]);
+
+  const flushPendingChanges = useCallback(async () => {
+    // Wait for the current queue before retrying values still marked as unsaved.
+    await pendingMutationsRef.current;
+    mutationErrorRef.current = null;
     for (const questionId of [...dirtyAnswersRef.current.keys()]) {
       handleQuestionLeave(questionId);
     }
-  }, [handleQuestionLeave]);
+    for (const [questionId, change] of dirtyBookmarksRef.current) {
+      saveBookmark(questionId, change);
+    }
+    await pendingMutationsRef.current;
+    if (mutationErrorRef.current) throw mutationErrorRef.current;
+    if (dirtyAnswersRef.current.size || dirtyBookmarksRef.current.size) {
+      throw new Error("Changes have not been saved");
+    }
+  }, [handleQuestionLeave, saveBookmark]);
 
   const handleAnswerReveal = useCallback(async (questionId: string) => {
     const currentQuestion = displayedAttemptRef.current?.questions.find(
@@ -212,9 +244,12 @@ export function PremiumSolvePage() {
   }, [attemptId, updateDisplayedAttempt]);
 
   const handleBookmarkChange = useCallback((questionId: string) => {
+    if (actionInProgressRef.current) return;
     const question = displayedAttemptRef.current?.questions.find((item) => item.id === questionId);
     if (!question) return;
     const bookmarked = !(question.bookmarked ?? false);
+    const change = { value: bookmarked };
+    dirtyBookmarksRef.current.set(questionId, change);
     setError(null);
     updateDisplayedAttempt((current) => ({
       ...current,
@@ -222,10 +257,8 @@ export function PremiumSolvePage() {
         item.id === questionId ? { ...item, bookmarked } : item
       ),
     }));
-    enqueueMutation((current) =>
-      setPremiumBookmark(current.id, questionId, bookmarked, current.revision)
-    );
-  }, [enqueueMutation, updateDisplayedAttempt]);
+    saveBookmark(questionId, change);
+  }, [saveBookmark, updateDisplayedAttempt]);
 
   const handleElapsedTimeTick = useCallback(() => {
     setElapsedSeconds((current) => current + 1);
@@ -237,8 +270,7 @@ export function PremiumSolvePage() {
     setPendingAction("pause");
     setError(null);
     try {
-      flushDirtyAnswers();
-      await pendingMutationsRef.current;
+      await flushPendingChanges();
       const current = serverAttemptRef.current;
       if (!current || current.status !== "in_progress") return;
       replaceAttempt(await pausePremiumAttempt(current.id, current.revision));
@@ -252,7 +284,7 @@ export function PremiumSolvePage() {
       actionInProgressRef.current = false;
       setPendingAction(null);
     }
-  }, [flushDirtyAnswers, navigate, replaceAttempt]);
+  }, [flushPendingChanges, navigate, replaceAttempt]);
 
   const handleSubmit = useCallback(async () => {
     if (actionInProgressRef.current) return;
@@ -260,8 +292,7 @@ export function PremiumSolvePage() {
     setPendingAction("submit");
     setError(null);
     try {
-      flushDirtyAnswers();
-      await pendingMutationsRef.current;
+      await flushPendingChanges();
       const current = serverAttemptRef.current;
       if (!current) return;
       const result = await submitPremiumAttempt(current.id, current.revision);
@@ -275,7 +306,7 @@ export function PremiumSolvePage() {
       actionInProgressRef.current = false;
       setPendingAction(null);
     }
-  }, [flushDirtyAnswers, navigate]);
+  }, [flushPendingChanges, navigate]);
 
   if (isLoading) {
     return <PremiumSolveSkeleton />;
@@ -302,19 +333,21 @@ export function PremiumSolvePage() {
 
   return (
     <>
-      <CbtSolveScreen
-        sessionId={attempt.id}
-        sessionOverride={session}
-        onAnswerChange={handleAnswerChange}
-        onBookmarkChange={handleBookmarkChange}
-        onElapsedTimeTick={handleElapsedTimeTick}
-        onQuestionLeave={handleQuestionLeave}
-        canRevealAnswer={false}
-        onAnswerRevealRequest={handleAnswerReveal}
-        onPaused={() => void handlePause()}
-        onSubmitted={() => void handleSubmit()}
-        allowCsvDownload={false}
-      />
+      <div ref={(element) => { if (element) element.inert = Boolean(pendingAction); }} aria-busy={Boolean(pendingAction)}>
+        <CbtSolveScreen
+          sessionId={attempt.id}
+          sessionOverride={session}
+          onAnswerChange={handleAnswerChange}
+          onBookmarkChange={handleBookmarkChange}
+          onElapsedTimeTick={handleElapsedTimeTick}
+          onQuestionLeave={handleQuestionLeave}
+          canRevealAnswer={false}
+          onAnswerRevealRequest={handleAnswerReveal}
+          onPaused={() => void handlePause()}
+          onSubmitted={() => void handleSubmit()}
+          allowCsvDownload={false}
+        />
+      </div>
       <Toast message={error} onDismiss={() => setError(null)} />
       {pendingAction ? (
         <AsyncTransitionOverlay

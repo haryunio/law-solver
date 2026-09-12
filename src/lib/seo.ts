@@ -5,7 +5,7 @@ export const SITE_NAME = "Law Solver";
 export const SOCIAL_IMAGE_URL = `${SITE_ORIGIN}/og-image.png`;
 export const SOCIAL_IMAGE_ALT = "Law Solver 문제 풀이 화면 미리보기";
 export const DEFAULT_DESCRIPTION =
-  "문제 만들기부터 복습과 오답 정리까지 한 번에. 로스쿨생이 만든 로스쿨 문제 풀이 앱";
+  "내 CSV 문제와 Premium 온라인 문제를 시험처럼 풀고, 오답과 책갈피로 복습하세요. 암호화 클라우드 백업과 로스쿨 미니 앱도 함께 제공해요.";
 
 export interface SeoMetadata {
   title: string;

@@ -39,8 +39,8 @@ jobs:
           test -n "$VITE_SUPABASE_URL"
           test -n "$VITE_SUPABASE_PUBLISHABLE_KEY"
 
-      - name: Build
-        run: npm run build
+      - name: Test and build
+        run: npm run verify
 
       - name: Setup Pages
         uses: actions/configure-pages@v6

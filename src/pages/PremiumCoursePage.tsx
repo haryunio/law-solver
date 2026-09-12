@@ -1,16 +1,15 @@
-import { useEffect, useState } from "react";
+import { useCallback } from "react";
 import { Link, useLocation, useParams } from "react-router-dom";
 import { PremiumProblemGridSkeleton } from "../components/premium/PremiumLoadingStates";
 import { AppFooter } from "../components/ui/AppFooter";
 import { DashboardHeaderTitle } from "../components/ui/DashboardHeaderTitle";
 import { PremiumBadge } from "../components/ui/PremiumBadge";
 import { ReturnLinkLabel } from "../components/ui/ReturnLinkLabel";
-import { Toast } from "../components/ui/Toast";
+import { PremiumLoadError } from "../components/premium/PremiumLoadError";
+import { usePremiumResource } from "../hooks/usePremiumResource";
 import {
-  getPremiumErrorMessage,
   listPremiumCourses,
   listPremiumProblemSets,
-  type PremiumProblemSetSummary,
   type PremiumQuestionType,
 } from "../lib/premiumApi";
 
@@ -30,49 +29,21 @@ export function PremiumCoursePage() {
   const { courseId } = useParams();
   const location = useLocation();
   const routeTitle = (location.state as { courseTitle?: string } | null)?.courseTitle;
-  const [title, setTitle] = useState(routeTitle ?? "온라인 문제 목록");
-  const [problemSets, setProblemSets] = useState<PremiumProblemSetSummary[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [didLoadFail, setDidLoadFail] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (!courseId) {
-      setDidLoadFail(true);
-      setError("과목 정보를 찾을 수 없습니다. 온라인 과목 목록에서 다시 선택해 주세요.");
-      setIsLoading(false);
-      return;
-    }
-
-    let cancelled = false;
-    setIsLoading(true);
-    setDidLoadFail(false);
-    void Promise.all([listPremiumCourses(), listPremiumProblemSets(courseId)])
-      .then(([courses, sets]) => {
-        if (cancelled) return;
-        setTitle(courses.find((course) => course.id === courseId)?.name ?? "온라인 문제 목록");
-        setProblemSets(sets);
-      })
-      .catch((cause: unknown) => {
-        if (cancelled) return;
-        setDidLoadFail(true);
-        setError(getPremiumErrorMessage(
-          cause,
-          "문제 목록을 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.",
-        ));
-      })
-      .finally(() => {
-        if (!cancelled) setIsLoading(false);
-      });
-
-    return () => {
-      cancelled = true;
-    };
+  const load = useCallback(async () => {
+    if (!courseId) throw new Error("Missing course");
+    const [courses, problemSets] = await Promise.all([listPremiumCourses(), listPremiumProblemSets(courseId)]);
+    return { title: courses.find((course) => course.id === courseId)?.name, problemSets };
   }, [courseId]);
+  const { data, error, isLoading, reload } = usePremiumResource(
+    courseId ?? "",
+    load,
+    "문제 목록을 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.",
+  );
+  const title = data?.title ?? routeTitle ?? "온라인 문제 목록";
+  const problemSets = data?.problemSets ?? [];
 
   return (
     <div className="app-page px-4 py-8 transition-colors duration-300 md:px-6">
-      <Toast message={error} onDismiss={() => setError(null)} />
       <div className="mx-auto max-w-6xl">
         <DashboardHeaderTitle
           title={title}
@@ -90,6 +61,8 @@ export function PremiumCoursePage() {
 
         {isLoading ? (
           <PremiumProblemGridSkeleton />
+        ) : error ? (
+          <PremiumLoadError message={error} onRetry={reload} backTo="/premium" />
         ) : problemSets.length > 0 ? (
           <div className="grid gap-4 md:grid-cols-2">
             {problemSets.map((problemSet) => (
@@ -142,12 +115,10 @@ export function PremiumCoursePage() {
         ) : (
           <div className="app-card rounded-2xl border border-dashed p-10 text-center">
             <p className="text-base font-medium text-stone-700 dark:text-stone-300">
-              {didLoadFail ? "문제 목록을 표시하지 못했습니다." : "공개된 문제가 없습니다."}
+              공개된 문제가 없습니다.
             </p>
             <p className="mt-1 text-sm text-stone-500 dark:text-stone-500">
-              {didLoadFail
-                ? "과목 목록에서 다시 들어오거나 잠시 후 새로고침해 주세요."
-                : "문제가 등록되면 이곳에서 풀이를 시작할 수 있습니다."}
+              문제가 등록되면 이곳에서 풀이를 시작할 수 있습니다.
             </p>
           </div>
         )}

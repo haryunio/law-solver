@@ -19,7 +19,7 @@
 - 프론트는 공개 Supabase URL과 publishable key만 사용합니다. 서버의 CSV 콘텐츠, migration용 관리자 값, `service_role`, 결제·SMTP secret을 이 저장소로 복사하지 마세요.
 - 로컬 실행 포트는 DB 대상에 따라 고정합니다. `npm run dev:local`과 기본 `npm run dev`는 로컬 Supabase를 바라보는 `127.0.0.1:5164`, `npm run dev:production`은 운영 Supabase를 바라보는 `127.0.0.1:5174`입니다. 운영용 명령은 `hosted` Vite mode와 `.env.hosted.local`을 사용하고 포트가 점유되면 임의 포트로 이동하지 않아야 합니다.
 - 두 저장소에 걸친 변경은 각각 검증하고 별도 커밋으로 남깁니다. 한 저장소의 커밋에 다른 저장소 파일을 포함하거나 두 저장소의 배포를 암묵적으로 묶지 마세요.
-- 프론트는 `develop`을 통합 기준으로 하고 Premium 작업은 `feature/premium`에서 진행합니다. 서버는 `develop`에서 통합하고 안정 상태만 `main`으로 반영하며, 서버 CI/CD는 별도 결정 전까지 수동 검증·배포를 기준으로 합니다.
+- 프론트는 `develop`을 통합 기준으로 하고 Premium 장기 작업은 `feature/premium`에서 진행합니다. 서버는 `develop`에서 통합하고 안정 상태만 `main`으로 반영합니다. 서버는 PR CI를 실행하며 운영 배포는 별도 확인과 GitHub Environment 승인을 요구하는 수동 workflow를 사용합니다.
 
 ## Git 브랜치와 릴리즈 규칙
 
@@ -51,7 +51,7 @@
 src/App.tsx
 ```
 
-라우팅과 테마/폰트·계정 watcher를 담당합니다. Premium 온라인 라우트는 `/premium`, `/premium/courses/:courseId`, `/premium/courses/:courseId/problem-sets/:problemSetId`, `/premium/attempts/:attemptId`, `/premium/results/:attemptId`, `/premium/wrong/:attemptId`, `/premium/review/:attemptId`이며 동적 ID를 메타데이터나 분석에 보내지 않습니다. 출시된 미니 앱은 `/apps/:appId` 아래에 추가하며 현재 `/apps/lbti`, `/apps/legal-ethics-17`, `/apps/hoban-course-registration`을 제공합니다.
+전역 기능을 조합합니다. 라우트와 화면 지연 로딩은 `src/app/AppRoutes.tsx`, 테마와 계정 watcher는 `src/app/AppWatchers.tsx`, 화면 오류 복구는 `src/app/AppRouteBoundary.tsx`가 담당합니다. Premium 온라인 라우트는 `/premium`, `/premium/courses/:courseId`, `/premium/courses/:courseId/problem-sets/:problemSetId`, `/premium/attempts/:attemptId`, `/premium/results/:attemptId`, `/premium/wrong/:attemptId`, `/premium/review/:attemptId`이며 동적 ID를 메타데이터나 분석에 보내지 않습니다. 출시된 미니 앱은 `/apps/:appId` 아래에 추가하며 현재 `/apps/lbti`, `/apps/legal-ethics-17`, `/apps/hoban-course-registration`을 제공합니다.
 
 ```txt
 src/pages/
@@ -81,7 +81,7 @@ Zustand store입니다. 문제 세션, 과목, 세션-과목 매핑 상태는 `u
 src/lib/
 ```
 
-CSV 파싱/다운로드, Premium API client, GA4 이벤트, SEO 정책, 채점, 정렬, 답안 표시, ID 생성, 시간 포맷 등 도메인 유틸입니다. `premiumApi.ts`에는 공개 Supabase client와 인증된 Edge Function 호출만 두며 관리자 key를 사용하지 않습니다.
+CSV 파싱/다운로드, Premium API client, GA4 이벤트, SEO 정책, 채점, 정렬, 답안 표시, ID 생성, 시간 포맷 등 도메인 유틸입니다. `premiumApi.ts`는 공개 진입점을 유지하고 `src/lib/premium/`의 타입, 인증, 통신, 오류, 계정, 학습, 백업 모듈을 연결합니다. 관리자 key를 사용하지 않습니다.
 
 ```txt
 src/types/
@@ -226,6 +226,7 @@ sed -n '1,220p' package.json
 
 ```bash
 sed -n '1,220p' src/App.tsx
+sed -n '1,240p' src/app/AppRoutes.tsx
 ```
 
 주요 타입 확인:
@@ -443,3 +444,12 @@ PR에는 다음을 포함하는 것을 권장합니다.
 - README와 샘플 CSV의 설명이 실제 파서 동작과 맞는지 확인합니다.
 - 브라우저 저장소 의존 기능은 백업/복원 UX와 데이터 손실 가능성을 함께 고려합니다.
 - GitHub Pages 관련 수정은 커스텀 도메인과 프로젝트 경로 배포의 차이를 명확히 확인한 뒤 진행합니다.
+
+## 유지보수 기준 문서
+
+- 전체 구조는 `docs/ARCHITECTURE.md`, 디자인 구현은 `docs/DESIGN_SYSTEM.md`, 작업 절차는 `docs/MAINTENANCE.md`에서 관리합니다. `GEMINI.md`는 이 문서를 가리키며 별도 규칙을 복제하지 않습니다.
+- 새 오프라인 데이터 사용 화면은 `AppRoutes.tsx`에서 `OfflineDataHydrationGate`를 적용합니다. 계정과 온라인 화면을 오프라인 저장소 초기화에 의존시키지 마세요.
+- 온라인 조회는 `usePremiumResource`의 key와 안정적인 `useCallback` 조회 함수를 사용해 이전 응답을 무시하고 오류와 빈 상태를 구분합니다. 실패 화면에는 재시도 동작을 제공합니다.
+- Premium 답안과 책갈피는 서버 저장 성공 전까지 미저장 상태를 유지합니다. 저장 실패 시 화면의 답안을 지우거나 중단과 제출을 계속 진행하지 않습니다.
+- `npm run verify`가 테스트와 빌드의 공통 진입점입니다. 프론트 CI와 Pages 배포에서 같은 검증을 실행합니다.
+- 새 한국어 문구에는 중간점, em dash, 말줄임표, 상투적인 대비 표현을 사용하지 않습니다. 현재 제공하는 기능과 사용자가 할 일을 구체적으로 설명합니다.
