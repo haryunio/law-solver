@@ -121,11 +121,11 @@ export function PremiumProblemSetSessionsPage() {
         ) : loadError ? (
           <PremiumLoadError message={loadError} onRetry={reload} backTo={coursePath} />
         ) : attempts.length > 0 ? (
-          <div className="space-y-2.5">
+          <div className="app-content-stagger space-y-2.5">
             {attempts.map((attempt) => <AttemptListItem key={attempt.id} attempt={attempt} />)}
           </div>
         ) : (
-          <div className="app-card rounded-2xl border border-dashed px-6 py-12 text-center">
+          <div className="app-content-enter app-card rounded-2xl border border-dashed px-6 py-12 text-center">
             <p className="text-base font-bold text-stone-800 dark:text-stone-200">
               아직 풀이 세션이 없습니다.
             </p>

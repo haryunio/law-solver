@@ -287,7 +287,7 @@ export function ResultPage() {
           </Link>
         </DashboardHeaderTitle>
 
-        <div className="grid items-stretch gap-3 md:grid-cols-[minmax(0,2fr)_minmax(0,1fr)_minmax(0,1fr)]">
+        <div className="app-content-stagger grid items-stretch gap-3 md:grid-cols-[minmax(0,2fr)_minmax(0,1fr)_minmax(0,1fr)]">
           <section className="app-card flex flex-col rounded-2xl border p-3">
             <div className="flex flex-wrap items-center justify-between gap-2">
               <div className="flex items-center gap-2">
@@ -419,7 +419,7 @@ export function ResultPage() {
           </section>
         </div>
 
-        <section className="app-card mt-4 min-w-0 rounded-2xl border p-4 md:p-5">
+        <section className="app-content-enter app-card mt-4 min-w-0 rounded-2xl border p-4 md:p-5">
           <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <h2 className="text-sm font-semibold text-stone-900 dark:text-stone-100">상세 분석</h2>

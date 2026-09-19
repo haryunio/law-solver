@@ -98,7 +98,7 @@ export function OfflineProblemSetSessionsPage() {
           <Link to={coursePath} className="app-button-secondary rounded-xl px-3 py-2 text-center text-sm font-semibold sm:px-4"><ReturnLinkLabel>문제 목록으로</ReturnLinkLabel></Link>
         </DashboardHeaderTitle>
         {relatedSessions.length ? (
-          <div className="space-y-2.5">
+          <div className="app-content-stagger space-y-2.5">
             {relatedSessions.map((session) => (
               <SessionListItem
                 key={session.id}
@@ -136,7 +136,7 @@ export function OfflineProblemSetSessionsPage() {
             ))}
           </div>
         ) : (
-          <div className="app-card rounded-2xl border border-dashed px-6 py-12 text-center">
+          <div className="app-content-enter app-card rounded-2xl border border-dashed px-6 py-12 text-center">
             <p className="text-base font-bold text-stone-800 dark:text-stone-200">아직 풀이 세션이 없습니다.</p>
             <p className="mt-2 text-sm leading-6 text-stone-500">등록한 문제는 준비되어 있습니다. 상단의 새로 문제 풀이 시작하기를 눌러 첫 풀이를 시작해 주세요.</p>
           </div>

@@ -77,12 +77,12 @@ export function DashboardPage() {
           <Link to="/dashboard" className="app-button-secondary rounded-xl px-3 py-2 text-center text-sm font-semibold sm:px-4"><ReturnLinkLabel>과목 목록으로</ReturnLinkLabel></Link>
         </DashboardHeaderTitle>
         {sortedProblemSets.length === 0 ? (
-          <div className="app-card rounded-2xl border border-dashed p-10 text-center">
+          <div className="app-content-enter app-card rounded-2xl border border-dashed p-10 text-center">
             <p className="text-base font-medium text-stone-700 dark:text-stone-300">아직 등록한 문제가 없습니다.</p>
             <p className="mt-2 text-sm leading-6 text-stone-500">CSV 파일을 등록하고, 문제마다 원하는 만큼 풀이 세션을 만들어 보세요.</p>
           </div>
         ) : (
-          <div className="grid gap-3 md:grid-cols-2">
+          <div className="app-content-stagger grid gap-3 md:grid-cols-2">
             {sortedProblemSets.map((problemSet) => (
               <article key={problemSet.id} className="app-card app-problem-card flex min-w-0 flex-col rounded-2xl border">
                 <div className="relative px-4 pb-4 pt-3.5 pr-12">

@@ -102,7 +102,7 @@ export function AppHomePage() {
           </Link>
         </DashboardHeaderTitle>
 
-        <main className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <main className="app-content-stagger grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {homeMenus.map((menu) => (
             <Link
               key={menu.to}

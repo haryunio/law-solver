@@ -654,6 +654,31 @@ body {
   background: linear-gradient(90deg, #ef4444 0%, #f97316 100%) !important;
 }
 
+/* Only marked lists and cards enter. GNB, footer and modal roots remain immediate. */
+.app-route-enter-home { --app-entry-duration: 360ms; --app-entry-distance: 12px; }
+.app-route-enter-subjects { --app-entry-duration: 320ms; --app-entry-distance: 10px; }
+.app-route-enter-problems { --app-entry-duration: 280ms; --app-entry-distance: 8px; }
+.app-route-enter-sessions { --app-entry-duration: 240ms; --app-entry-distance: 6px; }
+.app-route-enter-results { --app-entry-duration: 280ms; --app-entry-distance: 8px; }
+
+.app-route-enter > .app-page:not(.app-focus-page) .app-content-enter,
+.app-route-enter > .app-page:not(.app-focus-page) .app-content-stagger > * {
+  animation: app-route-enter var(--app-entry-duration) cubic-bezier(0.2, 0.8, 0.2, 1) backwards;
+  animation-delay: var(--app-entry-delay, 0ms);
+}
+
+.app-content-stagger > * { --app-entry-delay: 0ms; }
+.app-content-stagger > :nth-child(n+2) { --app-entry-delay: 20ms; }
+.app-content-stagger > :nth-child(n+3) { --app-entry-delay: 40ms; }
+.app-content-stagger > :nth-child(n+4) { --app-entry-delay: 60ms; }
+.app-content-stagger > :nth-child(n+5) { --app-entry-delay: 80ms; }
+.app-content-stagger > :nth-child(n+6) { --app-entry-delay: 100ms; }
+
+@keyframes app-route-enter {
+  from { opacity: 0; transform: translateY(var(--app-entry-distance)); }
+  to { opacity: 1; transform: none; }
+}
+
 .app-skeleton {
   background: #e7e5e4 !important;
   animation: app-skeleton-pulse 1.45s ease-in-out infinite;
@@ -1056,6 +1081,8 @@ html {
 
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
+  .app-route-enter .app-content-enter,
+  .app-route-enter .app-content-stagger > * { animation: none !important; }
   .app-skeleton, .app-spinner, .purchase-modal-slide-forward { animation: none !important; }
   .landing-pulse-dot, .landing-fade-up, .landing-modal { animation: none; }
   .app-button-primary-standalone, .app-button-secondary,

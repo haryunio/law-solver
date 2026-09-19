@@ -60,7 +60,7 @@ export function PremiumCoursePage() {
         ) : error ? (
           <PremiumLoadError message={error} onRetry={reload} backTo="/premium" />
         ) : problemSets.length > 0 ? (
-          <div className="grid gap-3 md:grid-cols-2">
+          <div className="app-content-stagger grid gap-3 md:grid-cols-2">
             {problemSets.map((problemSet) => (
               <article
                 key={problemSet.id}
@@ -86,7 +86,7 @@ export function PremiumCoursePage() {
             ))}
           </div>
         ) : (
-          <div className="app-card rounded-2xl border border-dashed p-10 text-center">
+          <div className="app-content-enter app-card rounded-2xl border border-dashed p-10 text-center">
             <p className="text-base font-medium text-stone-700 dark:text-stone-300">
               공개된 문제가 없습니다.
             </p>

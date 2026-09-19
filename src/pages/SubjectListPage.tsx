@@ -431,7 +431,7 @@ export function SubjectListPage() {
           </Link>
         </DashboardHeaderTitle>
 
-        <BookGrid>
+        <BookGrid className="app-content-stagger">
           {subjectCards.map((subject) => (
             <SubjectBookCard key={subject.id} {...subject} />
           ))}

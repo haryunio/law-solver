@@ -90,7 +90,7 @@ export function PremiumDashboardPage() {
         {!initialized || (isSignedIn && isPremiumActive && (!hasLoadedCourses || isLoading)) ? (
           <PremiumCourseCatalogSkeleton />
         ) : !isSignedIn ? (
-          <div className="app-card rounded-2xl border p-6 text-center">
+          <div className="app-content-enter app-card rounded-2xl border p-6 text-center">
             <PremiumBadge />
             <h2 className="mt-4 text-xl font-bold text-stone-950 dark:text-stone-100">로그인이 필요합니다</h2>
             <p className="mt-2 text-sm text-stone-600 dark:text-stone-300">계정 페이지에서 로그인한 뒤 온라인 과목을 이용할 수 있습니다.</p>
@@ -99,7 +99,7 @@ export function PremiumDashboardPage() {
             </Link>
           </div>
         ) : !isPremiumActive ? (
-          <div className="app-card rounded-2xl border p-6 text-center">
+          <div className="app-content-enter app-card rounded-2xl border p-6 text-center">
             <PremiumBadge />
             <h2 className="mt-4 text-xl font-bold text-stone-950 dark:text-stone-100">Premium 회원권이 필요합니다</h2>
             <p className="mt-2 text-sm text-stone-600 dark:text-stone-300">계정 화면에서 Premium 회원권과 과목 이용권을 등록해 주세요.</p>
@@ -109,7 +109,7 @@ export function PremiumDashboardPage() {
           </div>
         ) : (
           <>
-            <BookGrid>
+            <BookGrid className="app-content-stagger">
               <Link
                 to="/account?tab=packages"
                 className={bookLinkClassName}
@@ -155,7 +155,7 @@ export function PremiumDashboardPage() {
               ))}
             </BookGrid>
             {courses.length === 0 ? (
-              <div className="app-card mt-4 rounded-2xl border p-6 text-center text-sm text-stone-600 dark:text-stone-300">
+              <div className="app-content-enter app-card mt-4 rounded-2xl border p-6 text-center text-sm text-stone-600 dark:text-stone-300">
                 {didLoadFail
                   ? "온라인 과목을 표시하지 못했습니다. 잠시 후 페이지를 새로고침해 주세요."
                   : "이용 중인 과목이 없습니다. 과목 이용권 관리에서 원하는 과목을 선택해 주세요."}

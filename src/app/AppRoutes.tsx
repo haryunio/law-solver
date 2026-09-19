@@ -2,6 +2,7 @@ import { lazy, Suspense } from "react";
 import { Navigate, Route, Routes, useLocation } from "react-router-dom";
 import { AppRouteBoundary, RouteLoadingScreen } from "./AppRouteBoundary";
 import { RouteAnchorScroll } from "./RouteAnchorScroll";
+import { RouteEntrance } from "./RouteEntrance";
 import { LandingPage } from "../pages/LandingPage";
 
 const OfflineDataHydrationGate = lazy(() => import("../components/storage/OfflineDataHydrationGate").then((module) => ({ default: module.OfflineDataHydrationGate })));
@@ -34,37 +35,39 @@ export function AppRoutes() {
   return (
     <AppRouteBoundary key={pathname}>
       <Suspense fallback={<RouteLoadingScreen />}>
-        <Routes>
-          <Route path="/" element={<LandingPage />} />
-          <Route path="/apps" element={<SideAppsPage />} />
-          <Route path="/apps/hoban-course-registration" element={<HobanCourseRegistrationPage />} />
-          <Route path="/apps/legal-ethics-17" element={<LegalEthics17Page />} />
-          <Route path="/apps/lbti" element={<LbtiHomePage />} />
-          <Route path="/apps/lbti/test" element={<LbtiTestPage />} />
-          <Route path="/apps/lbti/types" element={<LbtiTypesPage />} />
-          <Route path="/apps/lbti/result/:typeCode" element={<LbtiResultPage />} />
-          <Route path="/home" element={<AppHomePage />} />
-          <Route path="/settings" element={<OfflineDataHydrationGate><SettingsPage /></OfflineDataHydrationGate>} />
-          <Route path="/account" element={<AccountSubscriptionPage />} />
-          <Route path="/premium" element={<PremiumDashboardPage />} />
-          <Route path="/premium/courses/:courseId" element={<PremiumCoursePage />} />
-          <Route
-            path="/premium/courses/:courseId/problem-sets/:problemSetId"
-            element={<PremiumProblemSetSessionsPage />}
-          />
-          <Route path="/premium/attempts/:attemptId" element={<PremiumSolvePage />} />
-          <Route path="/premium/results/:attemptId" element={<PremiumResultPage />} />
-          <Route path="/premium/wrong/:attemptId" element={<PremiumSessionPage view="wrong" />} />
-          <Route path="/premium/review/:attemptId" element={<PremiumSessionPage view="review" />} />
-          <Route path="/dashboard" element={<OfflineDataHydrationGate><SubjectListPage /></OfflineDataHydrationGate>} />
-          <Route path="/dashboard/:subjectId" element={<OfflineDataHydrationGate><DashboardPage /></OfflineDataHydrationGate>} />
-          <Route path="/dashboard/:subjectId/problem-sets/:problemSetId" element={<OfflineDataHydrationGate><OfflineProblemSetSessionsPage /></OfflineDataHydrationGate>} />
-          <Route path="/solve/:sessionId" element={<OfflineDataHydrationGate><SolvePage /></OfflineDataHydrationGate>} />
-          <Route path="/result/:sessionId" element={<OfflineDataHydrationGate><ResultPage /></OfflineDataHydrationGate>} />
-          <Route path="/wrong/:sessionId" element={<OfflineDataHydrationGate><WrongAnswersPage /></OfflineDataHydrationGate>} />
-          <Route path="/review/:sessionId" element={<OfflineDataHydrationGate><ReviewAllPage /></OfflineDataHydrationGate>} />
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
+        <RouteEntrance>
+          <Routes>
+            <Route path="/" element={<LandingPage />} />
+            <Route path="/apps" element={<SideAppsPage />} />
+            <Route path="/apps/hoban-course-registration" element={<HobanCourseRegistrationPage />} />
+            <Route path="/apps/legal-ethics-17" element={<LegalEthics17Page />} />
+            <Route path="/apps/lbti" element={<LbtiHomePage />} />
+            <Route path="/apps/lbti/test" element={<LbtiTestPage />} />
+            <Route path="/apps/lbti/types" element={<LbtiTypesPage />} />
+            <Route path="/apps/lbti/result/:typeCode" element={<LbtiResultPage />} />
+            <Route path="/home" element={<AppHomePage />} />
+            <Route path="/settings" element={<OfflineDataHydrationGate><SettingsPage /></OfflineDataHydrationGate>} />
+            <Route path="/account" element={<AccountSubscriptionPage />} />
+            <Route path="/premium" element={<PremiumDashboardPage />} />
+            <Route path="/premium/courses/:courseId" element={<PremiumCoursePage />} />
+            <Route
+              path="/premium/courses/:courseId/problem-sets/:problemSetId"
+              element={<PremiumProblemSetSessionsPage />}
+            />
+            <Route path="/premium/attempts/:attemptId" element={<PremiumSolvePage />} />
+            <Route path="/premium/results/:attemptId" element={<PremiumResultPage />} />
+            <Route path="/premium/wrong/:attemptId" element={<PremiumSessionPage view="wrong" />} />
+            <Route path="/premium/review/:attemptId" element={<PremiumSessionPage view="review" />} />
+            <Route path="/dashboard" element={<OfflineDataHydrationGate><SubjectListPage /></OfflineDataHydrationGate>} />
+            <Route path="/dashboard/:subjectId" element={<OfflineDataHydrationGate><DashboardPage /></OfflineDataHydrationGate>} />
+            <Route path="/dashboard/:subjectId/problem-sets/:problemSetId" element={<OfflineDataHydrationGate><OfflineProblemSetSessionsPage /></OfflineDataHydrationGate>} />
+            <Route path="/solve/:sessionId" element={<OfflineDataHydrationGate><SolvePage /></OfflineDataHydrationGate>} />
+            <Route path="/result/:sessionId" element={<OfflineDataHydrationGate><ResultPage /></OfflineDataHydrationGate>} />
+            <Route path="/wrong/:sessionId" element={<OfflineDataHydrationGate><WrongAnswersPage /></OfflineDataHydrationGate>} />
+            <Route path="/review/:sessionId" element={<OfflineDataHydrationGate><ReviewAllPage /></OfflineDataHydrationGate>} />
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </RouteEntrance>
         <RouteAnchorScroll />
       </Suspense>
     </AppRouteBoundary>
