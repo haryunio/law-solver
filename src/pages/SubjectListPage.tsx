@@ -1,5 +1,4 @@
 import {
-  CSSProperties,
   FormEvent,
   KeyboardEvent,
   PointerEvent,
@@ -14,10 +13,9 @@ import { AppFooter } from "../components/ui/AppFooter";
 import { DashboardHeaderTitle } from "../components/ui/DashboardHeaderTitle";
 import { IconCloseButton } from "../components/ui/IconCloseButton";
 import { ReturnLinkLabel } from "../components/ui/ReturnLinkLabel";
-import { SubjectCardCover } from "../components/ui/SubjectCardCover";
-import { getSubjectDashboardPath, SubjectDropPlacement } from "../lib/subject";
+import { SubjectBookCard } from "../components/ui/SubjectBookCard";
+import { SubjectDropPlacement } from "../lib/subject";
 import {
-  getSubjectAccentColor,
   getSubjectCoverStyle,
   subjectCoverPalettes as coverPalettes,
 } from "../lib/subjectCover";
@@ -433,42 +431,9 @@ export function SubjectListPage() {
           </Link>
         </DashboardHeaderTitle>
 
-        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+        <div className="grid grid-cols-2 gap-x-3 gap-y-4 sm:grid-cols-3 sm:gap-x-4 sm:gap-y-5 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
           {subjectCards.map((subject) => (
-            <Link
-              key={subject.id}
-              to={getSubjectDashboardPath(subject.id)}
-              className="app-card app-subject-card group overflow-hidden rounded-2xl border transition hover:-translate-y-0.5 hover:shadow-[var(--app-shadow-hover)]"
-              style={
-                {
-                  "--subject-accent": getSubjectAccentColor(subject.coverPalette ?? "warm"),
-                } as CSSProperties
-              }
-            >
-              <SubjectCardCover
-                title={subject.name}
-                coverStyle={getSubjectCoverStyle(
-                  subject.name,
-                  subject.coverPalette ?? "warm",
-                )}
-                badge={(
-                  <span className="shrink-0 rounded-full border border-white/25 bg-white/25 px-2.5 py-1 text-xs font-bold text-white shadow-sm backdrop-blur">
-                    {subject.total}개
-                  </span>
-                )}
-              />
-
-              <div className="grid h-[104px] grid-cols-2 gap-2 p-4 text-sm">
-                <div className="app-subtle-surface flex flex-col justify-center rounded-xl border p-3">
-                  <p className="text-xs text-stone-500 dark:text-stone-500">풀이 중</p>
-                  <p className="mt-1 font-semibold text-red-600 dark:text-red-500">{subject.inProgress}</p>
-                </div>
-                <div className="app-subtle-surface flex flex-col justify-center rounded-xl border p-3">
-                  <p className="text-xs text-stone-500 dark:text-stone-500">채점 완료</p>
-                  <p className="mt-1 font-semibold text-blue-600 dark:text-blue-400">{subject.completed}</p>
-                </div>
-              </div>
-            </Link>
+            <SubjectBookCard key={subject.id} {...subject} />
           ))}
         </div>
 
