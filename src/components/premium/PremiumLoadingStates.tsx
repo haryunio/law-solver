@@ -52,14 +52,14 @@ export function PremiumAttemptListSkeleton() {
       {items(3).map((index) => (
         <article key={index} className="app-card app-problem-card rounded-xl border px-3 py-4 sm:px-4">
           <div className="lg:flex lg:items-end lg:gap-4">
-            <div className="grid min-h-14 min-w-0 flex-1 grid-cols-[56px_minmax(0,1fr)] items-center gap-x-3 gap-y-2 lg:grid-rows-[1fr_auto]">
-              <SkeletonBlock className="h-14 w-14 rounded-lg lg:row-span-2 lg:self-end" />
-              <SkeletonBlock className="h-5 w-36 max-w-full rounded-lg lg:self-end" />
-              <div className="col-span-2 flex flex-wrap gap-1 lg:col-span-1 lg:col-start-2 lg:self-end">
+            <div className="grid min-h-14 min-w-0 flex-1 grid-cols-[56px_minmax(0,1fr)] grid-rows-[1fr_auto] items-center gap-x-3 gap-y-2">
+              <SkeletonBlock className="row-span-2 h-14 w-14 rounded-lg lg:self-end" />
+              <SkeletonBlock className="h-8 w-36 max-w-full self-end rounded-lg lg:h-5" />
+              <div className="col-start-2 flex min-w-0 flex-wrap gap-1 self-end">
                 <SkeletonBlock className="h-6 w-14 rounded-full" />
                 <SkeletonBlock className="h-6 w-14 rounded-full" />
                 <SkeletonBlock className="h-6 w-16 rounded-full" />
-                <SkeletonBlock className="h-6 w-40 rounded-md" />
+                <SkeletonBlock className="h-6 w-36 max-w-full rounded-md sm:w-40" />
               </div>
             </div>
             <div className="mt-4 flex items-center gap-2 lg:mt-0 lg:shrink-0">
