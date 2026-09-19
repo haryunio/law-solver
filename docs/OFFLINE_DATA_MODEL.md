@@ -33,6 +33,8 @@ DB `law-solver-offline`, object store `persisted-state`, key `law-solver-storage
 
 `TestSession`과 `ParsedQuestion`은 기존 CBT, 채점 결과, CSV 내보내기에 필요한 화면 계약입니다. `materializeOfflineSession`이 원본과 응답을 합쳐 만듭니다. 이 결과를 다시 영구 저장하거나 전체 세션을 매번 조합하지 마세요. CSV 원본 행에는 가져온 파일의 값이 남을 수 있지만 현재 답안, 노트, 책갈피의 원본은 항상 해당 세션의 `responses`입니다.
 
+5지선다의 원본 `answer`는 문자열이며 복수정답을 `1,2` 형식으로 정규화해 저장할 수 있습니다. CSV의 공백과 중복 번호는 정리하지만 `originalRow`는 원문을 보존합니다. 복수정답 중 한 번호를 고르면 정답이고 단독 `0`은 정답 없음으로 미응답도 정답입니다. 사용자의 `responses.answer`는 여전히 단일 선택이나 빈 문자열입니다. 정답 없음도 실제 선택하지 않았다면 `solved_questions`를 늘리지 않지만 채점 점수에는 포함합니다. 결과의 정답, 오답, 미응답 분류에서는 정답 없음이 정답에만 들어갑니다. 백업 버전이나 스키마 변경 없이 기존 문자열 계약을 사용하며 복구 후에도 같은 공통 판정 함수로 오답과 재풀이 대상을 계산합니다.
+
 ## 생성과 변경
 
 - `createProblemSet`은 문제 원본만 추가합니다. 등록 직후 세션 목록은 비어 있습니다.

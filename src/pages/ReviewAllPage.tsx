@@ -5,7 +5,7 @@ import { useSessionPageAdapter } from "../components/session/SessionPageContext"
 import { OverflowTooltipTitle } from "../components/ui/OverflowTooltipTitle";
 import { RichTextContent } from "../components/ui/RichTextContent";
 import { ReturnLinkLabel } from "../components/ui/ReturnLinkLabel";
-import { getAnswerParts, getAnswerToken } from "../lib/answer";
+import { getAnswerParts, getAnswerToken, getQuestionAnswerToken, isCorrectAnswer } from "../lib/answer";
 import {
   ReviewType,
   toAnalyticsQuestionType,
@@ -133,7 +133,7 @@ export function ReviewAllPage() {
     );
   }
 
-  const isCorrect = current.my_answer === current.answer;
+  const isCorrect = isCorrectAnswer(current, current.my_answer);
 
   return (
     <div className="app-focus-page app-page text-stone-900 transition-colors duration-300 dark:text-stone-100">
@@ -319,7 +319,7 @@ export function ReviewAllPage() {
               <span></span>
             </div>
             {questions.map((question, qIdx) => {
-              const qIsCorrect = question.my_answer === question.answer;
+              const qIsCorrect = isCorrectAnswer(question, question.my_answer);
               return (
                 <button
                   key={question.id}
@@ -336,7 +336,7 @@ export function ReviewAllPage() {
                 >
                   <span>{solveOrderMap.get(question.id)}</span>
                   <span className="text-center">{getAnswerToken(question.my_answer)}</span>
-                  <span className="text-center">{getAnswerToken(question.answer)}</span>
+                  <span className="text-center">{getQuestionAnswerToken(question)}</span>
                   <span className="flex items-center justify-center leading-none">{question.wrong_note?.trim() ? "•" : ""}</span>
                 </button>
               );
@@ -363,7 +363,7 @@ export function ReviewAllPage() {
                 <span></span>
               </div>
               {questions.map((question, qIdx) => {
-                const qIsCorrect = question.my_answer === question.answer;
+                const qIsCorrect = isCorrectAnswer(question, question.my_answer);
                 return (
                   <button
                     key={question.id}
@@ -382,7 +382,7 @@ export function ReviewAllPage() {
                   >
                     <span>{solveOrderMap.get(question.id)}</span>
                     <span className="text-center">{getAnswerToken(question.my_answer)}</span>
-                    <span className="text-center">{getAnswerToken(question.answer)}</span>
+                    <span className="text-center">{getQuestionAnswerToken(question)}</span>
                     <span className="flex items-center justify-center leading-none">{question.wrong_note?.trim() ? "•" : ""}</span>
                   </button>
                 );

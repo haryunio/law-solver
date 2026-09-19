@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { getWrongQuestions } from "./session";
-import { TestSession } from "../types/test";
+import { getCorrectCount, getWrongQuestions, isCorrectQuestion } from "./session";
+import { ParsedQuestion, TestSession } from "../types/test";
 
 describe("getWrongQuestions", () => {
   it("includes unanswered questions as wrong after submission", () => {
@@ -46,5 +46,42 @@ describe("getWrongQuestions", () => {
     expect(wrong).toHaveLength(2);
     expect(wrong.map((q) => q.no)).toEqual([1, 2]);
   });
-});
 
+  it("uses accepted choice alternatives consistently for score and retry candidates", () => {
+    const responses = ["1", "2", "3", "", "1,2"];
+    const questions: ParsedQuestion[] = responses.map((response, index) => ({
+      id: `q${index + 1}`,
+      no: index + 1,
+      question: `가상 문항 ${index + 1}`,
+      choices: ["하나", "둘", "셋", "넷", "다섯"],
+      answer: "1, 2",
+      my_answer: response,
+      originalRow: {},
+    }));
+    questions.push(...["4", ""].map((response, index): ParsedQuestion => ({
+      id: `no-correct-${index}`,
+      no: index + 6,
+      question: "정답이 없는 문항",
+      choices: ["하나", "둘", "셋", "넷", "다섯"],
+      answer: "0",
+      my_answer: response,
+      originalRow: {},
+    })));
+    const session: TestSession = {
+      id: "choice-session",
+      title: "복수 허용 정답",
+      type: "5-choice",
+      total_questions: questions.length,
+      solved_questions: 5,
+      score: 57,
+      elapsed_time: 60,
+      created_at: "2026-09-21T00:00:00Z",
+      status: "completed",
+      questions,
+    };
+
+    expect(getCorrectCount(questions)).toBe(4);
+    expect(questions.map(isCorrectQuestion)).toEqual([true, true, false, false, false, true, true]);
+    expect(getWrongQuestions(session).map((question) => question.no)).toEqual([3, 4, 5]);
+  });
+});

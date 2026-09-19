@@ -2,6 +2,7 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { createId } from "../lib/id";
 import { orderQuestions } from "../lib/order";
+import { getCorrectCount, isCorrectQuestion } from "../lib/session";
 import { reorderSubjects, type SubjectDropPlacement } from "../lib/subject";
 import { DASHBOARD_BACKUP_VERSION, parseDashboardBackup, validateDashboardBackupVersion } from "../lib/dashboardBackup";
 import { emptyOfflineResponse, materializeOfflineSession, toOfflineQuestion } from "../lib/offlineProblemSets";
@@ -172,7 +173,7 @@ export const useTestStore = create<TestStore>()(
           const mode = source ? retryMode ?? "all" : null;
           const selected = source
             ? materializeOfflineSession(problem, source).questions.filter((question) => mode === "incorrect"
-              ? question.my_answer !== question.answer : mode === "bookmarked" ? question.bookmark : true)
+              ? !isCorrectQuestion(question) : mode === "bookmarked" ? question.bookmark : true)
             : problem.questions.map((question) => ({ ...question, my_answer: "" }));
           if (!selected.length) throw new Error("풀이할 문항이 없습니다. 문제나 재풀이 방식을 다시 선택해 주세요.");
           const id = createId();
@@ -254,7 +255,7 @@ export const useTestStore = create<TestStore>()(
             const problem = state.problemSets.find((item) => item.id === session.problem_set_id);
             if (!problem) return session;
             const materialized = materializeOfflineSession(problem, session);
-            const correct = materialized.questions.filter((question) => question.my_answer !== "" && question.my_answer === question.answer).length;
+            const correct = getCorrectCount(materialized.questions);
             const now = modifiedNow();
             return { ...session, solved_questions: solvedCount(session.responses), score: session.total_questions ? Math.round(correct / session.total_questions * 100) : 0,
               status: "completed", last_played_at: now, submitted_at: now };

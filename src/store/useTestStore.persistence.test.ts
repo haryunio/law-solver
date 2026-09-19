@@ -45,6 +45,36 @@ afterEach(async () => {
 });
 
 describe("useTestStore v4 persistence", () => {
+  it("grades alternative choice answers and keeps only wrong or unanswered questions in retries after restore", async () => {
+    const first = await loadStore();
+    const store = first.useTestStore.getState();
+    const problemSetId = store.createProblemSet({ title: "복수정답", type: "5-choice", questions: [
+      { ...question, id: "accepted-1", no: 1, answer: "1, 2" },
+      { ...question, id: "accepted-2", no: 2, answer: "1,2" },
+      { ...question, id: "incorrect", no: 3, answer: "1,2" },
+      { ...question, id: "unanswered", no: 4, answer: "1,2" },
+      { ...question, id: "no-correct-choice", no: 5, answer: "0" },
+    ] });
+    const sessionId = store.createSession({ problemSetId });
+    store.updateAnswer(sessionId, "accepted-1", "1");
+    store.updateAnswer(sessionId, "accepted-2", "2");
+    store.updateAnswer(sessionId, "incorrect", "3");
+    store.submitSession(sessionId);
+    expect(first.useTestStore.getState().sessions[0]).toMatchObject({ score: 60, solved_questions: 3, status: "completed" });
+    const backup = JSON.parse(JSON.stringify(first.useTestStore.getState().getDashboardBackupData()));
+    await first.flushOfflineData();
+    const second = await reloadStore();
+    await second.useTestStore.getState().importDashboardData(backup);
+    const restored = second.useTestStore.getState();
+    expect(restored.getSessionById(sessionId)?.questions.map(({ answer, my_answer }) => [answer, my_answer])).toEqual([
+      ["1, 2", "1"], ["1,2", "2"], ["1,2", "3"], ["1,2", ""], ["0", ""],
+    ]);
+    expect(restored.sessions[0]?.score).toBe(60);
+    const retryId = restored.createSession({ problemSetId, sourceSessionId: sessionId, retryMode: "incorrect" });
+    expect(second.useTestStore.getState().sessions.find(({ id }) => id === retryId)?.question_order).toEqual(["incorrect", "unanswered"]);
+    expect(second.useTestStore.getState().problemSets).toHaveLength(1);
+  });
+
   it("upgrades an authoritative v3 IndexedDB snapshot without a localStorage copy", async () => {
     const shuffledSession = {
       ...session,

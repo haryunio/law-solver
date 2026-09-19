@@ -6,7 +6,7 @@ import { AsyncTransitionOverlay } from "../components/ui/AsyncLoading";
 import { OverflowTooltipTitle } from "../components/ui/OverflowTooltipTitle";
 import { RichTextContent } from "../components/ui/RichTextContent";
 import { ReturnLinkLabel } from "../components/ui/ReturnLinkLabel";
-import { getAnswerParts, getAnswerToken } from "../lib/answer";
+import { getAnswerParts, getAnswerToken, getQuestionAnswerToken } from "../lib/answer";
 import {
   toAnalyticsQuestionType,
   trackEvent,
@@ -375,7 +375,7 @@ export function WrongAnswersPage() {
               >
                 <span>{solveOrderMap.get(question.id) ?? qIdx + 1}</span>
                 <span className="text-center">{getAnswerToken(question.my_answer)}</span>
-                <span className="text-center">{getAnswerToken(question.answer)}</span>
+                <span className="text-center">{getQuestionAnswerToken(question)}</span>
                 <span className="flex items-center justify-center leading-none">{question.wrong_note?.trim() ? "•" : ""}</span>
               </button>
             ))}
@@ -413,7 +413,7 @@ export function WrongAnswersPage() {
                 >
                   <span>{solveOrderMap.get(question.id) ?? qIdx + 1}</span>
                   <span className="text-center">{getAnswerToken(question.my_answer)}</span>
-                  <span className="text-center">{getAnswerToken(question.answer)}</span>
+                  <span className="text-center">{getQuestionAnswerToken(question)}</span>
                   <span className="flex items-center justify-center leading-none">{question.wrong_note?.trim() ? "•" : ""}</span>
                 </button>
               ))}

@@ -6,7 +6,9 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { CbtSolveScreen } from "../components/cbt/CbtSolveScreen";
 import { offlineDataStorage, useTestStore } from "../store/useTestStore";
 import { getOfflineProblemSetPath } from "../lib/offlineSession";
+import { parseCsvByType } from "../lib/csv";
 import { ResultPage } from "./ResultPage";
+import { WrongAnswersPage } from "./WrongAnswersPage";
 
 beforeEach(() => {
   useTestStore.setState({ problemSets: [], sessions: [], subjects: [], dataUpdatedAt: new Date().toISOString() });
@@ -40,6 +42,35 @@ function SolveDestination() {
 }
 
 describe("normalized offline session adapters", () => {
+  it("counts either accepted choice as correct and excludes it from wrong-answer review", () => {
+    const store = useTestStore.getState();
+    const questions = parseCsvByType([
+      "번호,문제,선택지1,선택지2,선택지3,선택지4,선택지5,정답",
+      '1,맞게 푼 복수정답 문제,선택 하나,선택 둘,선택 셋,선택 넷,선택 다섯,"1, 2"',
+      '2,틀린 복수정답 문제,선택 하나,선택 둘,선택 셋,선택 넷,선택 다섯,"3,5"',
+      '3,답하지 않은 복수정답 문제,선택 하나,선택 둘,선택 셋,선택 넷,선택 다섯,"1,2"',
+      "4,정답이 없는 문제,선택 하나,선택 둘,선택 셋,선택 넷,선택 다섯,0",
+    ].join("\n"), "5-choice");
+    const problemSetId = store.createProblemSet({ title: "복수정답 복기", type: "5-choice", questions });
+    const sessionId = store.createSession({ problemSetId });
+    store.updateAnswer(sessionId, questions[0]!.id, "2");
+    store.updateAnswer(sessionId, questions[1]!.id, "4");
+    store.submitSession(sessionId);
+    render(<MemoryRouter initialEntries={[`/result/${sessionId}`]}><Routes>
+      <Route path="/result/:sessionId" element={<ResultPage />} />
+      <Route path="/wrong/:sessionId" element={<WrongAnswersPage />} />
+    </Routes></MemoryRouter>);
+    expect(screen.getByText("50%")).toBeTruthy();
+    expect(screen.getByText("정답", { selector: "dt" }).nextElementSibling?.textContent).toBe("2");
+    expect(screen.getByText("미응답", { selector: "dt" }).nextElementSibling?.textContent).toBe("1");
+    const wrongLink = screen.getByRole("link", { name: "오답 확인 2" });
+    fireEvent.click(wrongLink);
+    expect(screen.getByText("틀린 복수정답 문제")).toBeTruthy();
+    expect(screen.queryByText("맞게 푼 복수정답 문제")).toBeNull();
+    expect(screen.queryByText("정답이 없는 문제")).toBeNull();
+    expect(screen.getAllByText("정답", { selector: "span" }).length).toBeGreaterThanOrEqual(2);
+  });
+
   it("uses the existing CBT to update only the current session and records its last play time", () => {
     const { sessionId, problemSetId } = createExample();
     const secondId = useTestStore.getState().createSession({ problemSetId });

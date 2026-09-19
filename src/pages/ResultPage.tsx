@@ -11,7 +11,7 @@ import { IconCloseButton } from "../components/ui/IconCloseButton";
 import { ReturnLinkLabel } from "../components/ui/ReturnLinkLabel";
 import { ThemeSelect } from "../components/ui/ThemeSelect";
 import { Toast } from "../components/ui/Toast";
-import { getAnswerToken } from "../lib/answer";
+import { getAnswerToken, getQuestionAnswerToken } from "../lib/answer";
 import {
   RetryType,
   toAnalyticsQuestionType,
@@ -213,7 +213,7 @@ export function ResultPage() {
 
   const correctCount = getCorrectCount(session.questions);
   const wrongCount = getWrongQuestions(session).length;
-  const unansweredCount = session.questions.filter((q) => !q.my_answer).length;
+  const unansweredCount = session.questions.filter((q) => !q.my_answer && !isCorrectQuestion(q)).length;
   const incorrectCount = session.questions.filter(
     (q) => q.my_answer && !isCorrectQuestion(q),
   ).length;
@@ -243,7 +243,7 @@ export function ResultPage() {
         current.total += 1;
         current.correct += isCorrect ? 1 : 0;
         current.wrong += question.my_answer && !isCorrect ? 1 : 0;
-        current.unanswered += question.my_answer ? 0 : 1;
+        current.unanswered += !question.my_answer && !isCorrect ? 1 : 0;
         acc.set(chapter, current);
         return acc;
       },
@@ -462,9 +462,9 @@ export function ResultPage() {
                 <div className="max-h-[58vh] overflow-y-auto">
                   {session.questions.map((question, idx) => {
                     const isCorrect = isCorrectQuestion(question);
-                    const isUnanswered = !question.my_answer;
+                    const isUnanswered = !question.my_answer && !isCorrect;
                     const myAnswerLabel = getAnswerToken(question.my_answer);
-                    const answerLabel = getAnswerToken(question.answer);
+                    const answerLabel = getQuestionAnswerToken(question);
                     const chapterLabel = question.chapter?.trim() || "—";
                     return (
                       <div

@@ -108,6 +108,45 @@ describe("CbtSolveScreen online adapter", () => {
     expect(onAnswerRevealRequest).toHaveBeenCalledWith("question-1");
   });
 
+  it("reveals every accepted choice while continuing to submit one selected answer", () => {
+    const onAnswerChange = vi.fn();
+    const multipleAnswers: TestSession = {
+      ...session,
+      questions: [{ ...session.questions[0]!, answer: "1, 2", my_answer: "2" }, session.questions[1]!],
+    };
+    render(
+      <MemoryRouter>
+        <CbtSolveScreen sessionId={session.id} sessionOverride={multipleAnswers} onAnswerChange={onAnswerChange} />
+      </MemoryRouter>,
+    );
+    fireEvent.click(screen.getByRole("button", { name: "?" }));
+    expect(screen.getByRole("button", { name: "① 가 정답" })).toBeTruthy();
+    const selected = screen.getByRole("button", { name: "② 나 정답" });
+    expect(selected.classList.contains("bg-emerald-50")).toBe(true);
+    expect(selected.classList.contains("bg-red-50")).toBe(false);
+    expect(screen.getByRole("button", { name: "③ 다" })).toBeTruthy();
+
+    fireEvent.click(screen.getByRole("button", { name: "① 가 정답" }));
+    expect(onAnswerChange).toHaveBeenCalledExactlyOnceWith("question-1", "1");
+  });
+
+  it.each(["", "3"])("reveals a no-correct-choice question without marking every option as an answer (response: %s)", (response) => {
+    const noCorrectChoice: TestSession = {
+      ...session,
+      questions: [{ ...session.questions[0]!, answer: "0", my_answer: response }, session.questions[1]!],
+    };
+    render(<MemoryRouter><CbtSolveScreen sessionId={session.id} sessionOverride={noCorrectChoice} /></MemoryRouter>);
+    fireEvent.click(screen.getByRole("button", { name: "?" }));
+    expect(screen.getByText("정답 없음")).toBeTruthy();
+    expect(screen.getByText("이 문항은 답을 고르지 않아도 정답으로 처리됩니다.")).toBeTruthy();
+    expect(screen.queryByRole("button", { name: /^[①②③④⑤].*정답/ })).toBeNull();
+    if (response) {
+      const selected = screen.getByRole("button", { name: "③ 다" });
+      expect(selected.classList.contains("bg-emerald-50")).toBe(true);
+      expect(selected.classList.contains("bg-red-50")).toBe(false);
+    }
+  });
+
   it("shows an in-place loading indicator while one answer is fetched", async () => {
     let resolveReveal: ((value: boolean) => void) | undefined;
     const onAnswerRevealRequest = vi.fn(() => new Promise<boolean>((resolve) => {
