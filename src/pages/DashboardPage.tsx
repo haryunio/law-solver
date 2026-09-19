@@ -1,6 +1,8 @@
-import { FormEvent, useEffect, useId, useMemo, useRef, useState } from "react";
+import { FormEvent, useId, useMemo, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { CsvUploadPanel } from "../components/upload/CsvUploadPanel";
+import { ProblemSetCardMetadata } from "../components/session/ProblemSetCardMetadata";
+import { ActionMenu } from "../components/ui/ActionMenu";
 import { ConfirmDialog } from "../components/ui/ConfirmDialog";
 import { AppFooter } from "../components/ui/AppFooter";
 import { Button } from "../components/ui/Button";
@@ -10,19 +12,10 @@ import { IconCloseButton } from "../components/ui/IconCloseButton";
 import { OverflowTooltipTitle } from "../components/ui/OverflowTooltipTitle";
 import { ReturnLinkLabel } from "../components/ui/ReturnLinkLabel";
 import { ThemeSelect } from "../components/ui/ThemeSelect";
+import { TimestampTag } from "../components/ui/TimestampTag";
 import { getOfflineProblemSetPath } from "../lib/offlineSession";
 import { useTestStore } from "../store/useTestStore";
 import { NO_SUBJECT_ID, type OfflineProblemSet } from "../types/test";
-
-const typeLabel = { OX: "OX", "5-choice": "5지선다", short: "단답형" } as const;
-const typeStyle = {
-  OX: "border-red-100 bg-red-50 text-red-700 dark:border-red-900/50 dark:bg-red-950/30 dark:text-red-400",
-  "5-choice": "border-orange-100 bg-orange-50 text-orange-700 dark:border-orange-900/50 dark:bg-orange-950/30 dark:text-orange-400",
-  short: "border-amber-100 bg-amber-50 text-amber-700 dark:border-amber-900/50 dark:bg-amber-950/30 dark:text-amber-400",
-} as const;
-const dateFormatter = new Intl.DateTimeFormat("ko-KR", {
-  year: "numeric", month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit",
-});
 
 export function DashboardPage() {
   const { subjectId = NO_SUBJECT_ID } = useParams();
@@ -36,9 +29,7 @@ export function DashboardPage() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingTitle, setEditingTitle] = useState("");
   const [editingSubjectId, setEditingSubjectId] = useState(NO_SUBJECT_ID);
-  const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   const [deleting, setDeleting] = useState<OfflineProblemSet | null>(null);
-  const menuRef = useRef<HTMLDivElement>(null);
   const uploadTitleId = useId();
   const editTitleId = useId();
 
@@ -55,19 +46,8 @@ export function DashboardPage() {
     return counts;
   }, [sessions]);
 
-  useEffect(() => {
-    if (!openMenuId) return;
-    const closeOutside = (event: PointerEvent) => {
-      if (event.target instanceof Node && !menuRef.current?.contains(event.target)) setOpenMenuId(null);
-    };
-    const closeEscape = (event: KeyboardEvent) => { if (event.key === "Escape") setOpenMenuId(null); };
-    document.addEventListener("pointerdown", closeOutside);
-    document.addEventListener("keydown", closeEscape);
-    return () => { document.removeEventListener("pointerdown", closeOutside); document.removeEventListener("keydown", closeEscape); };
-  }, [openMenuId]);
-
   const openEdit = (problemSet: OfflineProblemSet) => {
-    setOpenMenuId(null); setEditingId(problemSet.id); setEditingTitle(problemSet.title);
+    setEditingId(problemSet.id); setEditingTitle(problemSet.title);
     setEditingSubjectId(problemSet.subject_id ?? NO_SUBJECT_ID);
   };
   const saveEdit = (event: FormEvent) => {
@@ -93,7 +73,6 @@ export function DashboardPage() {
           <button type="button" onClick={() => setOpenUpload(true)} className="app-button-primary app-button-primary-standalone rounded-xl px-3 py-2 text-sm font-semibold sm:px-4">새 문제 등록</button>
           <Link to="/dashboard" className="app-button-secondary rounded-xl px-3 py-2 text-center text-sm font-semibold sm:px-4"><ReturnLinkLabel>과목 목록으로</ReturnLinkLabel></Link>
         </DashboardHeaderTitle>
-        <p className="mb-4 text-sm text-stone-500 dark:text-stone-400">등록한 문제 {sortedProblemSets.length}개</p>
         {sortedProblemSets.length === 0 ? (
           <div className="app-card rounded-2xl border border-dashed p-10 text-center">
             <p className="text-base font-medium text-stone-700 dark:text-stone-300">아직 등록한 문제가 없습니다.</p>
@@ -103,27 +82,22 @@ export function DashboardPage() {
           <div className="grid gap-3 md:grid-cols-2">
             {sortedProblemSets.map((problemSet) => (
               <article key={problemSet.id} className="app-card app-problem-card flex min-w-0 flex-col rounded-2xl border">
-                <div className="relative px-4 pb-3 pt-4 pr-12">
-                  <OverflowTooltipTitle as="h2" text={problemSet.title} className="text-base font-bold leading-snug text-stone-900 dark:text-stone-100" />
-                  <div className="absolute right-3 top-3" ref={openMenuId === problemSet.id ? menuRef : undefined}>
-                    <button type="button" onClick={() => setOpenMenuId((current) => current === problemSet.id ? null : problemSet.id)} className="app-button-secondary flex h-7 w-7 items-center justify-center rounded-full text-base font-bold" aria-label={`${problemSet.title} 메뉴 열기`} aria-expanded={openMenuId === problemSet.id}>⋮</button>
-                    {openMenuId === problemSet.id ? (
-                      <div className="app-card absolute right-0 top-9 z-20 w-32 overflow-hidden rounded-xl border py-1 shadow-xl">
-                        <button type="button" onClick={() => openEdit(problemSet)} className="block w-full px-4 py-2 text-left text-sm font-semibold text-stone-700 hover:bg-stone-50 dark:text-stone-200 dark:hover:bg-stone-800">편집</button>
-                        <button type="button" onClick={() => { setOpenMenuId(null); setDeleting(problemSet); }} className="block w-full px-4 py-2 text-left text-sm font-semibold text-red-700 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/30">삭제</button>
-                      </div>
-                    ) : null}
+                <div className="relative px-4 pb-3 pt-3.5 pr-12">
+                  <OverflowTooltipTitle as="h2" text={problemSet.title} className="text-base font-semibold leading-6 text-stone-900 dark:text-stone-100" />
+                  <div className="absolute right-3 top-2.5">
+                    <ActionMenu label={`${problemSet.title} 메뉴 열기`} items={[
+                      { id: "edit", label: "편집", onSelect: () => openEdit(problemSet) },
+                      { id: "delete", label: "삭제", danger: true, onSelect: () => setDeleting(problemSet) },
+                    ]} />
                   </div>
                 </div>
-                <div className="px-4 pb-4">
-                  <span className={`inline-flex rounded-full border px-2.5 py-0.5 text-[11px] font-bold ${typeStyle[problemSet.type]}`}>{typeLabel[problemSet.type]}</span>
-                  <dl className="mt-3 grid grid-cols-2 gap-2">
-                    <div className="app-neutral-box rounded-xl px-3 py-2"><dt className="text-[11px] text-stone-500">전체 문항</dt><dd className="mt-1 text-sm font-semibold text-stone-900 dark:text-stone-100">{problemSet.questions.length}문항</dd></div>
-                    <div className="app-neutral-box rounded-xl px-3 py-2"><dt className="text-[11px] text-stone-500">풀이 세션</dt><dd className="mt-1 text-sm font-semibold text-stone-900 dark:text-stone-100">{sessionCounts.get(problemSet.id) ?? 0}개</dd></div>
-                  </dl>
-                  <p className="mt-3 text-xs text-stone-400 dark:text-stone-500">문제 등록 <time dateTime={problemSet.created_at}>{Number.isFinite(new Date(problemSet.created_at).getTime()) ? dateFormatter.format(new Date(problemSet.created_at)) : "날짜 기록 없음"}</time></p>
+                <div className="px-4 pb-3">
+                  <ProblemSetCardMetadata type={problemSet.type} questionCount={problemSet.questions.length} sessionCount={sessionCounts.get(problemSet.id) ?? 0} />
                 </div>
-                <Link to={getOfflineProblemSetPath(problemSet.id, problemSet.subject_id)} className="app-result-link mt-auto flex items-center justify-center rounded-b-2xl border-t px-4 py-3 text-sm font-semibold">풀이 세션 보기</Link>
+                <Link to={getOfflineProblemSetPath(problemSet.id, problemSet.subject_id)} aria-label="풀이 세션 보기" className="app-result-link mt-auto flex min-h-12 flex-wrap items-center justify-between gap-2 rounded-b-2xl border-t px-4 py-2.5">
+                  <TimestampTag label="등록" value={problemSet.created_at} />
+                  <span className="ml-auto whitespace-nowrap text-sm font-semibold">풀이 세션 보기 <span aria-hidden="true">→</span></span>
+                </Link>
               </article>
             ))}
           </div>

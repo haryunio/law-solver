@@ -27,21 +27,19 @@ export function PremiumCourseCatalogSkeleton() {
 
 export function PremiumProblemGridSkeleton() {
   return (
-    <LoadingRegion label="문제 목록을 불러오는 중입니다" className="grid gap-4 md:grid-cols-2">
+    <LoadingRegion label="문제 목록을 불러오는 중입니다" className="grid gap-3 md:grid-cols-2">
       {items(4).map((index) => (
         <article key={index} className="app-card app-problem-card overflow-hidden rounded-2xl border">
-          <div className="p-5">
-            <SkeletonBlock className="h-6 w-3/5 rounded-lg" />
-            <div className="mt-3 flex gap-2">
-              <SkeletonBlock className="h-5 w-16 rounded-full" />
-              <SkeletonBlock className="h-5 w-14 rounded-full" />
+          <div className="px-4 pb-3 pt-3.5">
+            <div className="flex items-center justify-between gap-3">
+              <SkeletonBlock className="h-6 w-3/5 rounded-lg" />
+              <SkeletonBlock className="h-5 w-20 rounded-full" />
             </div>
-            <div className="mt-4 grid grid-cols-2 gap-2">
-              <SkeletonBlock className="h-[66px] rounded-xl" />
-              <SkeletonBlock className="h-[66px] rounded-xl" />
+            <div className="mt-3 grid grid-cols-3 gap-2">
+              {items(3).map((metric) => <SkeletonBlock key={metric} className="h-11 rounded-lg" />)}
             </div>
           </div>
-          <SkeletonBlock className="h-11 rounded-none border-t" />
+          <SkeletonBlock className="h-12 rounded-none border-t" />
         </article>
       ))}
     </LoadingRegion>
@@ -52,23 +50,24 @@ export function PremiumAttemptListSkeleton() {
   return (
     <LoadingRegion label="풀이 세션을 불러오는 중입니다" className="space-y-2.5">
       {items(3).map((index) => (
-        <article key={index} className="app-card app-problem-card rounded-2xl border px-4 py-3 sm:px-5">
-          <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
-            <div className="flex min-w-0 flex-1 items-start gap-3">
-              <SkeletonBlock className="h-9 w-14 shrink-0 rounded-lg" />
-              <div className="min-w-0 flex-1">
-                <div className="flex gap-2">
-                  <SkeletonBlock className="h-4 w-20 rounded-full" />
-                  <SkeletonBlock className="h-4 w-14 rounded-full" />
-                  <SkeletonBlock className="h-4 w-16 rounded-full" />
-                </div>
-                <SkeletonBlock className="mt-2 h-3 w-36 rounded-full" />
+        <article key={index} className="app-card app-problem-card rounded-xl border px-3 py-4 sm:px-4">
+          <div className="lg:flex lg:items-center lg:gap-4">
+            <div className="grid min-h-16 min-w-0 flex-1 grid-cols-[64px_minmax(0,1fr)] items-center gap-x-3 gap-y-2 lg:grid-rows-[auto_auto] lg:gap-y-1">
+              <SkeletonBlock className="h-16 w-16 rounded-lg lg:row-span-2" />
+              <SkeletonBlock className="h-5 w-36 max-w-full rounded-lg lg:self-end" />
+              <div className="col-span-2 flex flex-wrap gap-1 lg:col-span-1 lg:col-start-2 lg:self-start">
+                <SkeletonBlock className="h-6 w-14 rounded-full" />
+                <SkeletonBlock className="h-6 w-14 rounded-full" />
+                <SkeletonBlock className="h-6 w-16 rounded-full" />
+                <SkeletonBlock className="h-6 w-40 rounded-md" />
               </div>
             </div>
-            <div className="grid grid-cols-3 gap-2 lg:w-[360px]">
-              {items(3).map((metric) => <SkeletonBlock key={metric} className="h-[50px] rounded-lg" />)}
+            <div className="mt-4 flex items-center gap-2 lg:mt-0 lg:shrink-0">
+              <div className="grid min-w-0 flex-1 grid-cols-3 gap-1.5 lg:w-[270px]">
+                {items(3).map((metric) => <SkeletonBlock key={metric} className="h-16 rounded-lg" />)}
+              </div>
+              <SkeletonBlock className="h-16 w-24 shrink-0 rounded-lg sm:w-28" />
             </div>
-            <SkeletonBlock className="h-10 rounded-xl lg:w-[116px]" />
           </div>
         </article>
       ))}

@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { Link } from "react-router-dom";
 import type { SolveOrder } from "../../types/test";
 import { formatElapsedTime } from "../../lib/time";
+import { formatTimestamp, TimestampTag } from "../ui/TimestampTag";
 
 interface SessionListItemProps {
   attemptNumber: number;
@@ -25,62 +26,61 @@ const orderLabels: Record<SolveOrder, string> = {
   "chapter-random": "챕터별 랜덤",
   random: "전체 랜덤",
 };
-
-const dateFormatter = new Intl.DateTimeFormat("ko-KR", { dateStyle: "short", timeStyle: "short" });
-
-export function formatSessionDate(value: string) {
-  const date = new Date(value);
-  return Number.isFinite(date.getTime()) ? dateFormatter.format(date) : "날짜 기록 없음";
-}
+const tagClassName = "inline-flex h-6 items-center rounded-full border px-2 text-[11px] font-medium leading-4";
+const neutralTagClassName = `${tagClassName} border-stone-200 bg-stone-50 text-stone-600 dark:border-stone-700 dark:bg-stone-950/40 dark:text-stone-300`;
 
 export function SessionListItem({
   attemptNumber, title, modeLabel, completed, orderMode, createdAt, lastPlayedAt,
   solvedQuestions, totalQuestions, elapsedSeconds, scorePercent, destination,
   destinationState, actions,
 }: SessionListItemProps) {
+  const timestampTitle = [
+    `생성 ${formatTimestamp(createdAt)}`,
+    lastPlayedAt === null ? "마지막 풀이 기록 없음" : lastPlayedAt ? `마지막 풀이 ${formatTimestamp(lastPlayedAt)}` : null,
+  ].filter(Boolean).join(" / ");
+
   return (
-    <article className="app-card app-problem-card rounded-xl border px-4 py-4 sm:px-5">
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-center">
-        <div className="flex min-w-0 flex-1 items-start gap-3">
-          <span className="app-neutral-box inline-flex h-10 min-w-10 shrink-0 items-center justify-center rounded-lg px-2 text-xs font-semibold tabular-nums text-stone-600 dark:text-stone-300">
-            {attemptNumber}회
+    <article className="app-card app-problem-card relative rounded-xl border px-3 py-4 sm:px-4 lg:flex lg:items-center lg:gap-2">
+      <div className="min-w-0 flex-1 lg:flex lg:items-center lg:gap-4">
+        <div className="grid min-h-16 min-w-0 flex-1 grid-cols-[64px_minmax(0,1fr)] items-center gap-x-3 gap-y-2 lg:grid-rows-[auto_auto] lg:gap-y-1">
+          <span className="inline-flex h-16 w-16 shrink-0 items-center justify-center rounded-lg border border-red-100 bg-red-50 text-sm font-semibold tabular-nums text-red-700 dark:border-red-900/50 dark:bg-red-950/30 dark:text-red-400 lg:row-span-2">
+            {attemptNumber}회차
           </span>
-          <div className="min-w-0 flex-1">
-            <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-              <h2 title={title} className="line-clamp-2 min-w-0 break-keep text-sm font-semibold text-stone-900 [overflow-wrap:anywhere] dark:text-stone-100">{title}</h2>
-              <span className={`shrink-0 text-xs font-medium ${completed ? "text-blue-600 dark:text-blue-400" : "text-red-600 dark:text-red-400"}`}>
-                {completed ? "채점 완료" : "풀이 중"}
-              </span>
-            </div>
-            <p className="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-xs text-stone-500 dark:text-stone-400">
-              {modeLabel ? <span>{modeLabel}</span> : null}
-              <span>{orderLabels[orderMode]}</span>
-            </p>
-            <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-[11px] leading-4 text-stone-500 dark:text-stone-400">
-              <span>생성 {formatSessionDate(createdAt)}</span>
-              {lastPlayedAt !== undefined ? (
-                <span>{lastPlayedAt ? `마지막 풀이 ${formatSessionDate(lastPlayedAt)}` : "마지막 풀이 기록 없음"}</span>
-              ) : null}
-            </div>
+          <h2 title={title} className={`min-w-0 truncate text-sm font-semibold leading-5 text-stone-900 dark:text-stone-100 lg:self-end ${actions ? "pr-11 lg:pr-0" : ""}`}>{title}</h2>
+          <div className="col-span-2 flex min-w-0 flex-wrap items-center gap-1 lg:col-span-1 lg:col-start-2 lg:self-start">
+            {modeLabel ? <span className={neutralTagClassName}>{modeLabel}</span> : null}
+            <span className={`${tagClassName} ${completed
+              ? "border-blue-100 bg-blue-50 text-blue-700 dark:border-blue-900/50 dark:bg-blue-950/30 dark:text-blue-400"
+              : "border-red-100 bg-red-50 text-red-700 dark:border-red-900/50 dark:bg-red-950/30 dark:text-red-400"}`}>
+              {completed ? "채점 완료" : "풀이 중"}
+            </span>
+            <span className={neutralTagClassName}>{orderLabels[orderMode]}</span>
+            <TimestampTag label={lastPlayedAt ? "마지막 풀이" : "생성"} value={lastPlayedAt || createdAt} title={timestampTitle} />
           </div>
         </div>
-
-        <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-3 lg:shrink-0 lg:justify-end">
-          <dl className="grid min-w-0 flex-1 grid-cols-3 gap-4 text-xs sm:min-w-[224px] lg:flex-none">
-            <div><dt className="text-stone-500 dark:text-stone-400">진행</dt><dd className="mt-1 font-semibold tabular-nums">{solvedQuestions}/{totalQuestions}</dd></div>
-            <div><dt className="text-stone-500 dark:text-stone-400">시간</dt><dd className="mt-1 font-semibold tabular-nums">{formatElapsedTime(elapsedSeconds)}</dd></div>
-            <div><dt className="text-stone-500 dark:text-stone-400">점수</dt><dd className="mt-1 font-semibold tabular-nums">{completed ? `${scorePercent ?? 0}%` : "풀이 중"}</dd></div>
+        <div className="mt-4 flex items-center gap-2 lg:mt-0 lg:shrink-0">
+          <dl className="grid min-w-0 flex-1 grid-cols-3 gap-1.5 lg:w-[270px]">
+            {[
+              ["진행", `${solvedQuestions}/${totalQuestions}`],
+              ["시간", formatElapsedTime(elapsedSeconds)],
+              ["점수", completed ? `${scorePercent ?? 0}%` : "미채점"],
+            ].map(([label, value]) => (
+              <div key={label} className="app-neutral-box flex h-16 min-w-0 flex-col justify-center rounded-lg border px-1 sm:px-3">
+                <dt className="text-[11px] leading-4 text-stone-500 dark:text-stone-400">{label}</dt>
+                <dd className="mt-1 truncate text-xs font-semibold leading-4 tabular-nums text-stone-900 dark:text-stone-100 sm:text-sm" title={value}>{value}</dd>
+              </div>
+            ))}
           </dl>
           <Link
             to={destination}
             state={destinationState}
-            className={`${completed ? "app-button-secondary" : "app-button-primary"} shrink-0 rounded-lg px-4 py-2.5 text-center text-sm font-semibold`}
+            className={`${completed ? "app-button-secondary" : "app-button-primary"} inline-flex h-16 w-24 shrink-0 items-center justify-center rounded-lg text-sm font-semibold sm:w-28`}
           >
             {completed ? "결과 확인" : "이어서 풀기"}
           </Link>
         </div>
       </div>
-      {actions ? <div className="mt-3 flex flex-wrap justify-end gap-2 border-t border-stone-200/70 pt-2 dark:border-stone-700/70">{actions}</div> : null}
+      {actions ? <div className="absolute right-3 top-7 sm:right-4 lg:static lg:shrink-0">{actions}</div> : null}
     </article>
   );
 }

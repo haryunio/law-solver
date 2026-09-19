@@ -77,7 +77,7 @@ describe("offline problem and session workflow", () => {
     await openNewSession("첫 연습");
     fireEvent.click(screen.getByRole("link", { name: "세션 목록으로 돌아가기" }));
     await screen.findByRole("heading", { name: "첫 연습" });
-    expect(screen.getByText("마지막 풀이 기록 없음")).toBeTruthy();
+    expect(screen.getByTitle(/마지막 풀이 기록 없음/)).toBeTruthy();
     await openNewSession("두 번째 연습", true);
     const state = useTestStore.getState();
     expect(state.problemSets).toHaveLength(1);
@@ -92,7 +92,7 @@ describe("offline problem and session workflow", () => {
     const sessionId = useTestStore.getState().createSession({ problemSetId, title: "기존 풀이" });
     renderRoute(`/dashboard/${subjectId}`);
     fireEvent.click(screen.getByRole("button", { name: "민법 문제 메뉴 열기" }));
-    fireEvent.click(screen.getByRole("button", { name: "편집" }));
+    fireEvent.click(screen.getByRole("menuitem", { name: "편집" }));
     const dialog = screen.getByRole("dialog", { name: "문제 편집" });
     fireEvent.click(within(dialog).getByRole("button", { name: "과목 선택" }));
     fireEvent.click(within(dialog).getByRole("option", { name: "헌법" }));
@@ -107,12 +107,42 @@ describe("offline problem and session workflow", () => {
     expect(screen.getByRole("heading", { name: "기존 풀이" })).toBeTruthy();
   });
 
+  it("renames the selected session through its menu without changing its problem or another session", () => {
+    const { subjectId, problemSetId } = seed();
+    const selectedId = useTestStore.getState().createSession({ problemSetId, title: "이름을 바꿀 세션" });
+    const otherId = useTestStore.getState().createSession({ problemSetId, title: "기존 세션" });
+    useTestStore.getState().updateAnswer(selectedId, question.id, "O");
+    const before = useTestStore.getState();
+    const selectedBefore = before.sessions.find((session) => session.id === selectedId)!;
+    const otherBefore = before.sessions.find((session) => session.id === otherId)!;
+
+    renderRoute(getOfflineProblemSetPath(problemSetId, subjectId));
+    fireEvent.click(screen.getByRole("button", { name: "이름을 바꿀 세션 메뉴 열기" }));
+    fireEvent.click(screen.getByRole("menuitem", { name: "이름 변경" }));
+    const dialog = screen.getByRole("dialog", { name: "세션 이름 변경" });
+    const input = within(dialog).getByLabelText("세션 제목") as HTMLInputElement;
+    expect(input.value).toBe("이름을 바꿀 세션");
+    fireEvent.change(input, { target: { value: "기말고사 대비 연습" } });
+    fireEvent.click(within(dialog).getByRole("button", { name: "저장" }));
+
+    expect(screen.queryByRole("dialog")).toBeNull();
+    expect(screen.getByRole("heading", { name: "기말고사 대비 연습" })).toBeTruthy();
+    expect(screen.getByRole("heading", { name: "기존 세션" })).toBeTruthy();
+    expect(screen.queryByRole("heading", { name: "이름을 바꿀 세션" })).toBeNull();
+    const after = useTestStore.getState();
+    expect(after.sessions).toHaveLength(2);
+    expect(after.sessions.find((session) => session.id === selectedId)).toEqual({ ...selectedBefore, title: "기말고사 대비 연습" });
+    expect(after.sessions.find((session) => session.id === otherId)).toEqual(otherBefore);
+    expect(after.problemSets).toEqual(before.problemSets);
+  });
+
   it("deletes only one session before deleting a problem and all its remaining sessions", async () => {
     const { subjectId, problemSetId } = seed();
     useTestStore.getState().createSession({ problemSetId, title: "삭제할 세션" });
     useTestStore.getState().createSession({ problemSetId, title: "남겨둘 세션" });
     renderRoute(getOfflineProblemSetPath(problemSetId, subjectId));
-    fireEvent.click(screen.getByRole("button", { name: "삭제할 세션 삭제" }));
+    fireEvent.click(screen.getByRole("button", { name: "삭제할 세션 메뉴 열기" }));
+    fireEvent.click(screen.getByRole("menuitem", { name: "삭제" }));
     let dialog = screen.getByRole("dialog", { name: "이 풀이 세션을 삭제할까요?" });
     expect(within(dialog).getByText(/등록한 문제와 다른 풀이 세션은 유지됩니다/)).toBeTruthy();
     fireEvent.click(within(dialog).getByRole("button", { name: "세션 삭제" }));
@@ -120,7 +150,7 @@ describe("offline problem and session workflow", () => {
     expect(useTestStore.getState().sessions.map((session) => session.title)).toEqual(["남겨둘 세션"]);
     fireEvent.click(screen.getByRole("link", { name: "문제 목록으로" }));
     fireEvent.click(screen.getByRole("button", { name: "민법 문제 메뉴 열기" }));
-    fireEvent.click(screen.getByRole("button", { name: "삭제" }));
+    fireEvent.click(screen.getByRole("menuitem", { name: "삭제" }));
     dialog = screen.getByRole("dialog", { name: "이 문제를 삭제할까요?" });
     expect(within(dialog).getByText(/풀이 세션 1개가 함께 삭제됩니다/)).toBeTruthy();
     fireEvent.click(within(dialog).getByRole("button", { name: "문제 삭제" }));

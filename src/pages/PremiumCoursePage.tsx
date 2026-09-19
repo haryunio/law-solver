@@ -1,6 +1,7 @@
 import { useCallback } from "react";
 import { Link, useLocation, useParams } from "react-router-dom";
 import { PremiumProblemGridSkeleton } from "../components/premium/PremiumLoadingStates";
+import { ProblemSetCardMetadata } from "../components/session/ProblemSetCardMetadata";
 import { AppFooter } from "../components/ui/AppFooter";
 import { DashboardHeaderTitle } from "../components/ui/DashboardHeaderTitle";
 import { PremiumBadge } from "../components/ui/PremiumBadge";
@@ -12,17 +13,12 @@ import {
   listPremiumProblemSets,
   type PremiumQuestionType,
 } from "../lib/premiumApi";
+import type { TestType } from "../types/test";
 
-const questionTypeLabel: Record<PremiumQuestionType, string> = {
+const questionType: Record<PremiumQuestionType, TestType> = {
   ox: "OX",
-  multiple_choice: "5지선다",
-  short_answer: "단답형",
-};
-
-const questionTypeStyle: Record<PremiumQuestionType, string> = {
-  ox: "border-red-100 bg-red-50 text-red-700 dark:border-red-900/50 dark:bg-red-950/30 dark:text-red-400",
-  multiple_choice: "border-orange-100 bg-orange-50 text-orange-700 dark:border-orange-900/50 dark:bg-orange-950/30 dark:text-orange-400",
-  short_answer: "border-amber-100 bg-amber-50 text-amber-700 dark:border-amber-900/50 dark:bg-amber-950/30 dark:text-amber-400",
+  multiple_choice: "5-choice",
+  short_answer: "short",
 };
 
 export function PremiumCoursePage() {
@@ -64,50 +60,27 @@ export function PremiumCoursePage() {
         ) : error ? (
           <PremiumLoadError message={error} onRetry={reload} backTo="/premium" />
         ) : problemSets.length > 0 ? (
-          <div className="grid gap-4 md:grid-cols-2">
+          <div className="grid gap-3 md:grid-cols-2">
             {problemSets.map((problemSet) => (
               <article
                 key={problemSet.id}
                 className="app-card app-problem-card flex min-w-0 flex-col overflow-hidden rounded-2xl border"
               >
-                <div className="flex flex-1 flex-col p-5">
-                  <div className="min-w-0">
-                    <h2 className="text-lg font-bold text-stone-950 dark:text-stone-100">
+                <div className="px-4 pb-3 pt-3.5">
+                  <div className="mb-3 flex min-w-0 items-center justify-between gap-3">
+                    <h2 title={problemSet.title} className="min-w-0 truncate text-base font-semibold leading-6 text-stone-900 dark:text-stone-100">
                       {problemSet.title}
                     </h2>
-                    <div className="mt-3 flex flex-wrap items-center gap-2">
-                      <PremiumBadge />
-                      <span
-                        className={[
-                          "rounded-full border px-2.5 py-0.5 text-[11px] font-bold",
-                          questionTypeStyle[problemSet.question_type],
-                        ].join(" ")}
-                      >
-                        {questionTypeLabel[problemSet.question_type]}
-                      </span>
-                    </div>
+                    <PremiumBadge />
                   </div>
-                  <div className="mt-4 grid grid-cols-2 gap-2 text-sm">
-                    <div className="app-neutral-box min-w-0 rounded-xl px-3 py-3">
-                      <span className="block text-xs text-stone-500 dark:text-stone-400">전체 문항</span>
-                      <strong className="mt-1 block text-stone-900 dark:text-stone-100">
-                        {problemSet.question_count}문항
-                      </strong>
-                    </div>
-                    <div className="app-neutral-box min-w-0 rounded-xl px-3 py-3">
-                      <span className="block text-xs text-stone-500 dark:text-stone-400">풀이 세션</span>
-                      <strong className="mt-1 block text-stone-900 dark:text-stone-100">
-                        {problemSet.attempt_count}개
-                      </strong>
-                    </div>
-                  </div>
+                  <ProblemSetCardMetadata type={questionType[problemSet.question_type]} questionCount={problemSet.question_count} sessionCount={problemSet.attempt_count} />
                 </div>
                 <Link
                   to={`/premium/courses/${courseId}/problem-sets/${problemSet.id}`}
                   state={{ problemSetTitle: problemSet.title }}
-                  className="app-result-link block border-t px-4 py-3 text-center text-sm font-bold shadow-[0_-1px_0_rgba(0,0,0,0.02)]"
+                  className="app-result-link mt-auto flex min-h-12 items-center justify-end gap-2 border-t px-4 py-2.5 text-sm font-semibold"
                 >
-                  풀이 세션 보기
+                  풀이 세션 보기 <span aria-hidden="true">→</span>
                 </Link>
               </article>
             ))}

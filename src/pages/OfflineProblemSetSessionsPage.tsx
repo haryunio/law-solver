@@ -1,6 +1,7 @@
 import { FormEvent, useId, useMemo, useRef, useState } from "react";
 import { Link, Navigate, useNavigate, useParams } from "react-router-dom";
 import { SessionListItem } from "../components/session/SessionListItem";
+import { ActionMenu } from "../components/ui/ActionMenu";
 import { AppFooter } from "../components/ui/AppFooter";
 import { Button } from "../components/ui/Button";
 import { ConfirmDialog } from "../components/ui/ConfirmDialog";
@@ -96,7 +97,6 @@ export function OfflineProblemSetSessionsPage() {
           <button type="button" onClick={startCreate} className="app-button-primary app-button-primary-standalone rounded-xl px-3 py-2 text-sm font-semibold sm:px-4">새로 문제 풀이 시작하기</button>
           <Link to={coursePath} className="app-button-secondary rounded-xl px-3 py-2 text-center text-sm font-semibold sm:px-4"><ReturnLinkLabel>문제 목록으로</ReturnLinkLabel></Link>
         </DashboardHeaderTitle>
-        <p className="mb-4 text-sm text-stone-500 dark:text-stone-400">전체 {problemSet.questions.length}문항 / 풀이 세션 {relatedSessions.length}개</p>
         {relatedSessions.length ? (
           <div className="space-y-2.5">
             {relatedSessions.map((session) => (
@@ -116,27 +116,21 @@ export function OfflineProblemSetSessionsPage() {
                 destination={session.status === "completed" ? `/result/${session.id}` : `/solve/${session.id}`}
                 destinationState={session.status === "completed" ? undefined : { solveEntry: "resume" }}
                 actions={(
-                  <div className="flex items-center gap-2">
-                    <button
-                      type="button"
-                      className="text-xs font-medium text-stone-500 hover:text-stone-900 dark:text-stone-400 dark:hover:text-stone-100"
-                      aria-label={`${session.title} 이름 변경`}
-                      onClick={() => {
-                        setEditing(session);
-                        setEditingTitle(session.title);
-                      }}
-                    >
-                      이름 변경
-                    </button>
-                    <button
-                      type="button"
-                      className="text-xs font-medium text-stone-500 hover:text-red-700 dark:text-stone-400 dark:hover:text-red-400"
-                      aria-label={`${session.title} 삭제`}
-                      onClick={() => setDeleting(session)}
-                    >
-                      삭제
-                    </button>
-                  </div>
+                  <ActionMenu
+                    size="session"
+                    label={`${session.title} 메뉴 열기`}
+                    items={[
+                      {
+                        id: "rename",
+                        label: "이름 변경",
+                        onSelect: () => {
+                          setEditing(session);
+                          setEditingTitle(session.title);
+                        },
+                      },
+                      { id: "delete", label: "삭제", danger: true, onSelect: () => setDeleting(session) },
+                    ]}
+                  />
                 )}
               />
             ))}
