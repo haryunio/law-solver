@@ -166,6 +166,10 @@ GitHub Pages용 정적 파일입니다. `404.html`은 SPA 새로고침 대응용
 
 공통 토큰과 컴포넌트 클래스는 `src/index.css`에 있습니다.
 
+일반 탐색 화면의 곡률은 GNB의 16px을 기준으로 `--app-radius-card` 16px, `--app-radius-control`과 `--app-radius-inset` 12px, `--app-radius-tag` 8px을 사용합니다. 적용 경로는 `src/app/standardUi.ts`, 범위와 포털 전달은 `StandardUiScope`가 관리합니다. 풀이, 결과, 오답 확인, 전체/책갈피 복기와 개별 미니 앱은 이 범위에서 제외합니다. 원형 메뉴, 아바타와 스위치는 원형을 유지하고 책등의 왼쪽 6px은 형태상의 예외입니다. 새 일반 화면에서 임의 곡률을 추가하지 말고 공통 표면 클래스나 `app-radius-*`를 사용하세요.
+
+`/debug/designsystem`은 주소로만 접근하는 디자인 시스템 확인 페이지입니다. 실제 공통 컴포넌트를 재사용하고 샘플 상태는 페이지 메모리에서만 관리합니다. 메뉴 링크, 사이트맵, GA4 페이지뷰에 추가하지 않으며 `noindex`와 새로고침 가능한 정적 앱 셸을 유지합니다. 데모에서 학습 저장소, 계정 설정, 결제나 백업 API를 호출하지 마세요. 디자인 토큰이나 공통 컴포넌트가 바뀌면 페이지 예시와 `docs/DESIGN_SYSTEM.md`를 함께 갱신합니다.
+
 - `app-page`: 랜딩을 제외한 라우트 화면의 공통 미색/다크 배경
 - `app-card`: 주요 콘텐츠 카드와 OMR 패널
 - `app-subtle-surface`: 카드 안의 보조 영역

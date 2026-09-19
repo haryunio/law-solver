@@ -30,6 +30,11 @@
   --app-shadow-hover: 0 20px 48px rgba(82, 52, 36, 0.12), 0 4px 12px rgba(82, 52, 36, 0.06);
   --app-modal-overlay: rgba(28, 22, 18, 0.42);
   --app-modal-shadow: 0 28px 80px rgba(67, 38, 23, 0.18), 0 8px 24px rgba(67, 38, 23, 0.08);
+  --app-radius-card: 16px;
+  --app-radius-control: 12px;
+  --app-radius-inset: 12px;
+  --app-radius-tag: 8px;
+  --app-radius-circle: 9999px;
 }
 
 html.dark {
@@ -78,6 +83,42 @@ body {
 }
 
 /* Shared application design system. Keep layout decisions in page components. */
+/* General navigation only. Study/result routes never opt into this scope. */
+.app-standard-ui :is(.app-card, .app-modal-surface, .app-toast, .landing-step-card, .landing-bento-card, .landing-final-cta):not(:where(.app-focus-page *)) {
+  border-radius: var(--app-radius-card);
+}
+
+.app-standard-ui :is(.app-button-primary, .app-button-secondary, .app-button-danger, .app-button-success, .app-icon-button, .app-control, .app-select-trigger, .landing-primary-cta, .landing-secondary-cta, .landing-nav-cta, .landing-theme-button, .landing-final-guide-button, .landing-sample-link):not(:where(.rounded-full, .app-focus-page *)) {
+  border-radius: var(--app-radius-control);
+}
+
+.app-standard-ui .app-control:not(:where(.app-focus-page *))::file-selector-button {
+  border-radius: var(--app-radius-control);
+}
+
+.app-standard-ui :is(.app-neutral-box, .app-subtle-surface, .app-select-menu, .home-menu-graphic, .landing-step-visual, .landing-feature-icon):not(:where(.app-focus-page *)) {
+  border-radius: var(--app-radius-inset);
+}
+
+.app-standard-ui :is(.app-select-option, .app-premium-badge, .landing-eyebrow):not(:where(.app-focus-page *)) {
+  border-radius: var(--app-radius-tag);
+}
+
+.app-standard-ui .app-result-link:not(:where(.app-focus-page *)) {
+  border-radius: 0 0 var(--app-radius-card) var(--app-radius-card);
+}
+
+/* Explicit roles take precedence over component defaults and legacy utilities. */
+.app-standard-ui .app-radius-card:not(:where(.app-focus-page *)) { border-radius: var(--app-radius-card); }
+.app-standard-ui .app-radius-control:not(:where(.app-focus-page *)) { border-radius: var(--app-radius-control); }
+.app-standard-ui :is(.app-radius-inset, .app-radius-menu):not(:where(.app-focus-page *)) { border-radius: var(--app-radius-inset); }
+.app-standard-ui .app-radius-tag:not(:where(.app-focus-page *)) { border-radius: var(--app-radius-tag); }
+.app-standard-ui .app-radius-card-bottom:not(:where(.app-focus-page *)) { border-radius: 0 0 var(--app-radius-card) var(--app-radius-card); }
+
+/* Book spines keep their narrower left edge; circular controls keep their shape. */
+.app-standard-ui .app-radius-book:not(:where(.app-focus-page *)) { border-radius: 6px var(--app-radius-card) var(--app-radius-card) 6px; }
+.app-standard-ui .app-radius-book-label:not(:where(.app-focus-page *)) { border-radius: 2px 0 var(--app-radius-inset) 0; }
+
 .app-page {
   min-height: 100vh;
   color: var(--app-text);

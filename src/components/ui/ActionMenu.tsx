@@ -84,7 +84,7 @@ export function ActionMenu({ label, items, size = "compact" }: { label: string; 
               type="button"
               role="menuitem"
               tabIndex={index === active ? 0 : -1}
-              className={`block w-full rounded-lg px-3 py-2 text-left text-xs font-medium outline-none focus:bg-stone-100 dark:focus:bg-stone-800 ${item.danger ? "text-red-700 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/30" : "text-stone-700 hover:bg-stone-100 dark:text-stone-200 dark:hover:bg-stone-800"}`}
+              className={`app-radius-tag block w-full rounded-lg px-3 py-2 text-left text-xs font-medium outline-none focus:bg-stone-100 dark:focus:bg-stone-800 ${item.danger ? "text-red-700 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/30" : "text-stone-700 hover:bg-stone-100 dark:text-stone-200 dark:hover:bg-stone-800"}`}
               onClick={() => {
                 close();
                 item.onSelect();

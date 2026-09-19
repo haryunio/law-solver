@@ -362,7 +362,7 @@ export function CloudBackupSection() {
                 type="button"
                 onClick={() => setDeleteConfirm(true)}
                 disabled={Boolean(operation)}
-                className="rounded-xl border border-red-200 bg-red-50 px-4 py-2.5 text-sm font-semibold text-red-700 disabled:opacity-50 dark:border-red-900/60 dark:bg-red-950/30 dark:text-red-400"
+                className="app-radius-control rounded-xl border border-red-200 bg-red-50 px-4 py-2.5 text-sm font-semibold text-red-700 disabled:opacity-50 dark:border-red-900/60 dark:bg-red-950/30 dark:text-red-400"
               >클라우드 데이터 삭제</button>
             ) : null}
             <button
@@ -471,7 +471,7 @@ export function CloudBackupSection() {
                       : "내려받기를 시작하면 암호문을 한 번 내려받아 이 대화상자 메모리에만 보관합니다. 올바른 비밀번호가 있어야 내용을 확인할 수 있습니다."}
                   </p>
                   {modalError ? (
-                    <p role="alert" className="mt-3 rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700 dark:border-red-900/60 dark:bg-red-950/30 dark:text-red-300">
+                    <p role="alert" className="app-radius-inset mt-3 rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700 dark:border-red-900/60 dark:bg-red-950/30 dark:text-red-300">
                       {modalError}
                     </p>
                   ) : null}

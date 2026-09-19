@@ -114,7 +114,7 @@ export function AppHomePage() {
             >
               <div className="flex min-h-7 min-w-0 justify-end">
                 {menu.kind === "account" ? (
-                  <span className="inline-flex max-w-full items-center gap-1.5 rounded-full border border-stone-200 bg-stone-100 px-2.5 py-1 text-[11px] font-bold leading-4 text-stone-700 shadow-sm dark:border-stone-700 dark:bg-stone-800 dark:text-stone-200">
+                  <span className="app-radius-tag inline-flex max-w-full items-center gap-1.5 rounded-full border border-stone-200 bg-stone-100 px-2.5 py-1 text-[11px] font-bold leading-4 text-stone-700 shadow-sm dark:border-stone-700 dark:bg-stone-800 dark:text-stone-200">
                     <span
                       className={[
                         "h-1.5 w-1.5 shrink-0 rounded-full",

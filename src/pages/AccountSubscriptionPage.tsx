@@ -192,7 +192,7 @@ export function AccountSubscriptionPage() {
                 aria-controls={`${tab.id}-panel`}
                 onClick={() => selectTab(tab.id)}
                 className={[
-                  "min-h-11 rounded-xl px-2 py-2.5 text-xs font-semibold leading-5 transition-colors sm:px-4 sm:text-sm",
+                  "app-radius-control min-h-11 rounded-xl px-2 py-2.5 text-xs font-semibold leading-5 transition-colors sm:px-4 sm:text-sm",
                   activeTab === tab.id
                     ? "bg-red-600 text-white shadow-sm"
                     : "text-stone-600 hover:bg-stone-100 dark:text-stone-300 dark:hover:bg-stone-800",
@@ -225,13 +225,13 @@ export function AccountSubscriptionPage() {
                     </div>
                   </div>
                   <div className="mt-5 grid grid-cols-2 gap-2 text-center text-xs">
-                    <div className="rounded-xl bg-white px-3 py-3 dark:bg-stone-900">
+                    <div className="app-radius-inset rounded-xl bg-white px-3 py-3 dark:bg-stone-900">
                       <p className="text-stone-500">Premium</p>
                       <p className="mt-1 font-bold text-stone-900 dark:text-stone-100">
                         {isPremiumActive ? "이용 중" : "미구독"}
                       </p>
                     </div>
-                    <div className="rounded-xl bg-white px-3 py-3 dark:bg-stone-900">
+                    <div className="app-radius-inset rounded-xl bg-white px-3 py-3 dark:bg-stone-900">
                       <p className="text-stone-500">과목 이용권</p>
                       <p className="mt-1 font-bold text-stone-900 dark:text-stone-100">{packageIds.length}개</p>
                     </div>
@@ -249,7 +249,7 @@ export function AccountSubscriptionPage() {
             ) : (
               <div className="mt-4">
                 <div
-                  className="grid grid-cols-2 gap-2 rounded-xl bg-stone-100 p-1 dark:bg-stone-800"
+                  className="app-radius-inset grid grid-cols-2 gap-2 rounded-xl bg-stone-100 p-1 dark:bg-stone-800"
                   role="tablist"
                   aria-label="계정 접근 방식"
                 >
@@ -264,7 +264,7 @@ export function AccountSubscriptionPage() {
                       aria-selected={authMode === id}
                       onClick={() => setAuthMode(id as AuthMode)}
                       className={[
-                        "rounded-lg px-3 py-2.5 text-sm font-semibold transition-colors",
+                        "app-radius-control rounded-lg px-3 py-2.5 text-sm font-semibold transition-colors",
                         authMode === id
                           ? "bg-white text-red-700 shadow-sm dark:bg-stone-900 dark:text-red-400"
                           : "text-stone-500 dark:text-stone-400",

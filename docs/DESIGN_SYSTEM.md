@@ -12,6 +12,7 @@
 | `src/components/cbt/CbtSolveScreen.tsx` | 오프라인과 온라인이 공유하는 실제 문제 풀이 화면 |
 | `src/components/premium/PremiumLoadingStates.tsx` | 온라인 화면의 실제 배치를 따르는 로딩 스켈레톤 |
 | `src/pages/` | 화면의 폭, 그리드, 카드 배치, 여백과 반응형 구성 |
+| `src/pages/DesignSystemPage.tsx` | `/debug/designsystem`에서 실제 공통 컴포넌트와 상호작용을 확인하는 페이지 |
 | `src/mini-apps/<app-id>/` | 해당 미니 앱만 사용하는 화면과 기능 |
 
 공통 CSS는 색상, 테두리, 그림자, 전환을 담당합니다. 카드의 `display`, `position`, `width`, `height`, `overflow`는 호출하는 컴포넌트의 Tailwind 클래스에 둡니다. `app-page`, `app-spinner`처럼 이름 자체가 화면이나 특정 형태를 뜻하는 기존 클래스에는 그 형태에 필요한 규칙이 들어 있습니다. 이 예외를 일반 카드나 버튼 시각 클래스에 확대하지 않습니다.
@@ -41,6 +42,20 @@
 | `--app-modal-overlay`, `--app-modal-shadow` | 대화상자 배경과 그림자 |
 
 정답은 emerald, 오답과 선택 상태는 red, 정답 안내는 blue, 책갈피는 amber를 유지합니다. Premium은 `PremiumBadge`의 금색 체크 배지를 사용합니다. 일반 상태를 Premium과 비슷한 금색 태그로 표시하지 않습니다.
+
+곡률은 GNB의 외곽을 기준으로 세 단계로 정리합니다.
+
+| 토큰 | 값 | 적용 대상 |
+| --- | --- | --- |
+| `--app-radius-card` | 16px | GNB, 카드, 세션 행, 모달, 토스트 |
+| `--app-radius-control` | 12px | 버튼, 입력, 드롭다운 트리거 |
+| `--app-radius-inset` | 12px | 회차, 통계, 내부 정보 박스, 메뉴 표면 |
+| `--app-radius-tag` | 8px | 유형, 상태, 날짜 태그, 메뉴 항목 |
+| `--app-radius-circle` | 9999px | 원형 메뉴와 아바타의 기준. 기존 원형 유틸 유지 |
+
+`src/app/standardUi.ts`가 지정한 일반 탐색 경로에만 `StandardUiScope`가 적용됩니다. 랜딩, 홈, 과목/문제/세션 목록, 계정, 설정, 미니 앱 목록, 디자인 시스템 페이지가 대상입니다. 실제 풀이, 결과, 모든 복기와 개별 미니 앱에는 적용하지 않습니다. 기존 Tailwind 곡률은 제외 화면의 호환값으로 남기고 일반 화면에서만 공통 CSS가 덮어씁니다. `Dialog`와 `Toast`는 React context로 포털에 같은 범위를 전달합니다.
+
+`app-card`, `app-modal-surface`, `app-neutral-box`, `app-subtle-surface`, `app-button-*`, `app-control`, `app-select-*`는 역할에 맞는 곡률을 자동 적용합니다. 개별 표면에는 `app-radius-card`, `app-radius-control`, `app-radius-inset`, `app-radius-tag`를 사용합니다. 하단 CTA는 `app-result-link` 또는 `app-radius-card-bottom`으로 아래쪽 모서리만 16px을 적용합니다. 원형 메뉴와 아바타, 스위치, 작은 상태점은 원형을 유지합니다. 책은 `app-radius-book`으로 왼쪽 6px과 오른쪽 16px을 사용하고, 라벨의 오른쪽 아래만 `app-radius-book-label`로 12px을 적용해 책등 형태를 유지합니다.
 
 ## 3. 공통 클래스 선택
 
@@ -214,6 +229,8 @@ const titleId = useId();
 - 짧고 자연스러운 한국어로 사용자의 행동과 결과를 적습니다. 중간점으로 명사를 이어 붙이거나 em dash, 말줄임, 인위적인 대조 문장을 사용하지 않습니다.
 
 ## 9. 검증 방법
+
+`/debug/designsystem`을 직접 열면 토큰과 실제 버튼, 폼, 카드, 세션 목록, 메뉴, 대화상자, 토스트와 등장 효과를 확인할 수 있습니다. 이 페이지로 가는 서비스 메뉴는 만들지 않습니다. 검색 색인과 사이트맵, GA4 페이지뷰에서도 제외하고 직접 접속용 정적 앱 셸만 생성합니다. 데모 상호작용은 페이지 메모리만 바꾸며 실제 학습 데이터, 계정, 결제와 백업을 사용하지 않습니다. 공통 UI를 변경할 때 갤러리와 이 문서를 함께 갱신하세요.
 
 공통 컴포넌트에 동작을 추가하면 해당 동작을 직접 검증합니다. `Dialog.test.tsx`는 포커스 순환, Escape, 원래 요소 복원, 중첩 대화상자, 저장 중 닫기 제한과 스크롤 복원을 확인합니다. UI 표현만 바꾸는 경우 구현을 그대로 복사한 테스트를 만들지 않습니다.
 

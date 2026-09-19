@@ -373,7 +373,7 @@ export function SubjectListPage() {
           type="button"
           onClick={() => onSelect(palette.id)}
           className={[
-            "flex items-center gap-2 rounded-full border px-2.5 py-2 text-xs font-semibold transition",
+            "app-radius-control flex items-center gap-2 rounded-full border px-2.5 py-2 text-xs font-semibold transition",
             selectedPalette === palette.id
               ? "border-red-500 bg-red-50 text-red-700 dark:border-red-600 dark:bg-red-950/30 dark:text-red-400"
               : "border-stone-200 bg-white text-stone-600 hover:bg-stone-50 dark:border-stone-700 dark:bg-stone-900 dark:text-stone-300 dark:hover:bg-stone-800",
@@ -462,7 +462,7 @@ export function SubjectListPage() {
                 className="mt-5 max-h-[42vh] space-y-2 overflow-y-auto overscroll-contain px-1"
               >
                 {subjects.length === 0 ? (
-                  <p className="rounded-xl border border-dashed border-stone-200 bg-stone-50 p-4 text-center text-sm text-stone-500 dark:border-stone-800 dark:bg-stone-950/50 dark:text-stone-500">
+                  <p className="app-radius-inset rounded-xl border border-dashed border-stone-200 bg-stone-50 p-4 text-center text-sm text-stone-500 dark:border-stone-800 dark:bg-stone-950/50 dark:text-stone-500">
                     아직 추가한 과목이 없습니다.
                   </p>
                 ) : (
@@ -475,7 +475,7 @@ export function SubjectListPage() {
                         key={subject.id}
                         data-subject-drop-id={subject.id}
                         className={[
-                          "relative flex select-none items-center gap-3 rounded-xl border border-stone-200 bg-white p-3 transition-[border-color,background-color,box-shadow] duration-100 hover:border-red-200 hover:bg-red-50/30 dark:border-stone-800 dark:bg-stone-900 dark:hover:border-red-900/60 dark:hover:bg-red-950/10",
+                          "app-radius-inset relative flex select-none items-center gap-3 rounded-xl border border-stone-200 bg-white p-3 transition-[border-color,background-color,box-shadow] duration-100 hover:border-red-200 hover:bg-red-50/30 dark:border-stone-800 dark:bg-stone-900 dark:hover:border-red-900/60 dark:hover:bg-red-950/10",
                           draggingSubjectId === subject.id
                             ? "z-20 border-red-300 bg-white shadow-xl ring-2 ring-red-100 will-change-transform dark:border-red-800 dark:bg-stone-900 dark:ring-red-900/40"
                             : "",
@@ -507,7 +507,7 @@ export function SubjectListPage() {
                           onPointerCancel={(event) => handleSubjectPointerEnd(event, false)}
                           onLostPointerCapture={handleSubjectLostPointerCapture}
                           onKeyDown={(event) => handleSubjectDragKeyDown(event, subject.id)}
-                          className="grid h-10 w-8 shrink-0 touch-none cursor-grab select-none place-content-center rounded-md border border-transparent text-stone-400 outline-none transition-colors duration-100 hover:border-stone-200 hover:bg-stone-100 hover:text-stone-600 focus-visible:border-red-300 focus-visible:ring-2 focus-visible:ring-red-100 active:cursor-grabbing dark:text-stone-500 dark:hover:border-stone-700 dark:hover:bg-stone-800 dark:hover:text-stone-300 dark:focus-visible:border-red-800 dark:focus-visible:ring-red-900/50"
+                          className="app-radius-control grid h-10 w-8 shrink-0 touch-none cursor-grab select-none place-content-center rounded-md border border-transparent text-stone-400 outline-none transition-colors duration-100 hover:border-stone-200 hover:bg-stone-100 hover:text-stone-600 focus-visible:border-red-300 focus-visible:ring-2 focus-visible:ring-red-100 active:cursor-grabbing dark:text-stone-500 dark:hover:border-stone-700 dark:hover:bg-stone-800 dark:hover:text-stone-300 dark:focus-visible:border-red-800 dark:focus-visible:ring-red-900/50"
                         >
                           <span aria-hidden="true" className="flex flex-col items-center gap-[3px]">
                             <span className="h-[2px] w-3.5 rounded-full bg-current" />
@@ -533,7 +533,7 @@ export function SubjectListPage() {
                           </button>
                           <button
                             onClick={() => handleDeleteSubject(subject)}
-                            className="rounded-lg border border-red-200 bg-red-50 px-3 py-1.5 text-xs font-semibold text-red-700 transition hover:bg-red-100 dark:border-red-900/50 dark:bg-red-950/30 dark:text-red-400 dark:hover:bg-red-900/30"
+                            className="app-radius-control rounded-lg border border-red-200 bg-red-50 px-3 py-1.5 text-xs font-semibold text-red-700 transition hover:bg-red-100 dark:border-red-900/50 dark:bg-red-950/30 dark:text-red-400 dark:hover:bg-red-900/30"
                           >
                             삭제
                           </button>

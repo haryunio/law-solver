@@ -16,17 +16,17 @@ interface ProblemSetCardMetadataProps {
 export function ProblemSetCardMetadata({ type, questionCount, sessionCount }: ProblemSetCardMetadataProps) {
   return (
     <dl className="grid grid-cols-[minmax(0,1.5fr)_repeat(2,minmax(0,1fr))] gap-2 text-xs sm:grid-cols-3">
-      <div className="app-neutral-box flex h-11 min-w-0 items-center justify-between gap-1 rounded-lg px-2">
+      <div className="app-neutral-box app-radius-inset flex h-11 min-w-0 items-center justify-between gap-1 rounded-lg px-2">
         <dt className="shrink-0 text-[11px] text-stone-500 dark:text-stone-400">유형</dt>
-        <dd className={`inline-flex h-6 items-center whitespace-nowrap rounded-full border px-2 text-[11px] font-semibold leading-none ${typeStyle[type]}`}>
+        <dd className={`app-radius-tag inline-flex h-6 items-center whitespace-nowrap rounded-full border px-2 text-[11px] font-semibold leading-none ${typeStyle[type]}`}>
           {typeLabel[type]}
         </dd>
       </div>
-      <div className="app-neutral-box flex h-11 min-w-0 items-center justify-between gap-1 rounded-lg px-2">
+      <div className="app-neutral-box app-radius-inset flex h-11 min-w-0 items-center justify-between gap-1 rounded-lg px-2">
         <dt className="shrink-0 text-[11px] text-stone-500 dark:text-stone-400">문항</dt>
         <dd className="whitespace-nowrap font-semibold tabular-nums text-stone-900 dark:text-stone-100">{questionCount}</dd>
       </div>
-      <div className="app-neutral-box flex h-11 min-w-0 items-center justify-between gap-1 rounded-lg px-2">
+      <div className="app-neutral-box app-radius-inset flex h-11 min-w-0 items-center justify-between gap-1 rounded-lg px-2">
         <dt className="shrink-0 text-[11px] text-stone-500 dark:text-stone-400">세션</dt>
         <dd className="whitespace-nowrap font-semibold tabular-nums text-stone-900 dark:text-stone-100">{sessionCount}</dd>
       </div>

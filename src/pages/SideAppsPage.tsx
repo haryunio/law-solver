@@ -16,7 +16,7 @@ function MiniAppCard({ app }: { app: MiniAppDefinition }) {
   const content = (
     <div className={`flex items-start gap-4 sm:gap-5 ${isComingSoon ? "select-none opacity-65 blur-[0.7px]" : ""}`}>
       <div
-        className={`flex h-16 w-16 shrink-0 items-center justify-center rounded-[22px] text-xl font-black tracking-[-0.06em] shadow-sm sm:h-[72px] sm:w-[72px] sm:text-2xl ${app.iconClass}`}
+        className={`app-radius-inset flex h-16 w-16 shrink-0 items-center justify-center rounded-[22px] text-xl font-black tracking-[-0.06em] shadow-sm sm:h-[72px] sm:w-[72px] sm:text-2xl ${app.iconClass}`}
         aria-hidden="true"
       >
         {app.icon}
@@ -24,7 +24,7 @@ function MiniAppCard({ app }: { app: MiniAppDefinition }) {
       <div className="min-w-0 pt-0.5">
         <div className="flex flex-wrap items-center gap-2.5">
           <h3 className="text-lg font-bold tracking-tight sm:text-xl">{app.name}</h3>
-          <span className="rounded-full border border-stone-200 bg-stone-100 px-2.5 py-1 text-[10px] font-bold tracking-[0.1em] text-stone-500 dark:border-stone-700 dark:bg-stone-800 dark:text-stone-400">
+          <span className="app-radius-tag rounded-full border border-stone-200 bg-stone-100 px-2.5 py-1 text-[10px] font-bold tracking-[0.1em] text-stone-500 dark:border-stone-700 dark:bg-stone-800 dark:text-stone-400">
             {statusLabels[app.status]}
           </span>
           {app.premium ? <PremiumBadge /> : null}

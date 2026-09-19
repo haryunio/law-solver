@@ -31,7 +31,7 @@ export function TimestampTag({
   return (
     <span
       title={title ?? formattedTimestamp}
-      className="app-neutral-box inline-flex h-6 max-w-full items-center gap-1.5 rounded-md border px-2 text-[10px] leading-3 text-stone-500 dark:text-stone-400"
+      className="app-neutral-box app-radius-tag inline-flex h-6 max-w-full items-center gap-1.5 rounded-md border px-2 text-[10px] leading-3 text-stone-500 dark:text-stone-400"
     >
       <svg aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.2" className="h-3 w-3 shrink-0">
         <rect x="2.5" y="3.5" width="11" height="10" rx="2" />

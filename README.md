@@ -279,6 +279,7 @@ GA4 데이터 스트림의 향상된 측정에서 `브라우저 방문 기록 �
 
 - 색인 대상: 랜딩, 과목 대시보드, 미니 앱 목록, 호반대학교 수강신청 연습, 제17회 법조윤리시험 가답안, LBTI 소개, 16개 유형 목록, 16개 유형별 결과
 - 색인 제외: 서비스 홈, 환경설정, 계정·구독, Premium 대시보드, LBTI 응답 화면, 과목별 문제 대시보드, 풀이, 채점 결과와 리뷰, 알 수 없는 경로
+- `/debug/designsystem`은 주소를 직접 입력해 여는 디자인 시스템 페이지입니다. 서비스 메뉴나 사이트맵에는 노출하지 않고 `noindex`를 적용합니다. 직접 접속과 새로고침을 위한 정적 앱 셸은 생성합니다. 데모는 페이지 안의 임시 상태만 사용하며 실제 과목, 문제, 세션이나 결제를 변경하지 않습니다.
 - `src/components/seo/RouteMetadata.tsx`가 React Router 이동 시 title, description, canonical, robots, Open Graph와 Twitter 메타데이터를 갱신합니다.
 - 메인 title은 `Law Solver`이며 세부 화면은 `Law Solver | 대시보드`처럼 브랜드명 뒤에 1뎁스 기능명만 붙입니다.
 - `index.html`에는 운영 도메인 canonical, 기본 소셜 메타데이터와 `WebApplication` JSON-LD가 들어 있습니다.

@@ -11,7 +11,7 @@ interface BookCoverProps {
 }
 
 export const bookLinkClassName =
-  "block min-w-0 rounded-l-md rounded-r-xl focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-red-500";
+  "app-radius-book block min-w-0 rounded-l-md rounded-r-xl focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-red-500";
 
 /** A 224px book surface. The caller supplies navigation and domain-specific details. */
 export function BookCover({
@@ -25,7 +25,7 @@ export function BookCover({
 }: BookCoverProps) {
   return (
     <div
-      className="app-card app-subject-card app-subject-book relative isolate flex h-56 min-w-0 overflow-hidden rounded-l-md rounded-r-xl border transition-[border-color,box-shadow] duration-150"
+      className="app-card app-subject-card app-subject-book app-radius-book relative isolate flex h-56 min-w-0 overflow-hidden rounded-l-md rounded-r-xl border transition-[border-color,box-shadow] duration-150"
       style={{ "--subject-accent": accentColor } as CSSProperties}
     >
       <div aria-hidden="true" className="pointer-events-none absolute inset-0" style={coverStyle}>
@@ -35,7 +35,7 @@ export function BookCover({
       </div>
       {topRight ? <div className="absolute right-3 top-5">{topRight}</div> : null}
 
-      <div className="app-subject-book-label relative mb-[3px] ml-3 mr-[3px] mt-14 flex min-w-0 flex-1 flex-col rounded-br-lg rounded-tl-sm px-3 pb-3 pt-3">
+      <div className="app-subject-book-label app-radius-book-label relative mb-[3px] ml-3 mr-[3px] mt-14 flex min-w-0 flex-1 flex-col rounded-br-lg rounded-tl-sm px-3 pb-3 pt-3">
         {eyebrow ? <p className="shrink-0 text-[11px] leading-4 text-stone-500 dark:text-stone-400">{eyebrow}</p> : null}
         <h2
           title={title}

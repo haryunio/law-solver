@@ -105,6 +105,7 @@ export function getSeoMetadata(pathname: string): SeoMetadata {
   }
   if (routePath === "/home") return privateMetadata("Law Solver");
   if (routePath === "/settings") return privateMetadata("Law Solver | 환경설정");
+  if (routePath === "/debug/designsystem") return privateMetadata("Law Solver | 디자인 시스템", "공통 디자인 토큰과 컴포넌트의 상태 및 동작을 확인하는 개발용 페이지입니다.");
   if (routePath === "/account") return privateMetadata("Law Solver | 계정 및 구독");
   if (routePath === "/premium" || routePath.startsWith("/premium/")) {
     return privateMetadata("Law Solver | 온라인 문제 풀이");
@@ -140,4 +141,5 @@ export const STATIC_APP_SHELL_PATHS = [
   "/settings",
   "/account",
   "/premium",
+  "/debug/designsystem",
 ] as const;

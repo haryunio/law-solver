@@ -34,7 +34,7 @@ export function CourseProductCard({
         topRight={<PremiumBadge />}
       />
 
-      <div className="app-card flex flex-1 flex-col rounded-xl border p-3">
+      <div className="app-card app-radius-card flex flex-1 flex-col rounded-xl border p-3">
         <dl className="min-w-0">
           <div className="mb-3 border-b border-stone-200 pb-3 dark:border-stone-700">
             <dt className="text-[11px] text-stone-500 dark:text-stone-400">금액</dt>

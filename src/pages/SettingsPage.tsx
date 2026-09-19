@@ -173,7 +173,7 @@ export function SettingsPage() {
                 aria-selected={activeTab === id}
                 onClick={() => setActiveTab(id as SettingsTab)}
                 className={[
-                  "rounded-xl px-4 py-3 text-sm font-semibold transition-colors duration-150",
+                  "app-radius-control rounded-xl px-4 py-3 text-sm font-semibold transition-colors duration-150",
                   activeTab === id
                     ? "bg-red-600 text-white shadow-sm"
                     : "text-stone-600 hover:bg-stone-100 dark:text-stone-300 dark:hover:bg-stone-800",
@@ -235,7 +235,7 @@ export function SettingsPage() {
                       type="button"
                       onClick={() => setFontFamily(font.id)}
                       className={[
-                        "flex items-center justify-between rounded-xl border px-4 py-3 text-left text-sm transition-colors duration-150",
+                        "app-radius-control flex items-center justify-between rounded-xl border px-4 py-3 text-left text-sm transition-colors duration-150",
                         fontFamily === font.id
                           ? "border-red-500 bg-red-50 text-red-700 dark:border-red-700 dark:bg-red-950/30 dark:text-red-300"
                           : "border-stone-200 bg-white text-stone-700 hover:bg-stone-50 dark:border-stone-700 dark:bg-stone-900 dark:text-stone-300 dark:hover:bg-stone-800",
@@ -305,7 +305,7 @@ export function SettingsPage() {
                   </p>
                   <button
                     onClick={handleReset}
-                    className="mt-5 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700 transition-colors hover:bg-red-100 dark:border-red-900/60 dark:bg-red-950/30 dark:text-red-400 dark:hover:bg-red-950/50"
+                    className="app-radius-control mt-5 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700 transition-colors hover:bg-red-100 dark:border-red-900/60 dark:bg-red-950/30 dark:text-red-400 dark:hover:bg-red-950/50"
                   >
                     문제 풀이 데이터 초기화
                   </button>

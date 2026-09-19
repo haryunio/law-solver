@@ -49,7 +49,7 @@ export function CloudBackupComparisonWarnings({ warnings }: { warnings: string[]
   return (
     <div
       role="alert"
-      className="mt-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-amber-900 dark:border-amber-900/60 dark:bg-amber-950/30 dark:text-amber-200"
+      className="app-radius-inset mt-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-amber-900 dark:border-amber-900/60 dark:bg-amber-950/30 dark:text-amber-200"
     >
       <p className="text-xs font-bold">데이터 교체 전 확인해 주세요</p>
       <ul className="mt-2 space-y-1.5 text-xs leading-5">
