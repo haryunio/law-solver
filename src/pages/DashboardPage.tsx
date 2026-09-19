@@ -13,6 +13,7 @@ import { OverflowTooltipTitle } from "../components/ui/OverflowTooltipTitle";
 import { ReturnLinkLabel } from "../components/ui/ReturnLinkLabel";
 import { ThemeSelect } from "../components/ui/ThemeSelect";
 import { TimestampTag } from "../components/ui/TimestampTag";
+import { Toast } from "../components/ui/Toast";
 import { getOfflineProblemSetPath } from "../lib/offlineSession";
 import { useTestStore } from "../store/useTestStore";
 import { NO_SUBJECT_ID, type OfflineProblemSet } from "../types/test";
@@ -26,6 +27,7 @@ export function DashboardPage() {
   const updateProblemSet = useTestStore((state) => state.updateProblemSet);
   const navigate = useNavigate();
   const [openUpload, setOpenUpload] = useState(false);
+  const [uploadNotice, setUploadNotice] = useState("");
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingTitle, setEditingTitle] = useState("");
   const [editingSubjectId, setEditingSubjectId] = useState(NO_SUBJECT_ID);
@@ -68,6 +70,7 @@ export function DashboardPage() {
 
   return (
     <div className="app-page px-4 py-8 transition-colors duration-300 md:px-6">
+      <Toast message={uploadNotice} tone="success" onDismiss={() => setUploadNotice("")} />
       <div className="mx-auto max-w-6xl">
         <DashboardHeaderTitle title={currentSubjectName} sectionTitle="문제 목록" logoTo="/dashboard" logoLabel="과목 목록으로 이동">
           <button type="button" onClick={() => setOpenUpload(true)} className="app-button-primary app-button-primary-standalone rounded-xl px-3 py-2 text-sm font-semibold sm:px-4">새 문제 등록</button>
@@ -108,6 +111,9 @@ export function DashboardPage() {
         <Dialog labelledBy={uploadTitleId} onClose={() => setOpenUpload(false)}>
           <CsvUploadPanel headingId={uploadTitleId} onCancel={() => setOpenUpload(false)} subjectId={isNoSubject ? null : subjectId} onCreated={(problemSetId) => {
             setOpenUpload(false); navigate(getOfflineProblemSetPath(problemSetId, isNoSubject ? null : subjectId));
+          }} onBatchCreated={(problemSetIds) => {
+            setOpenUpload(false);
+            setUploadNotice(`문제 ${problemSetIds.length}개를 등록했습니다.`);
           }} />
         </Dialog>
       ) : null}

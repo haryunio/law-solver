@@ -57,6 +57,33 @@ async function openNewSession(title: string, random = false) {
 }
 
 describe("offline problem and session workflow", () => {
+  it("registers multiple CSV files in the current subject and stays on its problem list", async () => {
+    const subjectId = useTestStore.getState().createSubject("민법");
+    renderRoute(`/dashboard/${subjectId}`);
+    fireEvent.click(screen.getByRole("button", { name: "새 문제 등록" }));
+    const files = [
+      ["민법_OX.csv", "번호,문제,정답\n1,가상 문제,O"],
+      ["민법_단답.csv", "번호,문제,정답\n1,가상 문제,채권"],
+    ].map(([name, contents]) => {
+      const csv = new TextEncoder().encode(contents);
+      const file = new File([csv], name!, { type: "text/csv" });
+      Object.defineProperty(file, "arrayBuffer", { value: async () => csv.buffer });
+      return file;
+    });
+    fireEvent.change(screen.getByLabelText("CSV 파일"), { target: { files } });
+    const confirmation = screen.getByRole("dialog", { name: "문제를 일괄 등록할까요?" });
+    expect(useTestStore.getState().problemSets).toHaveLength(0);
+    fireEvent.click(within(confirmation).getByRole("button", { name: "일괄 등록" }));
+    await screen.findByRole("heading", { name: "민법 OX" });
+    expect(screen.getByRole("heading", { name: "민법 단답" })).toBeTruthy();
+    expect(screen.getByText("문제 2개를 등록했습니다.")).toBeTruthy();
+    expect(screen.queryByRole("dialog")).toBeNull();
+    expect(useTestStore.getState().problemSets.map(({ subject_id, type }) => [subject_id, type])).toEqual([
+      [subjectId, "OX"], [subjectId, "short"],
+    ]);
+    expect(useTestStore.getState().sessions).toHaveLength(0);
+  });
+
   it("registers CSV without a session, then creates independent sessions with their own title and order", async () => {
     const subjectId = useTestStore.getState().createSubject("민법");
     renderRoute(`/dashboard/${subjectId}`);

@@ -28,7 +28,7 @@ import {
   type TestType,
 } from "../types/test";
 
-interface CreateProblemSetInput {
+export interface CreateProblemSetInput {
   title: string;
   type: TestType;
   questions: ParsedQuestion[];
@@ -49,6 +49,7 @@ export interface PersistedTestState {
 }
 interface TestStore extends PersistedTestState {
   createProblemSet: (input: CreateProblemSetInput) => string;
+  createProblemSets: (inputs: CreateProblemSetInput[]) => string[];
   updateProblemSet: (id: string, updates: { title?: string; subjectId?: string | null }) => void;
   deleteProblemSet: (id: string) => void;
   createSession: (input: CreateSessionInput) => string;
@@ -128,18 +129,19 @@ export const useTestStore = create<TestStore>()(
       };
       return {
         ...emptyState(),
-        createProblemSet: ({ title, type, questions, subjectId }) => {
-          const id = createId();
+        createProblemSet: (input) => get().createProblemSets([input])[0]!,
+        createProblemSets: (inputs) => {
+          if (!inputs.length) return [];
           const now = modifiedNow();
           const state = get();
-          const problem: OfflineProblemSet = {
-            id, title: title.trim(), type, subject_id: selectedSubject(subjectId, state.subjects),
+          const problems: OfflineProblemSet[] = inputs.map(({ title, type, questions, subjectId }) => ({
+            id: createId(), title: title.trim(), type, subject_id: selectedSubject(subjectId, state.subjects),
             created_at: now, updated_at: now, questions: questions.map(toOfflineQuestion),
-          };
-          // Validate imported source before it becomes authoritative persisted data.
-          const normalized = normalizedState({ ...persistedTestState(state), problemSets: [problem, ...state.problemSets], dataUpdatedAt: now });
+          }));
+          // Validate the complete batch before publishing or persisting any of it.
+          const normalized = normalizedState({ ...persistedTestState(state), problemSets: [...problems, ...state.problemSets], dataUpdatedAt: now });
           set(normalized);
-          return id;
+          return problems.map((problem) => problem.id);
         },
         updateProblemSet: (id, updates) => {
           set((state) => {

@@ -178,6 +178,82 @@ describe("useTestStore v4 persistence", () => {
 });
 
 describe("normalized offline learning records", () => {
+  it("registers a complete batch together, preserving file order and source content without creating sessions", async () => {
+    const module = await loadStore();
+    await module.useTestStore.getState().importDashboardData(legacyState);
+    const before = module.useTestStore.getState();
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date("2026-09-20T03:00:00Z"));
+    const observedProblemCounts: number[] = [];
+    const unsubscribe = module.useTestStore.subscribe((state) => observedProblemCounts.push(state.problemSets.length));
+    const ids = before.createProblemSets([
+      { title: "  첫 파일  ", type: "5-choice", questions: [question], subjectId: subject.id },
+      { title: "둘째 파일", type: "5-choice", questions: [{ ...question, id: "second-file-question" }] },
+    ]);
+    unsubscribe();
+
+    expect(ids).toHaveLength(2);
+    expect(new Set(ids).size).toBe(2);
+    expect(observedProblemCounts).toEqual([3]);
+    const after = module.useTestStore.getState();
+    expect(after.problemSets.slice(0, 2).map((problem) => problem.id)).toEqual(ids);
+    expect(after.problemSets.slice(0, 2)).toMatchObject([
+      { title: "첫 파일", subject_id: subject.id, created_at: "2026-09-20T03:00:00.000Z", updated_at: "2026-09-20T03:00:00.000Z" },
+      { title: "둘째 파일", subject_id: null, created_at: "2026-09-20T03:00:00.000Z", updated_at: "2026-09-20T03:00:00.000Z" },
+    ]);
+    expect(after.dataUpdatedAt).toBe("2026-09-20T03:00:00.000Z");
+    expect(after.problemSets[0]!.questions[0]!.originalRow).toEqual(question.originalRow);
+    for (const field of ["my_answer", "wrong_note", "bookmark"]) {
+      expect(after.problemSets[0]!.questions[0]).not.toHaveProperty(field);
+    }
+    expect(after.problemSets[2]).toEqual(before.problemSets[0]);
+    expect(after.sessions).toEqual(before.sessions);
+    expect(after.subjects).toEqual(before.subjects);
+    await module.flushOfflineData();
+    const reloaded = await reloadStore();
+    expect(reloaded.useTestStore.getState().problemSets).toEqual(after.problemSets);
+    expect(reloaded.useTestStore.getState().sessions).toEqual(before.sessions);
+  });
+
+  it.each([
+    { label: "invalid title", input: { title: "  ", type: "5-choice" as const, questions: [question] } },
+    { label: "unknown subject", input: { title: "둘째 파일", type: "5-choice" as const, questions: [question], subjectId: "missing-subject" } },
+  ])("rejects a batch with an $label in the middle without changing memory or storage", async ({ input }) => {
+    const module = await loadStore();
+    await module.useTestStore.getState().importDashboardData(legacyState);
+    await module.flushOfflineData();
+    const before = module.useTestStore.getState();
+    const storedBefore = await module.offlineDataStorage.storage.getItem(OFFLINE_DATA_STORAGE_KEY);
+    const changed = vi.fn();
+    const unsubscribe = module.useTestStore.subscribe(changed);
+
+    expect(() => before.createProblemSets([
+      { title: "첫 파일", type: "5-choice", questions: [question] },
+      input,
+      { title: "셋째 파일", type: "5-choice", questions: [question] },
+    ])).toThrow();
+    expect(module.useTestStore.getState()).toBe(before);
+    expect(changed).not.toHaveBeenCalled();
+    unsubscribe();
+    await module.flushOfflineData();
+    expect(await module.offlineDataStorage.storage.getItem(OFFLINE_DATA_STORAGE_KEY)).toEqual(storedBefore);
+    const reloaded = await reloadStore();
+    expect(reloaded.useTestStore.getState().problemSets).toEqual(before.problemSets);
+    expect(reloaded.useTestStore.getState().sessions).toEqual(before.sessions);
+    expect(reloaded.useTestStore.getState().dataUpdatedAt).toBe(before.dataUpdatedAt);
+  });
+
+  it("leaves the current snapshot unchanged for an empty problem batch", async () => {
+    const module = await loadStore();
+    const before = module.useTestStore.getState();
+    const changed = vi.fn();
+    const unsubscribe = module.useTestStore.subscribe(changed);
+    expect(before.createProblemSets([])).toEqual([]);
+    expect(module.useTestStore.getState()).toBe(before);
+    expect(changed).not.toHaveBeenCalled();
+    unsubscribe();
+  });
+
   it("registers and orders existing CSV numbering without replacing negative or decimal values", async () => {
     const module = await loadStore();
     const store = module.useTestStore.getState();
