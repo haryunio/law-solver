@@ -1,6 +1,7 @@
 import { useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import { IconCloseButton } from "./IconCloseButton";
+import { useStandardUiScope } from "./StandardUiScope";
 
 export type ToastTone = "error" | "success" | "warning" | "info";
 
@@ -19,6 +20,7 @@ const toneIcon: Record<ToastTone, string> = {
 };
 
 export function Toast({ message, tone = "error", onDismiss, durationMs }: ToastProps) {
+  const standardUi = useStandardUiScope();
   const onDismissRef = useRef(onDismiss);
   onDismissRef.current = onDismiss;
   const resolvedDuration = durationMs ?? (tone === "success" ? 4_000 : 7_000);
@@ -32,7 +34,7 @@ export function Toast({ message, tone = "error", onDismiss, durationMs }: ToastP
   if (!message || typeof document === "undefined") return null;
 
   return createPortal(
-    <div className="pointer-events-none fixed left-1/2 top-4 z-[120] w-[calc(100%-2rem)] max-w-md -translate-x-1/2 sm:left-auto sm:right-5 sm:top-5 sm:translate-x-0">
+    <div className={`${standardUi ? "app-standard-ui " : ""}pointer-events-none fixed left-1/2 top-4 z-[120] w-[calc(100%-2rem)] max-w-md -translate-x-1/2 sm:left-auto sm:right-5 sm:top-5 sm:translate-x-0`}>
       <div
         role={tone === "error" ? "alert" : "status"}
         aria-live={tone === "error" ? "assertive" : "polite"}

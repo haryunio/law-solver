@@ -1,4 +1,4 @@
-import type { CSSProperties, FormEvent } from "react";
+import type { FormEvent } from "react";
 import { useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import {
@@ -16,14 +16,11 @@ import { DashboardHeaderTitle } from "../components/ui/DashboardHeaderTitle";
 import { PremiumBadge } from "../components/ui/PremiumBadge";
 import { ProfileAvatar } from "../components/ui/ProfileAvatar";
 import { ReturnLinkLabel } from "../components/ui/ReturnLinkLabel";
-import { SubjectCardCover } from "../components/ui/SubjectCardCover";
+import { BookGrid } from "../components/ui/BookGrid";
+import { CourseProductCard } from "../components/premium/CourseProductCard";
 import { Toast, type ToastTone } from "../components/ui/Toast";
 import { PrivacyPolicyLink } from "../components/ui/PrivacyPolicyLink";
 import { TermsOfServiceLink } from "../components/ui/TermsOfServiceLink";
-import {
-  getPremiumSubjectCoverStyle,
-  premiumOrangeAccentColor,
-} from "../lib/subjectCover";
 import type { MarketplaceProduct } from "../lib/premiumApi";
 import { getPremiumMembershipPeriod } from "../lib/premiumEntitlements";
 import { useAccountStore } from "../store/useAccountStore";
@@ -195,7 +192,7 @@ export function AccountSubscriptionPage() {
                 aria-controls={`${tab.id}-panel`}
                 onClick={() => selectTab(tab.id)}
                 className={[
-                  "min-h-11 rounded-xl px-2 py-2.5 text-xs font-semibold leading-5 transition-colors sm:px-4 sm:text-sm",
+                  "app-radius-control min-h-11 rounded-xl px-2 py-2.5 text-xs font-semibold leading-5 transition-colors sm:px-4 sm:text-sm",
                   activeTab === tab.id
                     ? "bg-red-600 text-white shadow-sm"
                     : "text-stone-600 hover:bg-stone-100 dark:text-stone-300 dark:hover:bg-stone-800",
@@ -228,13 +225,13 @@ export function AccountSubscriptionPage() {
                     </div>
                   </div>
                   <div className="mt-5 grid grid-cols-2 gap-2 text-center text-xs">
-                    <div className="rounded-xl bg-white px-3 py-3 dark:bg-stone-900">
+                    <div className="app-radius-inset rounded-xl bg-white px-3 py-3 dark:bg-stone-900">
                       <p className="text-stone-500">Premium</p>
                       <p className="mt-1 font-bold text-stone-900 dark:text-stone-100">
                         {isPremiumActive ? "이용 중" : "미구독"}
                       </p>
                     </div>
-                    <div className="rounded-xl bg-white px-3 py-3 dark:bg-stone-900">
+                    <div className="app-radius-inset rounded-xl bg-white px-3 py-3 dark:bg-stone-900">
                       <p className="text-stone-500">과목 이용권</p>
                       <p className="mt-1 font-bold text-stone-900 dark:text-stone-100">{packageIds.length}개</p>
                     </div>
@@ -252,7 +249,7 @@ export function AccountSubscriptionPage() {
             ) : (
               <div className="mt-4">
                 <div
-                  className="grid grid-cols-2 gap-2 rounded-xl bg-stone-100 p-1 dark:bg-stone-800"
+                  className="app-radius-inset grid grid-cols-2 gap-2 rounded-xl bg-stone-100 p-1 dark:bg-stone-800"
                   role="tablist"
                   aria-label="계정 접근 방식"
                 >
@@ -267,7 +264,7 @@ export function AccountSubscriptionPage() {
                       aria-selected={authMode === id}
                       onClick={() => setAuthMode(id as AuthMode)}
                       className={[
-                        "rounded-lg px-3 py-2.5 text-sm font-semibold transition-colors",
+                        "app-radius-control rounded-lg px-3 py-2.5 text-sm font-semibold transition-colors",
                         authMode === id
                           ? "bg-white text-red-700 shadow-sm dark:bg-stone-900 dark:text-red-400"
                           : "text-stone-500 dark:text-stone-400",
@@ -489,10 +486,9 @@ export function AccountSubscriptionPage() {
                 <div className="app-card rounded-2xl border p-8 text-center text-sm text-stone-500 dark:text-stone-400">
                   현재 구매 가능한 과목 이용권이 없습니다.
                 </div>
-              ) : <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+              ) : <BookGrid>
                 {packageCatalog.map((item) => {
                   const isActive = packageIds.includes(item.code);
-                  const courseName = item.courseName ?? item.name;
                   const actionLabel = !isSignedIn
                   ? "로그인 후 구매"
                   : !isPremiumActive
@@ -502,51 +498,19 @@ export function AccountSubscriptionPage() {
                       : "이용권 구매";
 
                   return (
-                    <article
-                    key={item.id}
-                    className="app-card app-subject-card group flex flex-col overflow-hidden rounded-2xl border transition hover:-translate-y-0.5 hover:shadow-[var(--app-shadow-hover)]"
-                    style={
-                      {
-                        "--subject-accent": premiumOrangeAccentColor,
-                      } as CSSProperties
-                    }
-                  >
-                    <SubjectCardCover
-                      title={item.name}
-                      coverStyle={getPremiumSubjectCoverStyle(courseName)}
-                      titleLines={2}
+                    <CourseProductCard
+                      key={item.id}
+                      product={item}
+                      priceLabel={formatPrice(item.priceKrw)}
+                      actionLabel={actionLabel}
+                      active={isActive}
+                      disabled={!configured || !initialized || isLoading || isActive || purchasingCode === item.code}
+                      pending={purchasingCode === item.code}
+                      onAction={() => handlePackageAction(item)}
                     />
-                    <div className="flex min-w-0 flex-1 flex-col p-5">
-                      <dl className="app-subtle-surface divide-y divide-stone-200 overflow-hidden rounded-xl border px-4 text-sm dark:divide-stone-700">
-                        {[
-                          ["금액", formatPrice(item.priceKrw)],
-                          ["이용 기간", `${item.durationDays}일`],
-                          ["다시 풀기", item.maxAttempts === null ? "무제한" : `문제별 ${item.maxAttempts}회`],
-                        ].map(([label, value]) => (
-                          <div key={label} className="flex items-center justify-between gap-4 py-3">
-                            <dt className="text-stone-500 dark:text-stone-400">{label}</dt>
-                            <dd className="font-bold text-stone-900 dark:text-stone-100">{value}</dd>
-                          </div>
-                        ))}
-                      </dl>
-                      <button
-                        type="button"
-                        onClick={() => handlePackageAction(item)}
-                        disabled={!configured || !initialized || isLoading || isActive || purchasingCode === item.code}
-                        className={[
-                          "mt-5 inline-flex h-12 w-full items-center justify-center rounded-xl px-4 text-sm font-semibold",
-                          isActive ? "app-button-secondary cursor-not-allowed" : "app-button-primary",
-                        ].join(" ")}
-                      >
-                        {purchasingCode === item.code
-                          ? <ButtonLoadingContent label="결제 처리 중" />
-                          : actionLabel}
-                      </button>
-                    </div>
-                    </article>
                   );
                 })}
-              </div>
+              </BookGrid>
             )}
           </section>
         ) : null}

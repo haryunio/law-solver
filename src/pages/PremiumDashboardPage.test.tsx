@@ -6,6 +6,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { listPremiumCourses } from "../lib/premiumApi";
 import { useAccountStore } from "../store/useAccountStore";
 import { PremiumDashboardPage } from "./PremiumDashboardPage";
+import { getPremiumSubjectCoverStyle } from "../lib/subjectCover";
 
 vi.mock("../lib/premiumApi", async () => {
   const actual = await vi.importActual<typeof import("../lib/premiumApi")>("../lib/premiumApi");
@@ -46,10 +47,15 @@ describe("PremiumDashboardPage course covers", () => {
     );
 
     const heading = await waitFor(() => screen.getByRole("heading", { name: "법조윤리" }));
-    const cover = heading.parentElement?.parentElement;
     const card = heading.closest("a");
+    const artwork = card?.querySelector<HTMLElement>('[aria-hidden="true"][style]');
+    const book = card?.querySelector(".app-subject-book");
 
-    expect(cover?.getAttribute("style")).toContain("linear-gradient");
-    expect(card?.getAttribute("style")).toContain("--subject-accent");
+    expect(artwork?.style.background).toBe(getPremiumSubjectCoverStyle("법조윤리").background);
+    expect(book?.getAttribute("style")).toContain("--subject-accent");
+    expect(card?.getAttribute("href")).toBe("/premium/courses/course-1");
+    expect(card?.textContent).toContain("2026. 12. 31.까지");
+    expect(card?.textContent).toContain("Premium");
+    expect(card?.textContent).toContain("문제 목록");
   });
 });

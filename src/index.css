@@ -30,6 +30,11 @@
   --app-shadow-hover: 0 20px 48px rgba(82, 52, 36, 0.12), 0 4px 12px rgba(82, 52, 36, 0.06);
   --app-modal-overlay: rgba(28, 22, 18, 0.42);
   --app-modal-shadow: 0 28px 80px rgba(67, 38, 23, 0.18), 0 8px 24px rgba(67, 38, 23, 0.08);
+  --app-radius-card: 16px;
+  --app-radius-control: 12px;
+  --app-radius-inset: 12px;
+  --app-radius-tag: 8px;
+  --app-radius-circle: 9999px;
 }
 
 html.dark {
@@ -78,6 +83,42 @@ body {
 }
 
 /* Shared application design system. Keep layout decisions in page components. */
+/* General navigation only. Study/result routes never opt into this scope. */
+.app-standard-ui :is(.app-card, .app-modal-surface, .app-toast, .landing-step-card, .landing-bento-card, .landing-final-cta):not(:where(.app-focus-page *)) {
+  border-radius: var(--app-radius-card);
+}
+
+.app-standard-ui :is(.app-button-primary, .app-button-secondary, .app-button-danger, .app-button-success, .app-icon-button, .app-control, .app-select-trigger, .landing-primary-cta, .landing-secondary-cta, .landing-nav-cta, .landing-theme-button, .landing-final-guide-button, .landing-sample-link):not(:where(.rounded-full, .app-focus-page *)) {
+  border-radius: var(--app-radius-control);
+}
+
+.app-standard-ui .app-control:not(:where(.app-focus-page *))::file-selector-button {
+  border-radius: var(--app-radius-control);
+}
+
+.app-standard-ui :is(.app-neutral-box, .app-subtle-surface, .app-select-menu, .home-menu-graphic, .landing-step-visual, .landing-feature-icon):not(:where(.app-focus-page *)) {
+  border-radius: var(--app-radius-inset);
+}
+
+.app-standard-ui :is(.app-select-option, .app-premium-badge, .landing-eyebrow):not(:where(.app-focus-page *)) {
+  border-radius: var(--app-radius-tag);
+}
+
+.app-standard-ui .app-result-link:not(:where(.app-focus-page *)) {
+  border-radius: 0 0 var(--app-radius-card) var(--app-radius-card);
+}
+
+/* Explicit roles take precedence over component defaults and legacy utilities. */
+.app-standard-ui .app-radius-card:not(:where(.app-focus-page *)) { border-radius: var(--app-radius-card); }
+.app-standard-ui .app-radius-control:not(:where(.app-focus-page *)) { border-radius: var(--app-radius-control); }
+.app-standard-ui :is(.app-radius-inset, .app-radius-menu):not(:where(.app-focus-page *)) { border-radius: var(--app-radius-inset); }
+.app-standard-ui .app-radius-tag:not(:where(.app-focus-page *)) { border-radius: var(--app-radius-tag); }
+.app-standard-ui .app-radius-card-bottom:not(:where(.app-focus-page *)) { border-radius: 0 0 var(--app-radius-card) var(--app-radius-card); }
+
+/* Book spines keep their narrower left edge; circular controls keep their shape. */
+.app-standard-ui .app-radius-book:not(:where(.app-focus-page *)) { border-radius: 6px var(--app-radius-card) var(--app-radius-card) 6px; }
+.app-standard-ui .app-radius-book-label:not(:where(.app-focus-page *)) { border-radius: 2px 0 var(--app-radius-inset) 0; }
+
 .app-page {
   min-height: 100vh;
   color: var(--app-text);
@@ -368,6 +409,31 @@ body {
 
 .app-subject-card:hover { border-color: var(--subject-accent) !important; }
 
+.app-subject-book {
+  box-shadow: 0 3px 8px rgba(82, 52, 36, 0.06), 0 1px 2px rgba(82, 52, 36, 0.08);
+}
+
+.app-subject-book:hover {
+  box-shadow: 0 7px 16px rgba(82, 52, 36, 0.12), 0 2px 4px rgba(82, 52, 36, 0.08);
+}
+
+.app-subject-book-label {
+  background: var(--app-surface-solid);
+  box-shadow: 0 -1px 0 rgba(255, 255, 255, 0.35), -1px 0 0 rgba(0, 0, 0, 0.05);
+}
+
+.dark .app-subject-book {
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.2), 0 1px 2px rgba(0, 0, 0, 0.25);
+}
+
+.dark .app-subject-book:hover {
+  box-shadow: 0 7px 16px rgba(0, 0, 0, 0.3), 0 2px 4px rgba(0, 0, 0, 0.25);
+}
+
+.dark .app-subject-book-label {
+  box-shadow: 0 -1px 0 rgba(255, 255, 255, 0.1), -1px 0 0 rgba(0, 0, 0, 0.2);
+}
+
 .app-problem-card {
   background: var(--app-surface-problem) !important;
 }
@@ -627,6 +693,31 @@ body {
 
 .app-progress-gradient {
   background: linear-gradient(90deg, #ef4444 0%, #f97316 100%) !important;
+}
+
+/* Only marked lists and cards enter. GNB, footer and modal roots remain immediate. */
+.app-route-enter-home { --app-entry-duration: 360ms; --app-entry-distance: 12px; }
+.app-route-enter-subjects { --app-entry-duration: 320ms; --app-entry-distance: 10px; }
+.app-route-enter-problems { --app-entry-duration: 280ms; --app-entry-distance: 8px; }
+.app-route-enter-sessions { --app-entry-duration: 240ms; --app-entry-distance: 6px; }
+.app-route-enter-results { --app-entry-duration: 280ms; --app-entry-distance: 8px; }
+
+.app-route-enter > .app-page:not(.app-focus-page) .app-content-enter,
+.app-route-enter > .app-page:not(.app-focus-page) .app-content-stagger > * {
+  animation: app-route-enter var(--app-entry-duration) cubic-bezier(0.2, 0.8, 0.2, 1) backwards;
+  animation-delay: var(--app-entry-delay, 0ms);
+}
+
+.app-content-stagger > * { --app-entry-delay: 0ms; }
+.app-content-stagger > :nth-child(n+2) { --app-entry-delay: 20ms; }
+.app-content-stagger > :nth-child(n+3) { --app-entry-delay: 40ms; }
+.app-content-stagger > :nth-child(n+4) { --app-entry-delay: 60ms; }
+.app-content-stagger > :nth-child(n+5) { --app-entry-delay: 80ms; }
+.app-content-stagger > :nth-child(n+6) { --app-entry-delay: 100ms; }
+
+@keyframes app-route-enter {
+  from { opacity: 0; transform: translateY(var(--app-entry-distance)); }
+  to { opacity: 1; transform: none; }
 }
 
 .app-skeleton {
@@ -1031,6 +1122,8 @@ html {
 
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
+  .app-route-enter .app-content-enter,
+  .app-route-enter .app-content-stagger > * { animation: none !important; }
   .app-skeleton, .app-spinner, .purchase-modal-slide-forward { animation: none !important; }
   .landing-pulse-dot, .landing-fade-up, .landing-modal { animation: none; }
   .app-button-primary-standalone, .app-button-secondary,

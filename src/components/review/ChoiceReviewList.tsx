@@ -1,4 +1,5 @@
 import { ParsedQuestion } from "../../types/test";
+import { hasNoCorrectChoice, isCorrectAnswer } from "../../lib/answer";
 import { RichTextContent } from "../ui/RichTextContent";
 
 const choiceMarkers = ["①", "②", "③", "④", "⑤"];
@@ -9,25 +10,30 @@ interface ChoiceReviewListProps {
 
 export function ChoiceReviewList({ question }: ChoiceReviewListProps) {
   if (!question.choices) return null;
+  const noCorrectChoice = hasNoCorrectChoice(question);
 
   return (
     <section className="app-subtle-surface mt-5 rounded-xl border p-4">
       <div className="mb-3 flex items-center justify-between gap-3">
         <h3 className="text-xs font-semibold text-stone-600 dark:text-stone-500">문제 선지</h3>
+        {noCorrectChoice ? <span className="rounded-full bg-blue-100 px-2 py-0.5 text-[11px] font-bold text-blue-700 dark:bg-blue-950/50 dark:text-blue-300">정답 없음</span> : null}
       </div>
+
+      {noCorrectChoice ? <p className="mb-3 text-xs leading-5 text-stone-600 dark:text-stone-400">이 문항은 답을 고르지 않아도 정답으로 처리됩니다.</p> : null}
 
       <div className="space-y-2">
         {question.choices.map((choice, idx) => {
           const value = String(idx + 1);
           const isMine = question.my_answer === value;
-          const isAnswer = question.answer === value;
+          const isAnswer = !noCorrectChoice && isCorrectAnswer(question, value);
+          const isAcceptedSelection = isMine && isCorrectAnswer(question, value);
 
           return (
             <div
               key={value}
               className={[
                 "flex gap-3 rounded-lg border px-3 py-2.5 text-xs leading-5 transition md:text-sm md:leading-6",
-                isMine && isAnswer
+                isAcceptedSelection
                   ? "border-emerald-200 bg-emerald-50 text-emerald-900 dark:border-emerald-900/60 dark:bg-emerald-950/20 dark:text-emerald-200"
                   : isAnswer
                     ? "border-blue-200 bg-blue-50 text-blue-900 dark:border-blue-900/60 dark:bg-blue-950/20 dark:text-blue-200"
@@ -40,7 +46,9 @@ export function ChoiceReviewList({ question }: ChoiceReviewListProps) {
               <RichTextContent content={choice} className="min-w-0 flex-1" />
               <span className="flex shrink-0 flex-col items-end gap-1 sm:flex-row sm:items-center">
                 {isMine ? (
-                  <span className="rounded-full bg-red-100 px-2 py-0.5 text-[11px] font-bold text-red-700 dark:bg-red-950/50 dark:text-red-300">
+                  <span className={`rounded-full px-2 py-0.5 text-[11px] font-bold ${isAcceptedSelection
+                    ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300"
+                    : "bg-red-100 text-red-700 dark:bg-red-950/50 dark:text-red-300"}`}>
                     내 답
                   </span>
                 ) : null}

@@ -75,7 +75,7 @@ Law Solver 안에서 독립적으로 실행되는 미니 앱 영역입니다. `c
 src/store/
 ```
 
-Zustand store입니다. 문제 세션, 과목, 세션-과목 매핑 상태는 `useTestStore.ts`, 다크 모드와 글꼴 설정은 `useSettingsStore.ts`, 온라인 계정·이용권 상태는 `useAccountStore.ts`에서 관리합니다.
+Zustand store입니다. 문제 원본, 세션별 풀이 기록, 과목 상태는 `useTestStore.ts`, 다크 모드와 글꼴 설정은 `useSettingsStore.ts`, 온라인 계정·이용권 상태는 `useAccountStore.ts`에서 관리합니다.
 
 ```txt
 src/lib/
@@ -124,15 +124,17 @@ GitHub Pages용 정적 파일입니다. `404.html`은 SPA 새로고침 대응용
 - Premium 화면에는 Supabase Auth, Edge Function, 결제사, 네트워크의 원문 `error.message`를 직접 표시하지 않습니다. `getPremiumErrorMessage`에서 안정적인 오류 code·HTTP status를 행동 가능한 한국어 안내로 변환하고, 화면별 fallback도 사용자가 다음에 할 일을 포함해야 합니다.
 - Supabase Auth 구독은 초기 계정 API보다 먼저 등록해 첫 조회가 실패해도 `TOKEN_REFRESHED`를 놓치지 않게 합니다. 장시간 유휴 탭이 다시 보이거나 포커스를 얻거나 네트워크가 복구되면 계정 상태를 레이아웃 로딩 없이 다시 동기화하세요. 인증 API가 401을 반환하면 session을 강제 갱신한 뒤 최초 요청의 body와 멱등키를 그대로 유지해 한 번만 재시도하며, 이 과정에서 활성 풀이의 로컬 답안 상태를 초기화하지 마세요.
 - Premium 활성 문제풀이는 별도 화면을 만들지 말고 `src/components/cbt/CbtSolveScreen.tsx`에 서버 상태 adapter를 연결합니다. 문제 카드, 박스형 지문, 선지, OMR, 모바일 OMR, 책갈피, 이동 버튼과 중단·제출 모달은 오프라인 CSV 풀이와 같은 컴포넌트·레이아웃을 유지하세요. Premium 콘텐츠와 풀이 결과에는 CSV 다운로드 버튼이나 export 동작을 제공하지 않습니다. 선지 선택은 로컬 상태에 먼저 반영하고 이전·다음·OMR 이동, 중단·제출 시 떠나는 문항만 서버에 저장합니다. `?`는 현재 문항의 정답·해설만 지연 조회하며 기본 attempt DTO에 전체 정답을 섞지 않습니다.
-- Premium 과목 화면은 구매한 문제 세트를 카드로 표시합니다. 카드 본문에는 제목만 표시하고 서버 `description` 통문자열을 UI 메타데이터처럼 파싱하거나 반복 노출하지 마세요. Premium 표시는 `src/components/ui/PremiumBadge.tsx`의 금색 체크 배지만 사용하고 화면별 변형 태그를 만들지 않습니다. 서버의 구조화된 단일 `question_type`으로 OX·5지선다·단답형 태그 하나를 만들고, `혼합형`이나 여러 유형 태그를 만들지 않습니다. 전체 문항 수와 현재 사용자의 풀이 세션 수를 2열로 표시합니다. 카드 하단의 중립 회색 `풀이 세션 보기` 링크를 선택하면 해당 문제의 세션 목록으로 이동합니다. 구매나 목록 조회만으로 세션을 자동 생성하지 말고, 빈 목록의 `새로 문제 풀이 시작하기`를 사용자가 누를 때 첫 세션을 생성하세요. 세션은 얇은 카드형 목록으로 회차·첫 풀이/새로 풀기/전체 다시 풀기/오답 풀기/책갈피 풀기·진행 상태·진행도·시간·점수를 표시하고, 재풀이는 원본을 덮어쓰지 않는 새 세션으로 누적합니다.
+- Premium 과목 화면은 구매한 문제 세트를 카드로 표시합니다. 카드 본문에는 제목만 표시하고 서버 `description` 통문자열을 UI 메타데이터처럼 파싱하거나 반복 노출하지 마세요. Premium 표시는 `src/components/ui/PremiumBadge.tsx`의 금색 체크 배지만 사용하고 화면별 변형 태그를 만들지 않습니다. 서버의 구조화된 단일 `question_type`으로 OX·5지선다·단답형 태그 하나를 만들고, `혼합형`이나 여러 유형 태그를 만들지 않습니다. 문제 유형, 전체 문항 수와 현재 사용자의 풀이 세션 수는 `ProblemSetCardMetadata`의 같은 높이인 세 칸에 한 줄로 표시합니다. 카드 하단의 중립 회색 `풀이 세션 보기` 링크를 선택하면 해당 문제의 세션 목록으로 이동합니다. 구매나 목록 조회만으로 세션을 자동 생성하지 말고, 빈 목록의 `새로 문제 풀이 시작하기`를 사용자가 누를 때 첫 세션을 생성하세요. 세션은 얇은 카드형 목록으로 회차·첫 풀이/새로 풀기/전체 다시 풀기/오답 풀기/책갈피 풀기·진행 상태·진행도·시간·점수를 표시하고, 재풀이는 원본을 덮어쓰지 않는 새 세션으로 누적합니다.
 - Premium 결과·오답 확인·전체 확인은 별도 UI를 만들지 말고 `ResultPage`, `WrongAnswersPage`, `ReviewAllPage`에 서버 session adapter를 연결합니다. 재풀이 제목·풀이 순서·책갈피와 오답 노트도 서버에 보존하세요.
 - 로그인 프로필 아바타는 `ProfileAvatar`를 사용합니다. 표시 이름의 첫 글자를 이니셜로 쓰고 이름 해시로 정한 팔레트가 사용자에게 안정적으로 유지되도록 하며 화면마다 임의 색상이나 고정 `LS` 문구를 만들지 마세요.
 - 프론트에는 Supabase URL과 publishable key만 둘 수 있습니다. `service_role`/secret key, DB 비밀번호와 Toss secret key는 금지합니다.
 - CSV 헤더 호환성은 `src/lib/csv.ts`의 `normalize`, `getValue` 흐름을 기준으로 확장합니다.
-- 새 문제 등록은 CSV 파일을 첫 입력으로 배치합니다. 파일 선택 시 확장자를 제거하고 특수문자를 공백으로 바꾼 파일명을 세션 제목으로 제안하며, 선택지 헤더와 정답 값으로 5지선다·OX·단답형을 판별할 수 있을 때만 문제 타입을 자동 변경합니다. 판별 실패 시 사용자의 현재 선택을 유지합니다.
+- 오프라인 5지선다 정답은 단일 1~5, 쉼표로 나열한 복수정답, 단독 `0`을 허용합니다. 복수정답은 하나만 골라도 맞고, `0`은 미응답까지 항상 정답입니다. `0,1` 같은 혼합 형식은 거부합니다. 정답 파싱은 `normalizeChoiceAnswer`, 채점은 `isCorrectAnswer`와 `isCorrectQuestion`을 재사용하며 문자열 직접 비교를 다시 추가하지 마세요. `hasNoCorrectChoice`로 정답 없음 표시를 구분해 다섯 선지를 모두 정답 선지로 강조하지 않습니다. 결과에서 정답 없음은 정답 수에만 집계하고 오답 확인, 오답 재풀이, 오답 CSV에서 제외합니다. 단답형의 쉼표나 `0`은 기존 정확한 문자열 일치로 처리합니다. 사용자 선택은 여전히 한 개이며 저장 형식은 v4의 문자열을 유지합니다.
+- 새 문제 등록은 CSV 파일을 첫 입력으로 배치합니다. 파일 선택 시 확장자를 제거하고 특수문자를 공백으로 바꾼 파일명을 문제 제목으로 제안하며, 선택지 헤더와 정답 값으로 5지선다·OX·단답형을 판별할 수 있을 때만 문제 타입을 자동 변경합니다. 판별 실패 시 사용자의 현재 선택을 유지합니다.
+- CSV를 여러 개 선택하면 선택 개수와 자동 제목/유형 안내를 담은 확인 모달을 먼저 표시합니다. 일괄 등록은 파일마다 기존 읽기, 제목 생성, 유형 판별, 파서를 재사용하고 모든 파일 검증 후 `createProblemSets`로 한 번에 반영합니다. 유형을 판별할 수 없거나 오류가 있는 파일이 있으면 해당 파일을 안내하고 아무 문제도 등록하지 않습니다. 판별 불가 파일은 단일 등록에서 유형을 지정하게 안내하세요. 빈 자동 제목은 선택 순서에 따라 `새 문제 1`처럼 부여합니다. 일괄 등록 후에는 현재 과목 문제 목록에 머물며 성공 Toast를 표시하고 풀이 세션을 자동 생성하지 않습니다. 파일명, 제목, 선택 개수를 분석에 보내지 않습니다.
 - 문제·보기·선지·해설에 포함된 제한적 HTML은 `src/components/ui/RichTextContent.tsx`로 렌더링합니다. 표·줄바꿈·문단·목록·기본 강조와 셀 병합만 허용하고, 스크립트·외부 콘텐츠·폼·이벤트 속성·임의 스타일은 제거합니다. HTML이 없는 일반 텍스트의 CRLF·LF·Unicode 줄 구분자는 명시적인 줄바꿈 요소로 변환합니다. 문제 본문과 선지는 한국어 문자 간 좌우맞춤을 사용합니다. 표에는 강제 최소 너비나 별도 가로 스크롤을 적용하지 않고 문제 카드 너비에 맞추며, 표 내부 글자는 모바일 12px·데스크톱 13px을 기준으로 합니다. 문제 문자열을 `dangerouslySetInnerHTML`로 직접 주입하지 마세요.
 - IndexedDB 또는 localStorage 데이터 구조를 바꿀 때는 기존 사용자 데이터와 마이그레이션 영향을 고려합니다.
-- `과목 없음`은 저장되는 subject가 아니라 세션-과목 매핑이 없는 상태입니다. `NO_SUBJECT_ID`는 라우팅/UI용 sentinel로만 사용하세요.
+- `과목 없음`은 저장되는 subject가 아니라 문제의 `subject_id`가 `null`인 상태입니다. `NO_SUBJECT_ID`는 라우팅/UI용 sentinel로만 사용하세요.
 - GA4 이벤트는 페이지 컴포넌트에서 `window.gtag`를 직접 호출하지 말고 `src/lib/analytics.ts`의 `trackEvent`, `trackPageView`를 사용하세요.
 - 새 GA4 이벤트나 파라미터를 추가할 때는 `AnalyticsEventMap`에 타입을 먼저 정의하고 README, AGENTS, 개인정보처리방침을 함께 갱신하세요.
 - 라우트별 title, description, canonical, robots와 소셜 메타데이터는 페이지 컴포넌트에서 직접 수정하지 말고 `src/lib/seo.ts`와 `src/components/seo/RouteMetadata.tsx`를 사용하세요.
@@ -164,6 +166,10 @@ GitHub Pages용 정적 파일입니다. `404.html`은 SPA 새로고침 대응용
 
 공통 토큰과 컴포넌트 클래스는 `src/index.css`에 있습니다.
 
+일반 탐색 화면의 곡률은 GNB의 16px을 기준으로 `--app-radius-card` 16px, `--app-radius-control`과 `--app-radius-inset` 12px, `--app-radius-tag` 8px을 사용합니다. 적용 경로는 `src/app/standardUi.ts`, 범위와 포털 전달은 `StandardUiScope`가 관리합니다. 풀이, 결과, 오답 확인, 전체/책갈피 복기와 개별 미니 앱은 이 범위에서 제외합니다. 원형 메뉴, 아바타와 스위치는 원형을 유지하고 책등의 왼쪽 6px은 형태상의 예외입니다. 새 일반 화면에서 임의 곡률을 추가하지 말고 공통 표면 클래스나 `app-radius-*`를 사용하세요.
+
+`/debug/designsystem`은 주소로만 접근하는 디자인 시스템 확인 페이지입니다. 실제 공통 컴포넌트를 재사용하고 샘플 상태는 페이지 메모리에서만 관리합니다. 메뉴 링크, 사이트맵, GA4 페이지뷰에 추가하지 않으며 `noindex`와 새로고침 가능한 정적 앱 셸을 유지합니다. 데모에서 학습 저장소, 계정 설정, 결제나 백업 API를 호출하지 마세요. 디자인 토큰이나 공통 컴포넌트가 바뀌면 페이지 예시와 `docs/DESIGN_SYSTEM.md`를 함께 갱신합니다.
+
 - `app-page`: 랜딩을 제외한 라우트 화면의 공통 미색/다크 배경
 - `app-card`: 주요 콘텐츠 카드와 OMR 패널
 - `app-subtle-surface`: 카드 안의 보조 영역
@@ -182,7 +188,8 @@ GitHub Pages용 정적 파일입니다. `404.html`은 SPA 새로고침 대응용
 - `app-button-*`, `app-card` 같은 공통 시각 클래스에는 `position`, `display`, `width`, `height`, `overflow`처럼 배치를 바꾸는 속성을 넣지 않습니다. 위치와 크기는 페이지 컴포넌트의 Tailwind 클래스가 소유하며, 공통 클래스는 색상·테두리·그림자·전환만 담당합니다.
 - 대표 CTA와 작은 진행률에만 레드→오렌지 그라디언트를 사용하고, 넓은 문제 본문이나 표 전체에는 사용하지 않습니다.
 - 그라디언트 버튼의 기본 `app-button-primary`는 hover 시 배경 레이어만 한 단계 진해지고 위치·크기·글자색·기본 그림자는 유지합니다. 버튼 전체에 `filter`를 적용하면 흰 글자까지 어두워지므로 사용하지 않습니다. 독립 CTA와 페이지 우상단의 대표 관리 CTA에만 `app-button-primary-standalone`을 함께 사용해 상승 효과를 추가합니다. 카드 하단, 풀이 하단, 결과 페이지의 버튼 묶음에는 modifier를 사용하지 않습니다.
-- 문제 세션 카드는 `app-problem-card`의 순백색 표면을 사용하고, 완료 카드 하단의 `app-result-link`는 아주 밝은 중립 회색으로 분리합니다. 문제 카드에 미색 CTA 표면을 사용하지 않습니다.
+- 과목과 과목 이용권 상품은 `BookCover`와 `BookGrid`를 공유하며 표지 높이 224px, 모바일 2열에서 데스크톱 5~6열을 유지합니다. 상품의 금액과 이용 조건, 구매 CTA는 책 표지 아래 `CourseProductCard`의 별도 카드에 표시합니다.
+- 문제 카드는 `app-problem-card`의 순백색 표면과 중립 회색 `app-result-link` 이동 영역을 사용합니다. 문제 유형, 문항 수와 세션 수는 `ProblemSetCardMetadata`의 44px 정보 박스 한 줄로 표시하고 오프라인 등록 시각은 하단 이동 영역의 `TimestampTag`에 넣습니다. 문제 아래 풀이 기록은 온라인과 오프라인 모두 `SessionListItem`을 사용합니다. 데스크톱 회차는 56px 정사각형으로 표시하고 통계와 CTA도 높이 56px로 맞춥니다. 위아래 여백은 16px, 제목과 태그 간격은 8px입니다. 회차, 태그 줄, 통계, CTA는 하단을 맞추고 태그가 줄바꿈되어도 유지합니다. 관리 메뉴 버튼은 정원형으로 카드에서는 32px, 목록에서는 데스크톱 28px와 모바일 32px를 사용하고 세로 중앙에 정렬합니다. CTA 폭은 모바일 96px, sm 이상 112px로 통일합니다. 모바일에서도 회차 왼쪽, 제목과 태그 오른쪽의 두 열을 유지합니다. 태그를 회차 아래 전체 폭으로 분리하지 않으며 좁은 화면의 세션 날짜 태그는 연도만 생략합니다. 전체 날짜는 접근성 이름과 툴팁에 보존합니다. 이름 변경과 삭제는 `ActionMenu`에 모으고 하단 버튼 줄을 추가하지 않습니다. 문제 카드에 미색 CTA 표면을 사용하지 않습니다.
 - 결과 요약과 문제 세션 카드 안의 진행률·시간·점수 같은 중립 정보 박스는 `app-neutral-box`의 쿨 그레이 표면과 얇은 테두리를 사용합니다. 외부의 미색 페이지 배경과 내부 정보 영역이 섞이지 않도록 `bg-stone-50`만 단독으로 사용하지 않습니다.
 - 정답은 emerald, 오답과 선택 상태는 red, 정답 안내는 blue, 책갈피는 amber 의미 색상을 유지합니다.
 - 본문과 문제 텍스트는 `word-break: keep-all`을 고려하고, 지나치게 굵은 글자나 좁은 행간을 피합니다.
@@ -196,6 +203,7 @@ GitHub Pages용 정적 파일입니다. `404.html`은 SPA 새로고침 대응용
 - 공통 스타일을 추가할 때 기존 `app-*` 클래스나 UI 컴포넌트를 먼저 확장하고 페이지마다 긴 스타일 문자열을 복제하지 않습니다.
 - 테마형 드롭다운은 `src/components/ui/ThemeSelect.tsx`를 사용합니다. 문제 편집, 새 문제 등록, 재풀이 설정 등 앱의 모든 드롭다운은 네이티브 `<select>` 대신 이 컴포넌트를 사용하며, 바깥 클릭, Escape, 방향키, Home/End, Enter/Space 조작을 유지합니다. 화살표는 고정 크기 박스의 중심축에서만 회전하도록 유지합니다.
 - 활성 문제 풀이 화면은 `app-focus-page`를 사용합니다. 이 범위에서는 그라디언트, hover 이동·축소, 위치/크기 transition, animation, smooth scroll을 추가하지 않습니다. 기본 CTA는 단색 red-600, hover는 red-700을 사용하며 색상·테두리 전환만 90ms로 짧게 허용합니다.
+- 내부 페이지 진입 효과는 `src/app/RouteEntrance.tsx`의 명시적 허용 경로에서 목록의 `app-content-stagger` 직계 항목과 단일 영역의 `app-content-enter`에만 적용합니다. 메인 360ms/12px, 과목 목록 320ms/10px, 문제 목록 280ms/8px, 세션 목록 240ms/6px, 결과 조회 280ms/8px로 아래에서 올라오며 나타납니다. 항목별 시간차는 20ms씩 최대 100ms로 제한합니다. GNB는 즉시 바뀌고 배경, 푸터와 모달도 효과에서 제외합니다. GNB를 포함한 상위 컨테이너에 효과를 붙이지 마세요. 랜딩의 기존 700ms/22px 등장 및 미리보기 120ms 지연은 유지합니다. 실제 풀이와 모든 복기 경로는 제외하며 `prefers-reduced-motion`에서는 끕니다. 애니메이션 완료를 기다리는 이동, JS 타이머, 클릭 잠금을 추가하지 마세요. 종료 후 transform을 남기거나 검색 조건과 앵커 변경으로 재생하지 않습니다.
 - 문제풀이·오답 확인·전체 확인·책갈피 확인 화면은 동일한 `app-focus-page` 상단 바 높이와 콘텐츠 시작 간격을 사용합니다. 문제풀이 상단 우측 버튼은 고정 폭이나 균등 분할을 적용하지 않고 텍스트 너비만큼 차지한 상태로 우측 정렬합니다.
 - 과목 순서 변경은 브라우저 기본 `draggable` 대신 전용 드래그 손잡이와 Pointer Events를 사용합니다. 카드 본문은 모바일 스크롤을 유지하고, 손잡이에서만 `touch-action: none`과 텍스트 선택 방지를 적용하며 키보드 위·아래 이동도 지원합니다.
 - 활성 문제 풀이의 상단 헤더는 타이머·세션명·중단·제출 기능만 유지하는 압축 높이를 사용합니다. 헤더나 바깥 여백을 불필요하게 키워 문제 카드의 세로 영역을 줄이지 않습니다.
@@ -281,7 +289,7 @@ npm run lint
 
 - `src/lib/csv.ts`: CSV 업로드/다운로드, Excel 인코딩, 샘플 CSV와 직접 연결됩니다. 헤더 호환성을 깨지 않게 조심하세요.
 - `src/types/test.ts`: IndexedDB에 저장되는 세션 구조와 연결됩니다. 필드 변경 시 기존 저장 데이터 호환성을 검토하세요.
-- `src/store/useTestStore.ts`: 세션 생성, 과목 CRUD, 세션-과목 매핑, 답안 저장, 오답노트, 북마크, 백업/복원 동작의 중심입니다.
+- `src/store/useTestStore.ts`: 문제와 세션 생성, 과목 CRUD, 문제의 과목 연결, 답안 저장, 오답노트, 북마크, 백업/복원 동작의 중심입니다.
 - `src/components/cbt/CbtSolveScreen.tsx`: 풀이 UX, 타이머, OMR, 단답형 입력, 정답 보기, 책갈피 기능이 모여 있습니다.
 - `src/lib/analytics.ts`: GA4 측정 ID, 이벤트 타입, 운영 도메인 제한, 페이지 경로 정규화가 들어 있습니다. 동적 ID나 학습 성과 데이터가 전송되지 않도록 주의하세요.
 - `src/components/analytics/PageViewTracker.tsx`: React Router 경로가 바뀔 때 수동 `page_view`를 전송합니다. 자동 History 페이지뷰와 함께 사용하지 마세요.
@@ -293,8 +301,8 @@ npm run lint
 - `src/pages/AppHomePage.tsx`: `/home` 서비스 홈입니다. 환경설정, 계정·구독, 온라인 Premium, 오프라인 문제 풀이의 진입점을 제공합니다.
 - `src/pages/SettingsPage.tsx`: `/settings` 환경설정 화면입니다. 테마·글꼴과 오프라인 전체 데이터 백업/복원/초기화를 탭으로 관리합니다.
 - `src/pages/AccountSubscriptionPage.tsx`, `src/pages/Premium*Page.tsx`: Supabase Auth, 30일 선불 회원권·과목권, 온라인 풀이·결과 흐름입니다. 결제 금액과 학습 권한·채점은 서버 판단을 신뢰하며 프론트에서 재계산하지 마세요.
-- `src/pages/SubjectListPage.tsx`: `/dashboard` 오프라인 과목 목록 화면입니다. 과목 관리, 표지 색상 선택, 과목 카드 드래그 순서 변경이 이 페이지에 있습니다. 과목 삭제는 세션 삭제가 아니라 매핑 삭제로 처리해야 합니다.
-- `src/pages/DashboardPage.tsx`: `/dashboard/:subjectId` 과목별 세션 대시보드입니다. 새 문제 등록과 편집 시 세션-과목 매핑이 맞는지 확인하세요. 전체 데이터 백업/복원 UI는 이 페이지에 두지 않습니다.
+- `src/pages/SubjectListPage.tsx`: `/dashboard` 오프라인 과목 목록 화면입니다. 과목 관리, 표지 색상 선택, 과목 카드 드래그 순서 변경이 이 페이지에 있습니다. 과목 삭제는 문제와 세션을 유지하고 문제의 `subject_id`를 해제해야 합니다.
+- `src/pages/DashboardPage.tsx`: `/dashboard/:subjectId` 과목별 문제 카드 화면입니다. CSV 등록은 문제만 만들며 첫 세션을 자동 생성하지 않습니다. 문제 삭제는 소속 세션도 제거하므로 범위를 확인받아야 합니다. 전체 데이터 백업/복원 UI는 이 페이지에 두지 않습니다.
 - `src/mini-apps/catalog.ts`: `/apps`에 노출되는 앱과 순서의 단일 출처입니다. 앱 카드 내용을 `SideAppsPage.tsx`에 다시 하드코딩하지 마세요.
 - `src/mini-apps/*/manifest.ts`: 앱 ID, 상태와 출시 route를 관리합니다. `coming-soon` 앱에는 route를 넣지 마세요.
 - `public/404.html` 및 `index.html`: GitHub Pages SPA 새로고침 대응 스크립트가 들어 있습니다. 라우팅/배포 변경 시 함께 확인하세요.
@@ -397,23 +405,22 @@ SPA 라우트 새로고침은 `public/404.html`과 `index.html`의 redirect rest
 
 ## IndexedDB 마이그레이션과 백업
 
-오프라인 문제 풀이 데이터는 IndexedDB의 `law-solver-offline` 데이터베이스와 `persisted-state` object store에 저장하며, `law-solver-storage`는 Zustand persist `version: 3`을 사용합니다.
+오프라인 저장과 JSON 백업은 v4를 사용합니다. DB `law-solver-offline`, object store `persisted-state`, key `law-solver-storage`는 유지합니다. 자세한 계약은 [docs/OFFLINE_DATA_MODEL.md](docs/OFFLINE_DATA_MODEL.md)를 먼저 읽으세요.
 
-- `sessions`: 문제 세션과 답안
+- `problemSets`: 문제 원본, 소속 과목, 등록과 수정 시각
+- `sessions`: 문제 ID, 문항 ID 순서, 답안과 노트와 책갈피, 시간과 결과, 생성과 마지막 풀이와 제출 시각
 - `subjects`: 사용자가 만든 과목 목록, 표지 색상, 표시 순서
-- `sessionSubjectMap`: `sessionId -> subjectId` 매핑
-- `dataUpdatedAt`: 백업 충돌 비교에 사용하는 오프라인 데이터의 마지막 변경 시각
+- `dataUpdatedAt`: 백업 비교용 전체 데이터의 마지막 변경 시각
 
-기존 v1 데이터는 `sessions`만 있었기 때문에 마이그레이션 시 `subjects: []`, `sessionSubjectMap: {}`로 보정합니다. 즉 기존 문제는 모두 `과목 없음`으로 표시됩니다.
+세션에 원본 문항을 복제하지 마세요. `useOfflineSession`과 `materializeOfflineSession`으로 현재 세션만 화면용 `TestSession`으로 조합합니다. 과목 아래는 문제 카드, 문제 아래는 온라인과 같은 `SessionListItem` 목록을 사용합니다. 새 세션은 사용자 시작 동작에서만 생성하며, 문제 등록만으로 생성하지 않습니다.
 
-레거시 localStorage 데이터는 IndexedDB가 비어 있을 때만 복사합니다. IndexedDB transaction commit, readback, hydration, 정규화된 v3 저장이 모두 성공한 뒤 localStorage 원본을 삭제하세요. IndexedDB가 이미 있으면 수정 시각을 비교해 더 최근인 레거시 v3 snapshot을 먼저 이전하고, 삭제 직전에도 레거시 원본이 그 사이 바뀌지 않았는지 다시 검증하세요. 초기화는 빈 v3 snapshot을 저장해 레거시 데이터가 다시 살아나지 않게 합니다. 비동기 hydration 전에는 오프라인 데이터 소비 라우트를 렌더링하지 않고, 일반 변경은 직렬화·병합 저장하되 답안·책갈피·제출은 즉시 flush하며 복원과 초기화는 영구 저장 성공을 기다린 뒤 완료 처리하세요. 탭별 전체 snapshot 쓰기는 IndexedDB revision을 비교해 오래된 탭이 최신 데이터를 덮어쓰지 못하게 하며, 충돌 시 해당 탭을 새로고침하도록 안내합니다. IndexedDB가 일시적으로 실패했고 유효한 레거시 원본도 없으면 빈 localStorage로 전환하지 말고 hydration 오류를 표시하세요.
+기존 배열과 v1부터 v3까지의 세션은 각각 문제 하나와 세션 하나로 이전합니다. 제목이나 본문이 같아도 합치지 않습니다. 기존 세션 ID, 순서, 답안, 노트, 책갈피, 결과와 유효한 과목 연결을 보존합니다. 예전 데이터에 없던 마지막 풀이와 제출 시각은 `null`로 두며 추정하지 않습니다. `sessionSubjectMap`은 이전 시 읽고 v4에는 저장하지 않습니다.
 
-백업/복원은 특정 과목 단위가 아니라 전체 데이터베이스 단위입니다. 백업 복원은 두 형식을 모두 지원해야 합니다.
+IndexedDB hydration, JSON 복구, 복호화한 클라우드 백업은 `parseDashboardBackup`으로 검증하고 이전합니다. 클라우드에서는 이전 후에도 서버의 개수와 수정 시각을 대조하고 최종 교체 확인을 받습니다. 미래 버전과 손상된 참조를 빈 데이터로 보정하지 마세요.
 
-- 구형: `TestSession[]`
-- 신형: `{ app, version, exported_at, data_modified_at, sessions, subjects, sessionSubjectMap }`
+레거시 localStorage 원본은 IndexedDB transaction commit, readback, hydration, 정규화된 v4 저장 성공 뒤 제거합니다. IndexedDB가 이미 있으면 수정 시각을 비교해 더 최근인 레거시 snapshot을 이전하고, 삭제 직전에도 원본 변경 여부를 확인합니다. 초기화는 빈 v4 snapshot을 저장합니다. hydration 전에는 오프라인 소비 라우트를 렌더링하지 않습니다. 일반 변경은 직렬 저장하고 답안, 책갈피, 제출은 즉시 flush합니다. 복원과 초기화는 영구 저장 성공 뒤 메모리와 UI를 변경합니다. revision 비교로 오래된 탭의 덮어쓰기를 차단하고 충돌 시 새로고침을 안내합니다. 유효한 레거시 원본 없이 IndexedDB가 실패하면 빈 localStorage로 전환하지 않습니다.
 
-복원 시 존재하지 않는 sessionId 또는 subjectId를 가리키는 매핑은 버려야 합니다.
+v4 문항 수는 문제 원본의 합이며 세션 수와 구분합니다. 서버는 암호문을 보관하므로 내부 JSON v4를 위한 별도 API 변경은 없습니다. 하향 이전은 제공하지 않으므로 구형 앱으로 v4를 읽거나 저장하지 마세요.
 
 ## 커밋/PR 작성 권장 형식
 

@@ -9,8 +9,8 @@ import {
 import {
   getDashboardBackupStats,
   parseDashboardBackup,
-  parseDashboardBackupJson,
 } from "../../lib/dashboardBackup";
+import { parseCloudBackupRestore } from "../../lib/cloudBackupRestore";
 import {
   commitCloudBackupUpload,
   createCloudBackupRestoreTicket,
@@ -81,7 +81,7 @@ function comparisonCard({
         {formatDate(dataModifiedAt)}
       </p>
       <p className="mt-1 text-xs text-stone-500 dark:text-stone-400">
-        과목 {subjectCount.toLocaleString("ko-KR")}개 · 세션 {sessionCount.toLocaleString("ko-KR")}개 · 문제 {questionCount.toLocaleString("ko-KR")}개
+        과목 {subjectCount.toLocaleString("ko-KR")}개 / 세션 {sessionCount.toLocaleString("ko-KR")}개 / 문항 {questionCount.toLocaleString("ko-KR")}개
       </p>
     </article>
   );
@@ -96,13 +96,14 @@ export function CloudBackupSection() {
   const importDashboardData = useTestStore((state) => state.importDashboardData);
   const sessions = useTestStore((state) => state.sessions);
   const subjects = useTestStore((state) => state.subjects);
+  const problemSets = useTestStore((state) => state.problemSets);
   const dataUpdatedAt = useTestStore((state) => state.dataUpdatedAt);
   const localStats = useMemo(() => ({
     subjectCount: subjects.length,
     sessionCount: sessions.length,
-    questionCount: sessions.reduce((total, session) => total + session.questions.length, 0),
+    questionCount: problemSets.reduce((total, problemSet) => total + problemSet.questions.length, 0),
     dataModifiedAt: dataUpdatedAt,
-  }), [dataUpdatedAt, sessions, subjects.length]);
+  }), [dataUpdatedAt, problemSets, sessions.length, subjects.length]);
 
   const [metadata, setMetadata] = useState<CloudBackupMetadata | null>(null);
   const [loading, setLoading] = useState(false);
@@ -213,19 +214,10 @@ export function CloudBackupSection() {
         setMetadata(ticket.metadata);
       }
       setOperation("decrypting");
-      const parsed = parseDashboardBackupJson(await decryptCloudBackupJson(encrypted, password));
-      const stats = getDashboardBackupStats(parsed);
-      const remote = restoreMetadata?.backup;
-      if (
-        !remote || remote.subjectCount !== stats.subjectCount ||
-        remote.sessionCount !== stats.sessionCount || remote.questionCount !== stats.questionCount ||
-        Date.parse(remote.dataModifiedAt) !== Date.parse(stats.dataModifiedAt)
-      ) {
-        throw new CloudBackupCryptoError(
-          "백업 파일과 서버 정보가 일치하지 않습니다. 다시 시도해 주세요.",
-          "DECRYPTION_FAILED",
-        );
-      }
+      const parsed = parseCloudBackupRestore(
+        await decryptCloudBackupJson(encrypted, password),
+        restoreMetadata?.backup,
+      );
       setRestoredData(parsed);
       setPassword("");
     } catch (error) {
@@ -245,12 +237,7 @@ export function CloudBackupSection() {
     setModalError(null);
     setOperation("applying");
     try {
-      await importDashboardData({
-        sessions: restoredData.sessions,
-        subjects: restoredData.subjects,
-        sessionSubjectMap: restoredData.sessionSubjectMap,
-        dataModifiedAt: restoredData.data_modified_at,
-      });
+      await importDashboardData(restoredData);
       resetModal();
       setToast({ message: "클라우드의 오프라인 문제 풀이 데이터를 이 브라우저에 반영했습니다.", tone: "success" });
     } catch (error) {
@@ -375,7 +362,7 @@ export function CloudBackupSection() {
                 type="button"
                 onClick={() => setDeleteConfirm(true)}
                 disabled={Boolean(operation)}
-                className="rounded-xl border border-red-200 bg-red-50 px-4 py-2.5 text-sm font-semibold text-red-700 disabled:opacity-50 dark:border-red-900/60 dark:bg-red-950/30 dark:text-red-400"
+                className="app-radius-control rounded-xl border border-red-200 bg-red-50 px-4 py-2.5 text-sm font-semibold text-red-700 disabled:opacity-50 dark:border-red-900/60 dark:bg-red-950/30 dark:text-red-400"
               >클라우드 데이터 삭제</button>
             ) : null}
             <button
@@ -484,7 +471,7 @@ export function CloudBackupSection() {
                       : "내려받기를 시작하면 암호문을 한 번 내려받아 이 대화상자 메모리에만 보관합니다. 올바른 비밀번호가 있어야 내용을 확인할 수 있습니다."}
                   </p>
                   {modalError ? (
-                    <p role="alert" className="mt-3 rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700 dark:border-red-900/60 dark:bg-red-950/30 dark:text-red-300">
+                    <p role="alert" className="app-radius-inset mt-3 rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700 dark:border-red-900/60 dark:bg-red-950/30 dark:text-red-300">
                       {modalError}
                     </p>
                   ) : null}

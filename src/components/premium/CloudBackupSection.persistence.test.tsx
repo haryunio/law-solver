@@ -9,9 +9,14 @@ const backupJson = JSON.stringify({
   version: 3,
   exported_at: "2026-08-29T00:00:00.000Z",
   data_modified_at: "2026-08-29T00:00:00.000Z",
-  sessions: [],
-  subjects: [],
-  sessionSubjectMap: {},
+  sessions: [{
+    id: "legacy-session", title: "기존 문제", type: "OX", order_mode: "random",
+    total_questions: 1, solved_questions: 1, score: 0, elapsed_time: 32,
+    created_at: "2026-08-28T00:00:00.000Z", status: "completed",
+    questions: [{ id: "question-1", no: 1, question: "백업 복구 예시", answer: "O", my_answer: "X", wrong_note: "기존 노트", bookmark: true, originalRow: {} }],
+  }],
+  subjects: [{ id: "subject-1", name: "예시 과목", created_at: "2026-08-28T00:00:00.000Z" }],
+  sessionSubjectMap: { "legacy-session": "subject-1" },
 });
 
 const metadata = {
@@ -20,9 +25,9 @@ const metadata = {
     revision: 1,
     dataModifiedAt: "2026-08-29T00:00:00.000Z",
     uploadedAt: "2026-08-29T00:00:00.000Z",
-    subjectCount: 0,
-    sessionCount: 0,
-    questionCount: 0,
+    subjectCount: 1,
+    sessionCount: 1,
+    questionCount: 1,
     encryptedSizeBytes: 100,
     backupFormatVersion: 3,
     encryptionFormatVersion: 1,
@@ -114,8 +119,17 @@ describe("CloudBackupSection durable restore", () => {
     }));
     useTestStore.setState({ importDashboardData: importData });
     const replace = await reachFinalConfirmation();
+    expect(importData).not.toHaveBeenCalled();
 
     fireEvent.click(replace);
+    expect(importData).toHaveBeenCalledWith(expect.objectContaining({
+      version: 4,
+      problemSets: [expect.objectContaining({ id: "legacy-session", subject_id: "subject-1" })],
+      sessions: [expect.objectContaining({
+        id: "legacy-session", problem_set_id: "legacy-session", last_played_at: null,
+        responses: { "question-1": { answer: "X", wrong_note: "기존 노트", bookmark: true } },
+      })],
+    }));
     expect(screen.getByText("이 브라우저에 저장하는 중")).toBeTruthy();
     expect(screen.getByRole("heading", { name: "내려받은 데이터 최종 확인" })).toBeTruthy();
 

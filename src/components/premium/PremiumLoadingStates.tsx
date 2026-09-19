@@ -1,43 +1,45 @@
 import { LoadingRegion, SkeletonBlock } from "../ui/AsyncLoading";
+import { BookGrid } from "../ui/BookGrid";
 
 const items = (count: number) => Array.from({ length: count }, (_, index) => index);
 
+function BookCoverSkeleton() {
+  return (
+    <div className="app-card app-subject-book app-radius-book relative flex h-56 flex-col overflow-hidden rounded-l-md rounded-r-xl border px-3 pb-3 pl-6 pt-[68px]">
+      <SkeletonBlock className="absolute inset-x-0 top-0 h-14 rounded-none" />
+      <SkeletonBlock className="h-3 w-14 rounded-full" />
+      <SkeletonBlock className="mt-3 h-4 w-full rounded-full" />
+      <SkeletonBlock className="mt-2 h-4 w-3/4 rounded-full" />
+      <SkeletonBlock className="app-radius-inset mt-auto h-8 w-full rounded-lg" />
+    </div>
+  );
+}
+
 export function PremiumCourseCatalogSkeleton() {
   return (
-    <LoadingRegion label="온라인 과목을 불러오는 중입니다" className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-      {items(3).map((index) => (
-        <article key={index} className="app-card overflow-hidden rounded-2xl border">
-          <SkeletonBlock className="h-[104px] rounded-none" />
-          <div className="h-[104px] p-4">
-            <div className="flex justify-between gap-3">
-              <SkeletonBlock className="h-3 w-16 rounded-full" />
-              <SkeletonBlock className="h-3 w-24 rounded-full" />
-            </div>
-            <SkeletonBlock className="mt-4 h-11 w-full rounded-xl" />
-          </div>
-        </article>
-      ))}
+    <LoadingRegion label="온라인 과목을 불러오는 중입니다">
+      <BookGrid>
+        {items(6).map((index) => <BookCoverSkeleton key={index} />)}
+      </BookGrid>
     </LoadingRegion>
   );
 }
 
 export function PremiumProblemGridSkeleton() {
   return (
-    <LoadingRegion label="문제 목록을 불러오는 중입니다" className="grid gap-4 md:grid-cols-2">
+    <LoadingRegion label="문제 목록을 불러오는 중입니다" className="grid gap-3 md:grid-cols-2">
       {items(4).map((index) => (
-        <article key={index} className="app-card app-problem-card overflow-hidden rounded-2xl border">
-          <div className="p-5">
-            <SkeletonBlock className="h-6 w-3/5 rounded-lg" />
-            <div className="mt-3 flex gap-2">
-              <SkeletonBlock className="h-5 w-16 rounded-full" />
-              <SkeletonBlock className="h-5 w-14 rounded-full" />
+        <article key={index} className="app-card app-problem-card app-radius-card overflow-hidden rounded-2xl border">
+          <div className="px-4 pb-3 pt-3.5">
+            <div className="flex items-center justify-between gap-3">
+              <SkeletonBlock className="h-6 w-3/5 rounded-lg" />
+              <SkeletonBlock className="app-radius-tag h-5 w-20 rounded-full" />
             </div>
-            <div className="mt-4 grid grid-cols-2 gap-2">
-              <SkeletonBlock className="h-[66px] rounded-xl" />
-              <SkeletonBlock className="h-[66px] rounded-xl" />
+            <div className="mt-4 grid grid-cols-3 gap-2">
+              {items(3).map((metric) => <SkeletonBlock key={metric} className="app-radius-inset h-11 rounded-lg" />)}
             </div>
           </div>
-          <SkeletonBlock className="h-11 rounded-none border-t" />
+          <SkeletonBlock className="h-12 rounded-none border-t" />
         </article>
       ))}
     </LoadingRegion>
@@ -48,23 +50,24 @@ export function PremiumAttemptListSkeleton() {
   return (
     <LoadingRegion label="풀이 세션을 불러오는 중입니다" className="space-y-2.5">
       {items(3).map((index) => (
-        <article key={index} className="app-card app-problem-card rounded-2xl border px-4 py-3 sm:px-5">
-          <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
-            <div className="flex min-w-0 flex-1 items-start gap-3">
-              <SkeletonBlock className="h-9 w-14 shrink-0 rounded-lg" />
-              <div className="min-w-0 flex-1">
-                <div className="flex gap-2">
-                  <SkeletonBlock className="h-4 w-20 rounded-full" />
-                  <SkeletonBlock className="h-4 w-14 rounded-full" />
-                  <SkeletonBlock className="h-4 w-16 rounded-full" />
-                </div>
-                <SkeletonBlock className="mt-2 h-3 w-36 rounded-full" />
+        <article key={index} className="app-card app-problem-card app-radius-card rounded-xl border px-3 py-4 sm:px-4">
+          <div className="lg:flex lg:items-end lg:gap-4">
+            <div className="grid min-h-14 min-w-0 flex-1 grid-cols-[56px_minmax(0,1fr)] grid-rows-[1fr_auto] items-center gap-x-3 gap-y-2">
+              <SkeletonBlock className="app-radius-inset row-span-2 h-14 w-14 rounded-lg lg:self-end" />
+              <SkeletonBlock className="h-8 w-36 max-w-full self-end rounded-lg lg:h-5" />
+              <div className="col-start-2 flex min-w-0 flex-wrap gap-1 self-end">
+                <SkeletonBlock className="app-radius-tag h-6 w-14 rounded-full" />
+                <SkeletonBlock className="app-radius-tag h-6 w-14 rounded-full" />
+                <SkeletonBlock className="app-radius-tag h-6 w-16 rounded-full" />
+                <SkeletonBlock className="app-radius-tag h-6 w-36 max-w-full rounded-md sm:w-40" />
               </div>
             </div>
-            <div className="grid grid-cols-3 gap-2 lg:w-[360px]">
-              {items(3).map((metric) => <SkeletonBlock key={metric} className="h-[50px] rounded-lg" />)}
+            <div className="mt-4 flex items-center gap-2 lg:mt-0 lg:shrink-0">
+              <div className="grid min-w-0 flex-1 grid-cols-3 gap-1.5 lg:w-[270px]">
+                {items(3).map((metric) => <SkeletonBlock key={metric} className="app-radius-inset h-14 rounded-lg" />)}
+              </div>
+              <SkeletonBlock className="app-radius-control h-14 w-24 shrink-0 rounded-lg sm:w-28" />
             </div>
-            <SkeletonBlock className="h-10 rounded-xl lg:w-[116px]" />
           </div>
         </article>
       ))}
@@ -113,16 +116,23 @@ export function PremiumMembershipSkeleton() {
 
 export function PremiumPackageGridSkeleton() {
   return (
-    <LoadingRegion label="과목 이용권을 확인하는 중입니다" className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-      {items(4).map((index) => (
-        <article key={index} className="app-card overflow-hidden rounded-2xl border">
-          <SkeletonBlock className="h-[104px] rounded-none" />
-          <div className="p-5">
-            <SkeletonBlock className="h-32 rounded-xl" />
-            <SkeletonBlock className="mt-5 h-12 rounded-xl" />
-          </div>
-        </article>
-      ))}
+    <LoadingRegion label="과목 이용권을 확인하는 중입니다">
+      <BookGrid>
+        {items(6).map((index) => (
+          <article key={index} className="flex min-w-0 flex-col gap-3">
+            <BookCoverSkeleton />
+            <div className="app-card app-radius-card rounded-xl border p-3">
+              <SkeletonBlock className="h-3 w-8 rounded-full" />
+              <SkeletonBlock className="mt-2 h-6 w-20 max-w-full rounded-lg" />
+              <div className="mt-3 space-y-3 border-t border-stone-200 pt-3 dark:border-stone-700">
+                <SkeletonBlock className="h-4 w-full rounded-full" />
+                <SkeletonBlock className="h-4 w-full rounded-full" />
+              </div>
+              <SkeletonBlock className="app-radius-control mt-4 h-12 rounded-lg" />
+            </div>
+          </article>
+        ))}
+      </BookGrid>
     </LoadingRegion>
   );
 }

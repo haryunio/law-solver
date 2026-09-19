@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { ConfirmDialog } from "../ui/ConfirmDialog";
 import { OverflowTooltipTitle } from "../ui/OverflowTooltipTitle";
 import { RichTextContent } from "../ui/RichTextContent";
-import { getAnswerToken } from "../../lib/answer";
+import { getAnswerToken, getQuestionAnswerToken, hasNoCorrectChoice, isCorrectAnswer } from "../../lib/answer";
 import {
   QuestionNavigationMethod,
   SolveEntry,
@@ -11,7 +11,7 @@ import {
   trackEvent,
 } from "../../lib/analytics";
 import { downloadSessionCsv } from "../../lib/csv";
-import { getSubjectDashboardPath } from "../../lib/subject";
+import { useOfflineSession } from "../../hooks/useOfflineSession";
 import { formatElapsedTime } from "../../lib/time";
 import { useTestStore } from "../../store/useTestStore";
 import { AnswerValue, TestSession } from "../../types/test";
@@ -46,18 +46,18 @@ export function CbtSolveScreen({
   allowCsvDownload = true,
 }: CbtSolveScreenProps) {
   const navigate = useNavigate();
-  const sessions = useTestStore((state) => state.sessions);
-  const sessionSubjectMap = useTestStore((state) => state.sessionSubjectMap);
+  const { session: storedSession, sessionsPath } = useOfflineSession(sessionOverride ? "" : sessionId);
+  const markSessionPlayed = useTestStore((state) => state.markSessionPlayed);
   const updateAnswer = useTestStore((state) => state.updateAnswer);
   const toggleBookmark = useTestStore((state) => state.toggleBookmark);
   const tickElapsedTime = useTestStore((state) => state.tickElapsedTime);
   const submitSession = useTestStore((state) => state.submitSession);
 
-  const storedSession = useMemo(
-    () => sessions.find((item) => item.id === sessionId),
-    [sessions, sessionId],
-  );
   const session = sessionOverride ?? storedSession;
+
+  useEffect(() => {
+    if (!sessionOverride && storedSession?.status === "in-progress") markSessionPlayed(sessionId);
+  }, [sessionId, sessionOverride, storedSession?.status, markSessionPlayed]);
 
   const [index, setIndex] = useState(0);
   const [showAnswer, setShowAnswer] = useState(false);
@@ -160,7 +160,7 @@ export function CbtSolveScreen({
 
   const answeredCount = session.questions.filter((q) => q.my_answer !== "").length;
   const unansweredCount = session.questions.length - answeredCount;
-  const subjectDashboardPath = getSubjectDashboardPath(sessionSubjectMap[session.id]);
+  const subjectDashboardPath = sessionsPath;
   const questionPanelMinHeight =
     session.type === "OX"
       ? "md:min-h-[min(420px,calc(100vh-112px))]"
@@ -411,7 +411,8 @@ export function CbtSolveScreen({
             ) : (
               options.map((option) => {
                 const selected = current.my_answer === option.key;
-                const isCorrect = showAnswer && String(current.answer) === option.key;
+                const isCorrect = showAnswer && !hasNoCorrectChoice(current) && isCorrectAnswer(current, option.key);
+                const isAcceptedSelection = showAnswer && selected && isCorrectAnswer(current, option.key);
                 const showInlineNext =
                   session.type === "OX" && selected && !showAnswer && index < session.total_questions - 1;
 
@@ -423,11 +424,13 @@ export function CbtSolveScreen({
                         "flex w-full items-start gap-2 rounded-xl border px-4 py-3 text-left",
                         showInlineNext ? "pr-32 md:pr-36" : "",
                         session.type === "5-choice" ? "text-sm md:text-sm" : "text-base",
-                        isCorrect
-                          ? "border-blue-600 bg-blue-50 text-blue-700 dark:border-blue-600 dark:bg-blue-950/30 dark:text-blue-400"
-                          : selected
-                            ? "border-red-600 bg-red-50 text-red-700 dark:border-red-600 dark:bg-red-950/30 dark:text-red-400"
-                            : "border-stone-300 bg-white text-stone-800 hover:border-red-300 hover:bg-red-50/40 dark:border-stone-700 dark:bg-stone-800 dark:text-stone-300 dark:hover:border-red-900/70 dark:hover:bg-red-950/15",
+                        isAcceptedSelection
+                          ? "border-emerald-600 bg-emerald-50 text-emerald-700 dark:border-emerald-600 dark:bg-emerald-950/30 dark:text-emerald-400"
+                          : isCorrect
+                            ? "border-blue-600 bg-blue-50 text-blue-700 dark:border-blue-600 dark:bg-blue-950/30 dark:text-blue-400"
+                            : selected
+                              ? "border-red-600 bg-red-50 text-red-700 dark:border-red-600 dark:bg-red-950/30 dark:text-red-400"
+                              : "border-stone-300 bg-white text-stone-800 hover:border-red-300 hover:bg-red-50/40 dark:border-stone-700 dark:bg-stone-800 dark:text-stone-300 dark:hover:border-red-900/70 dark:hover:bg-red-950/15",
                       ].join(" ")}
                     >
                       {option.circle && (
@@ -464,8 +467,9 @@ export function CbtSolveScreen({
                 <span className="rounded bg-blue-600 px-1.5 py-0.5 text-[10px] font-bold text-white uppercase">
                   정답
                 </span>
-                <span className="text-sm font-bold text-blue-700 dark:text-blue-400">{getAnswerToken(String(current.answer))}</span>
+                <span className="text-sm font-bold text-blue-700 dark:text-blue-400">{getQuestionAnswerToken(current)}</span>
               </div>
+              {hasNoCorrectChoice(current) ? <p className="mb-2 text-sm leading-6 text-blue-700 dark:text-blue-400">이 문항은 답을 고르지 않아도 정답으로 처리됩니다.</p> : null}
               {current.explanation && (
                 <div className="text-sm leading-relaxed text-stone-700 dark:text-stone-300">
                   <p className="mb-1 font-semibold text-stone-900 dark:text-stone-100">해설</p>

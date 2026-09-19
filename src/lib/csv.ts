@@ -1,5 +1,6 @@
 import Papa from "papaparse";
 import { createId } from "./id";
+import { isCorrectAnswer, normalizeChoiceAnswer } from "./answer";
 import { ParsedQuestion, TestSession, TestType } from "../types/test";
 
 type RawRow = Record<string, string>;
@@ -21,6 +22,17 @@ const getValue = (row: RawRow, keys: string[], fallbackIndex?: number) => {
     return (values[fallbackIndex] ?? "").toString().trim();
   }
   return "";
+};
+
+const getOptionalMetadata = (row: RawRow, explanationIndex: number, sourceIndex: number) => {
+  const headers = new Set(Object.keys(row).map(normalize));
+  const hasNamedQuestion = ["문제", "question", "문항"].some((key) => headers.has(key))
+    && ["정답", "answer"].some((key) => headers.has(key));
+  // Named layouts may add chapters or boxes, so missing optional columns have no fixed position.
+  return {
+    explanation: getValue(row, ["해설", "해설optional", "explanation"], hasNamedQuestion ? undefined : explanationIndex),
+    source: getValue(row, ["출처", "출처optional", "source"], hasNamedQuestion ? undefined : sourceIndex),
+  };
 };
 
 export const createSessionTitleFromFileName = (fileName: string) => {
@@ -87,10 +99,10 @@ const parseOxAnswer = (value: string): "O" | "X" => {
   throw new Error(`OX 정답은 O 또는 X로 입력해 주세요. 확인할 값: ${value}`);
 };
 
-const parseChoiceAnswer = (value: string): "1" | "2" | "3" | "4" | "5" => {
-  const token = value.trim();
-  if (["1", "2", "3", "4", "5"].includes(token)) return token as "1" | "2" | "3" | "4" | "5";
-  throw new Error(`5지선다 정답은 1부터 5까지의 숫자로 입력해 주세요. 확인할 값: ${value}`);
+const parseChoiceAnswer = (value: string): string => {
+  const answer = normalizeChoiceAnswer(value);
+  if (answer !== null) return answer;
+  throw new Error(`5지선다 정답은 1부터 5까지의 숫자로 입력해 주세요. 정답이 없는 문항에는 0을 입력하고, 여러 정답은 쉼표로 구분해 주세요. 확인할 값: ${value}`);
 };
 
 const parseOxRows = (rows: RawRow[]): ParsedQuestion[] => {
@@ -109,8 +121,7 @@ const parseOxRows = (rows: RawRow[]): ParsedQuestion[] => {
       chapter,
       question,
       answer: parseOxAnswer(answerRaw),
-      explanation: getValue(row, ["해설", "해설optional", "explanation"], 3),
-      source: getValue(row, ["출처", "출처optional", "source"], 4),
+      ...getOptionalMetadata(row, 3, 4),
       my_answer: "",
       originalRow: row,
     };
@@ -161,8 +172,7 @@ const parseChoiceRows = (rows: RawRow[]): ParsedQuestion[] => {
       boxes: boxes.length > 0 ? boxes : undefined,
       choices,
       answer: parseChoiceAnswer(answerRaw),
-      explanation: getValue(row, ["해설", "해설optional", "explanation"], 8),
-      source: getValue(row, ["출처", "출처optional", "source"], 9),
+      ...getOptionalMetadata(row, 8, 9),
       my_answer: "",
       originalRow: row,
     };
@@ -185,8 +195,7 @@ const parseShortRows = (rows: RawRow[]): ParsedQuestion[] => {
       chapter,
       question,
       answer: answerRaw.trim(), // 단답형은 그대로 사용
-      explanation: getValue(row, ["해설", "해설optional", "explanation"], 3),
-      source: getValue(row, ["출처", "출처optional", "source"], 4),
+      ...getOptionalMetadata(row, 3, 4),
       my_answer: "",
       originalRow: row,
     };
@@ -213,7 +222,7 @@ export const buildSessionExportCsv = (session: TestSession): string => {
 
 export const buildWrongQuestionsOnlyCsv = (session: TestSession): string => {
   const wrongQuestions = session.questions.filter(
-    (q) => q.my_answer !== "" && q.my_answer !== q.answer,
+    (q) => q.my_answer !== "" && !isCorrectAnswer(q, q.my_answer),
   );
   const rows = wrongQuestions.map((question) => ({
     ...question.originalRow,
@@ -225,7 +234,7 @@ export const buildWrongQuestionsOnlyCsv = (session: TestSession): string => {
 
 export const buildWrongNoteCsv = (session: TestSession): string => {
   const wrongQuestions = session.questions.filter(
-    (q) => q.my_answer !== "" && q.my_answer !== q.answer,
+    (q) => q.my_answer !== "" && !isCorrectAnswer(q, q.my_answer),
   );
   const rows = wrongQuestions.map((q, idx) => ({
     번호: q.no || idx + 1,

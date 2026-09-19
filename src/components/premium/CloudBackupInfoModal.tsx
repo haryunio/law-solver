@@ -3,6 +3,7 @@ import { createPortal } from "react-dom";
 import { IconCloseButton } from "../ui/IconCloseButton";
 import { PrivacyPolicyLink } from "../ui/PrivacyPolicyLink";
 import { TermsOfServiceLink } from "../ui/TermsOfServiceLink";
+import { useStandardUiScope } from "../ui/StandardUiScope";
 
 interface CloudBackupInfoModalProps {
   onClose: () => void;
@@ -12,6 +13,7 @@ const policyLinkClass =
   "font-semibold text-red-600 underline decoration-red-200 underline-offset-4 transition-colors hover:text-red-700 dark:text-red-400 dark:decoration-red-900 dark:hover:text-red-300";
 
 export function CloudBackupInfoModal({ onClose }: CloudBackupInfoModalProps) {
+  const standardUi = useStandardUiScope();
   useEffect(() => {
     const previousOverflow = document.body.style.overflow;
 
@@ -24,7 +26,7 @@ export function CloudBackupInfoModal({ onClose }: CloudBackupInfoModalProps) {
 
   return createPortal(
     <div
-      className="fixed inset-0 z-[70]"
+      className={`${standardUi ? "app-standard-ui " : ""}fixed inset-0 z-[70]`}
       role="dialog"
       aria-modal="true"
       aria-labelledby="cloud-backup-info-title"

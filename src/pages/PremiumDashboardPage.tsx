@@ -1,12 +1,12 @@
-import type { CSSProperties } from "react";
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { PremiumCourseCatalogSkeleton } from "../components/premium/PremiumLoadingStates";
 import { AppFooter } from "../components/ui/AppFooter";
+import { BookCover, bookLinkClassName } from "../components/ui/BookCover";
+import { BookGrid } from "../components/ui/BookGrid";
 import { DashboardHeaderTitle } from "../components/ui/DashboardHeaderTitle";
 import { PremiumBadge } from "../components/ui/PremiumBadge";
 import { ReturnLinkLabel } from "../components/ui/ReturnLinkLabel";
-import { SubjectCardCover } from "../components/ui/SubjectCardCover";
 import { Toast } from "../components/ui/Toast";
 import {
   getPremiumErrorMessage,
@@ -90,7 +90,7 @@ export function PremiumDashboardPage() {
         {!initialized || (isSignedIn && isPremiumActive && (!hasLoadedCourses || isLoading)) ? (
           <PremiumCourseCatalogSkeleton />
         ) : !isSignedIn ? (
-          <div className="app-card rounded-2xl border p-6 text-center">
+          <div className="app-content-enter app-card rounded-2xl border p-6 text-center">
             <PremiumBadge />
             <h2 className="mt-4 text-xl font-bold text-stone-950 dark:text-stone-100">로그인이 필요합니다</h2>
             <p className="mt-2 text-sm text-stone-600 dark:text-stone-300">계정 페이지에서 로그인한 뒤 온라인 과목을 이용할 수 있습니다.</p>
@@ -99,7 +99,7 @@ export function PremiumDashboardPage() {
             </Link>
           </div>
         ) : !isPremiumActive ? (
-          <div className="app-card rounded-2xl border p-6 text-center">
+          <div className="app-content-enter app-card rounded-2xl border p-6 text-center">
             <PremiumBadge />
             <h2 className="mt-4 text-xl font-bold text-stone-950 dark:text-stone-100">Premium 회원권이 필요합니다</h2>
             <p className="mt-2 text-sm text-stone-600 dark:text-stone-300">계정 화면에서 Premium 회원권과 과목 이용권을 등록해 주세요.</p>
@@ -109,17 +109,22 @@ export function PremiumDashboardPage() {
           </div>
         ) : (
           <>
-            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+            <BookGrid className="app-content-stagger">
               <Link
                 to="/account?tab=packages"
-                className="app-card app-subject-card group overflow-hidden rounded-2xl border transition hover:-translate-y-0.5 hover:shadow-[var(--app-shadow-hover)]"
-                style={{ "--subject-accent": premiumOrangeAccentColor } as CSSProperties}
+                className={bookLinkClassName}
               >
-                <SubjectCardCover title="과목 이용권 관리" coverStyle={premiumOrangeCoverStyle} titleLines={2} />
-                <div className="flex h-[104px] items-center justify-between gap-3 p-4">
-                  <span className="text-sm font-semibold text-stone-700 dark:text-stone-300">새 과목 이용권 구매</span>
-                  <span className="text-xl font-semibold text-red-500 dark:text-red-400" aria-hidden="true">→</span>
-                </div>
+                <BookCover
+                  title="과목 이용권 관리"
+                  coverStyle={premiumOrangeCoverStyle}
+                  accentColor={premiumOrangeAccentColor}
+                  eyebrow="온라인 과목"
+                  titleLines={2}
+                >
+                  <span className="app-button-secondary mt-auto flex h-8 items-center justify-center gap-1.5 rounded-lg px-2 text-xs font-semibold">
+                    이용권 구매 <span aria-hidden="true">→</span>
+                  </span>
+                </BookCover>
               </Link>
 
               {courses.map((course) => (
@@ -127,29 +132,30 @@ export function PremiumDashboardPage() {
                   key={course.id}
                   to={`/premium/courses/${course.id}`}
                   state={{ courseTitle: course.name }}
-                  className="app-card app-subject-card group overflow-hidden rounded-2xl border transition hover:-translate-y-0.5 hover:shadow-[var(--app-shadow-hover)]"
-                  style={{ "--subject-accent": premiumOrangeAccentColor } as CSSProperties}
+                  className={bookLinkClassName}
                 >
-                  <SubjectCardCover
+                  <BookCover
                     title={course.name}
                     coverStyle={getPremiumSubjectCoverStyle(course.name)}
+                    accentColor={premiumOrangeAccentColor}
                     topRight={<PremiumBadge />}
+                    eyebrow={<span className="font-semibold text-emerald-700 dark:text-emerald-400">이용 중</span>}
                     titleLines={2}
-                  />
-                  <div className="h-[104px] p-4">
-                    <div className="flex items-center justify-between gap-3 text-xs">
-                      <span className="font-semibold text-emerald-700 dark:text-emerald-400">이용 중</span>
-                      <span className="text-stone-500">{formatDate(course.entitlement_valid_until)}까지</span>
+                  >
+                    <div className="mt-auto pt-2">
+                      <p className="whitespace-nowrap text-[11px] leading-4 text-stone-500 dark:text-stone-400">
+                        <time dateTime={course.entitlement_valid_until}>{formatDate(course.entitlement_valid_until)}</time>까지
+                      </p>
+                      <span className="app-button-primary mt-1.5 flex h-8 items-center justify-center gap-1.5 rounded-lg px-2 text-xs font-semibold">
+                        문제 목록 <span aria-hidden="true">→</span>
+                      </span>
                     </div>
-                    <span className="app-button-primary mt-3 inline-flex h-11 w-full items-center justify-center rounded-xl px-4 text-sm font-semibold">
-                      문제 목록
-                    </span>
-                  </div>
+                  </BookCover>
                 </Link>
               ))}
-            </div>
+            </BookGrid>
             {courses.length === 0 ? (
-              <div className="app-card mt-4 rounded-2xl border p-6 text-center text-sm text-stone-600 dark:text-stone-300">
+              <div className="app-content-enter app-card mt-4 rounded-2xl border p-6 text-center text-sm text-stone-600 dark:text-stone-300">
                 {didLoadFail
                   ? "온라인 과목을 표시하지 못했습니다. 잠시 후 페이지를 새로고침해 주세요."
                   : "이용 중인 과목이 없습니다. 과목 이용권 관리에서 원하는 과목을 선택해 주세요."}
