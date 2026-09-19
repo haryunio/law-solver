@@ -35,7 +35,7 @@ export function PremiumProblemGridSkeleton() {
               <SkeletonBlock className="h-6 w-3/5 rounded-lg" />
               <SkeletonBlock className="h-5 w-20 rounded-full" />
             </div>
-            <div className="mt-3 grid grid-cols-3 gap-2">
+            <div className="mt-4 grid grid-cols-3 gap-2">
               {items(3).map((metric) => <SkeletonBlock key={metric} className="h-11 rounded-lg" />)}
             </div>
           </div>
@@ -51,11 +51,11 @@ export function PremiumAttemptListSkeleton() {
     <LoadingRegion label="풀이 세션을 불러오는 중입니다" className="space-y-2.5">
       {items(3).map((index) => (
         <article key={index} className="app-card app-problem-card rounded-xl border px-3 py-4 sm:px-4">
-          <div className="lg:flex lg:items-center lg:gap-4">
-            <div className="grid min-h-16 min-w-0 flex-1 grid-cols-[64px_minmax(0,1fr)] items-center gap-x-3 gap-y-2 lg:grid-rows-[auto_auto] lg:gap-y-1">
-              <SkeletonBlock className="h-16 w-16 rounded-lg lg:row-span-2" />
+          <div className="lg:flex lg:items-end lg:gap-4">
+            <div className="grid min-h-14 min-w-0 flex-1 grid-cols-[56px_minmax(0,1fr)] items-center gap-x-3 gap-y-2 lg:grid-rows-[1fr_auto]">
+              <SkeletonBlock className="h-14 w-14 rounded-lg lg:row-span-2 lg:self-end" />
               <SkeletonBlock className="h-5 w-36 max-w-full rounded-lg lg:self-end" />
-              <div className="col-span-2 flex flex-wrap gap-1 lg:col-span-1 lg:col-start-2 lg:self-start">
+              <div className="col-span-2 flex flex-wrap gap-1 lg:col-span-1 lg:col-start-2 lg:self-end">
                 <SkeletonBlock className="h-6 w-14 rounded-full" />
                 <SkeletonBlock className="h-6 w-14 rounded-full" />
                 <SkeletonBlock className="h-6 w-16 rounded-full" />
@@ -64,9 +64,9 @@ export function PremiumAttemptListSkeleton() {
             </div>
             <div className="mt-4 flex items-center gap-2 lg:mt-0 lg:shrink-0">
               <div className="grid min-w-0 flex-1 grid-cols-3 gap-1.5 lg:w-[270px]">
-                {items(3).map((metric) => <SkeletonBlock key={metric} className="h-16 rounded-lg" />)}
+                {items(3).map((metric) => <SkeletonBlock key={metric} className="h-14 rounded-lg" />)}
               </div>
-              <SkeletonBlock className="h-16 w-24 shrink-0 rounded-lg sm:w-28" />
+              <SkeletonBlock className="h-14 w-24 shrink-0 rounded-lg sm:w-28" />
             </div>
           </div>
         </article>

@@ -82,7 +82,7 @@ export function DashboardPage() {
           <div className="grid gap-3 md:grid-cols-2">
             {sortedProblemSets.map((problemSet) => (
               <article key={problemSet.id} className="app-card app-problem-card flex min-w-0 flex-col rounded-2xl border">
-                <div className="relative px-4 pb-3 pt-3.5 pr-12">
+                <div className="relative px-4 pb-4 pt-3.5 pr-12">
                   <OverflowTooltipTitle as="h2" text={problemSet.title} className="text-base font-semibold leading-6 text-stone-900 dark:text-stone-100" />
                   <div className="absolute right-3 top-2.5">
                     <ActionMenu label={`${problemSet.title} 메뉴 열기`} items={[

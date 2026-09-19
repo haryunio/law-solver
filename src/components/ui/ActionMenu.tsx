@@ -65,7 +65,7 @@ export function ActionMenu({ label, items, size = "compact" }: { label: string; 
         aria-haspopup="menu"
         aria-expanded={open}
         aria-controls={open ? menuId : undefined}
-        className={`app-button-secondary inline-flex items-center justify-center rounded-lg text-stone-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-500 ${size === "session" ? "h-10 w-10 lg:h-16" : "h-8 w-8"}`}
+        className={`app-button-secondary inline-flex items-center justify-center rounded-full text-stone-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-500 ${size === "session" ? "h-8 w-8 lg:h-7 lg:w-7" : "h-8 w-8"}`}
         onClick={() => {
           setActive(0);
           setOpen(!open);

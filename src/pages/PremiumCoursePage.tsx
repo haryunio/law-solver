@@ -67,7 +67,7 @@ export function PremiumCoursePage() {
                 className="app-card app-problem-card flex min-w-0 flex-col overflow-hidden rounded-2xl border"
               >
                 <div className="px-4 pb-3 pt-3.5">
-                  <div className="mb-3 flex min-w-0 items-center justify-between gap-3">
+                  <div className="mb-4 flex min-w-0 items-center justify-between gap-3">
                     <h2 title={problemSet.title} className="min-w-0 truncate text-base font-semibold leading-6 text-stone-900 dark:text-stone-100">
                       {problemSet.title}
                     </h2>
