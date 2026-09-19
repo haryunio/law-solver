@@ -1,12 +1,12 @@
-import type { CSSProperties } from "react";
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { PremiumCourseCatalogSkeleton } from "../components/premium/PremiumLoadingStates";
 import { AppFooter } from "../components/ui/AppFooter";
+import { BookCover, bookLinkClassName } from "../components/ui/BookCover";
+import { BookGrid } from "../components/ui/BookGrid";
 import { DashboardHeaderTitle } from "../components/ui/DashboardHeaderTitle";
 import { PremiumBadge } from "../components/ui/PremiumBadge";
 import { ReturnLinkLabel } from "../components/ui/ReturnLinkLabel";
-import { SubjectCardCover } from "../components/ui/SubjectCardCover";
 import { Toast } from "../components/ui/Toast";
 import {
   getPremiumErrorMessage,
@@ -109,17 +109,22 @@ export function PremiumDashboardPage() {
           </div>
         ) : (
           <>
-            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+            <BookGrid>
               <Link
                 to="/account?tab=packages"
-                className="app-card app-subject-card group overflow-hidden rounded-2xl border transition hover:-translate-y-0.5 hover:shadow-[var(--app-shadow-hover)]"
-                style={{ "--subject-accent": premiumOrangeAccentColor } as CSSProperties}
+                className={bookLinkClassName}
               >
-                <SubjectCardCover title="과목 이용권 관리" coverStyle={premiumOrangeCoverStyle} titleLines={2} />
-                <div className="flex h-[104px] items-center justify-between gap-3 p-4">
-                  <span className="text-sm font-semibold text-stone-700 dark:text-stone-300">새 과목 이용권 구매</span>
-                  <span className="text-xl font-semibold text-red-500 dark:text-red-400" aria-hidden="true">→</span>
-                </div>
+                <BookCover
+                  title="과목 이용권 관리"
+                  coverStyle={premiumOrangeCoverStyle}
+                  accentColor={premiumOrangeAccentColor}
+                  eyebrow="온라인 과목"
+                  titleLines={2}
+                >
+                  <span className="app-button-secondary mt-auto flex h-8 items-center justify-center gap-1.5 rounded-lg px-2 text-xs font-semibold">
+                    이용권 구매 <span aria-hidden="true">→</span>
+                  </span>
+                </BookCover>
               </Link>
 
               {courses.map((course) => (
@@ -127,27 +132,28 @@ export function PremiumDashboardPage() {
                   key={course.id}
                   to={`/premium/courses/${course.id}`}
                   state={{ courseTitle: course.name }}
-                  className="app-card app-subject-card group overflow-hidden rounded-2xl border transition hover:-translate-y-0.5 hover:shadow-[var(--app-shadow-hover)]"
-                  style={{ "--subject-accent": premiumOrangeAccentColor } as CSSProperties}
+                  className={bookLinkClassName}
                 >
-                  <SubjectCardCover
+                  <BookCover
                     title={course.name}
                     coverStyle={getPremiumSubjectCoverStyle(course.name)}
+                    accentColor={premiumOrangeAccentColor}
                     topRight={<PremiumBadge />}
+                    eyebrow={<span className="font-semibold text-emerald-700 dark:text-emerald-400">이용 중</span>}
                     titleLines={2}
-                  />
-                  <div className="h-[104px] p-4">
-                    <div className="flex items-center justify-between gap-3 text-xs">
-                      <span className="font-semibold text-emerald-700 dark:text-emerald-400">이용 중</span>
-                      <span className="text-stone-500">{formatDate(course.entitlement_valid_until)}까지</span>
+                  >
+                    <div className="mt-auto pt-2">
+                      <p className="whitespace-nowrap text-[11px] leading-4 text-stone-500 dark:text-stone-400">
+                        <time dateTime={course.entitlement_valid_until}>{formatDate(course.entitlement_valid_until)}</time>까지
+                      </p>
+                      <span className="app-button-primary mt-1.5 flex h-8 items-center justify-center gap-1.5 rounded-lg px-2 text-xs font-semibold">
+                        문제 목록 <span aria-hidden="true">→</span>
+                      </span>
                     </div>
-                    <span className="app-button-primary mt-3 inline-flex h-11 w-full items-center justify-center rounded-xl px-4 text-sm font-semibold">
-                      문제 목록
-                    </span>
-                  </div>
+                  </BookCover>
                 </Link>
               ))}
-            </div>
+            </BookGrid>
             {courses.length === 0 ? (
               <div className="app-card mt-4 rounded-2xl border p-6 text-center text-sm text-stone-600 dark:text-stone-300">
                 {didLoadFail

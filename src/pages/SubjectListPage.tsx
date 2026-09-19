@@ -13,6 +13,7 @@ import { AppFooter } from "../components/ui/AppFooter";
 import { DashboardHeaderTitle } from "../components/ui/DashboardHeaderTitle";
 import { IconCloseButton } from "../components/ui/IconCloseButton";
 import { ReturnLinkLabel } from "../components/ui/ReturnLinkLabel";
+import { BookGrid } from "../components/ui/BookGrid";
 import { SubjectBookCard } from "../components/ui/SubjectBookCard";
 import { SubjectDropPlacement } from "../lib/subject";
 import {
@@ -44,8 +45,8 @@ interface SubjectCardData {
 
 export function SubjectListPage() {
   const sessions = useTestStore((state) => state.sessions);
+  const problemSets = useTestStore((state) => state.problemSets);
   const subjects = useTestStore((state) => state.subjects);
-  const sessionSubjectMap = useTestStore((state) => state.sessionSubjectMap);
   const createSubject = useTestStore((state) => state.createSubject);
   const updateSubject = useTestStore((state) => state.updateSubject);
   const reorderSubject = useTestStore((state) => state.reorderSubject);
@@ -91,15 +92,16 @@ export function SubjectListPage() {
   const subjectCards = useMemo<SubjectCardData[]>(() => {
     const makeStats = (subject: Subject | null): SubjectCardData => {
       const id = subject?.id ?? NO_SUBJECT_ID;
-      const relatedSessions = sessions.filter((session) => {
-        const mappedSubjectId = sessionSubjectMap[session.id];
-        return subject ? mappedSubjectId === subject.id : !mappedSubjectId;
-      });
+      const relatedProblems = problemSets.filter((problemSet) => subject
+        ? problemSet.subject_id === subject.id
+        : !problemSet.subject_id);
+      const problemIds = new Set(relatedProblems.map((problemSet) => problemSet.id));
+      const relatedSessions = sessions.filter((session) => problemIds.has(session.problem_set_id));
 
       return {
         id,
         name: subject?.name ?? "과목 없음",
-        total: relatedSessions.length,
+        total: relatedProblems.length,
         completed: relatedSessions.filter((session) => session.status === "completed").length,
         inProgress: relatedSessions.filter((session) => session.status === "in-progress").length,
         isDefault: !subject,
@@ -108,7 +110,7 @@ export function SubjectListPage() {
     };
 
     return [makeStats(null), ...subjects.map((subject) => makeStats(subject))];
-  }, [sessions, sessionSubjectMap, subjects]);
+  }, [sessions, problemSets, subjects]);
 
   const hasDuplicateSubjectName = (name: string, ignoredSubjectId?: string) =>
     subjects.some(
@@ -388,15 +390,13 @@ export function SubjectListPage() {
   );
 
   const handleDeleteSubject = (subject: Subject) => {
-    const affectedCount = sessions.filter(
-      (session) => sessionSubjectMap[session.id] === subject.id,
-    ).length;
+    const affectedCount = problemSets.filter((problemSet) => problemSet.subject_id === subject.id).length;
 
     setDialog({
       title: "과목을 삭제할까요?",
       description:
         affectedCount > 0
-          ? `${subject.name}\n\n이 과목에 배정된 ${affectedCount}개 문제는 '과목 없음'으로 이동합니다.`
+          ? `${subject.name}\n\n이 과목의 문제 ${affectedCount}개와 연결된 풀이 세션은 '과목 없음'으로 이동합니다.`
           : `${subject.name}\n\n삭제 후에도 문제 데이터는 유지됩니다.`,
       confirmLabel: "삭제",
       variant: "danger",
@@ -431,11 +431,11 @@ export function SubjectListPage() {
           </Link>
         </DashboardHeaderTitle>
 
-        <div className="grid grid-cols-2 gap-x-3 gap-y-4 sm:grid-cols-3 sm:gap-x-4 sm:gap-y-5 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
+        <BookGrid>
           {subjectCards.map((subject) => (
             <SubjectBookCard key={subject.id} {...subject} />
           ))}
-        </div>
+        </BookGrid>
 
         <AppFooter />
       </div>
@@ -521,7 +521,7 @@ export function SubjectListPage() {
                             {subject.name}
                           </p>
                           <p className="text-xs text-stone-500 dark:text-stone-500">
-                            {sessions.filter((session) => sessionSubjectMap[session.id] === subject.id).length}개 문제
+                            {problemSets.filter((problemSet) => problemSet.subject_id === subject.id).length}개 문제
                           </p>
                         </div>
                         <div className="flex shrink-0 items-center gap-2">

@@ -24,10 +24,10 @@ import {
   downloadCsvFile,
 } from "../lib/csv";
 import { getCorrectCount, getWrongQuestions, isCorrectQuestion } from "../lib/session";
-import { getSubjectDashboardPath } from "../lib/subject";
+import { useOfflineSession } from "../hooks/useOfflineSession";
 import { formatElapsedTime } from "../lib/time";
 import { useTestStore } from "../store/useTestStore";
-import { ParsedQuestion, SolveOrder } from "../types/test";
+import { SolveOrder } from "../types/test";
 
 type ResultTab = "omr" | "chapter";
 
@@ -61,10 +61,9 @@ export function ResultPage() {
   const { sessionId = "" } = useParams();
   const navigate = useNavigate();
   const adapter = useSessionPageAdapter();
-  const localSession = useTestStore((state) => state.sessions.find((item) => item.id === sessionId));
+  const { session: localSession, problemSet, sessionsPath } = useOfflineSession(adapter ? "" : sessionId);
   const session = adapter?.session ?? localSession;
   const allowCsvDownload = adapter?.allowCsvDownload ?? true;
-  const sessionSubjectMap = useTestStore((state) => state.sessionSubjectMap);
   const createSession = useTestStore((state) => state.createSession);
 
   const [isRetryModalOpen, setIsRetryModalOpen] = useState(false);
@@ -118,24 +117,11 @@ export function ResultPage() {
     e.preventDefault();
     if (!retryTitle.trim()) return;
 
-    let sourceQuestions = session.questions;
-    if (options.onlyWrong) {
-      sourceQuestions = getWrongQuestions(session);
-    } else if (options.onlyBookmark) {
-      sourceQuestions = session.questions.filter((q) => q.bookmark);
-    }
     const retryType: RetryType = options.onlyWrong
       ? "wrong"
       : options.onlyBookmark
         ? "bookmarked"
         : "all";
-
-    const resetQuestions: ParsedQuestion[] = sourceQuestions.map((q) => ({
-      ...q,
-      my_answer: "",
-      wrong_note: "", // 새 풀이에서는 오답 노트를 비움
-      bookmark: false, // 새 풀이에서는 책갈피를 비움
-    }));
 
     const retryMode: SessionRetryMode = options.onlyWrong
       ? "incorrect"
@@ -156,10 +142,10 @@ export function ResultPage() {
           })
         : createSession({
             title: retryTitle.trim(),
-            type: session.type,
+            problemSetId: problemSet!.id,
             orderMode: retryOrderMode,
-            questions: resetQuestions,
-            subjectId: sessionSubjectMap[session.id] ?? null,
+            sourceSessionId: session.id,
+            retryMode,
           });
     } catch (cause) {
       setError(
@@ -236,7 +222,7 @@ export function ResultPage() {
     session.total_questions > 0
       ? Math.round(session.elapsed_time / session.total_questions)
       : 0;
-  const subjectDashboardPath = adapter?.dashboardPath ?? getSubjectDashboardPath(sessionSubjectMap[session.id]);
+  const subjectDashboardPath = adapter?.dashboardPath ?? sessionsPath;
   const wrongPath = adapter?.wrongPath(session.id) ?? `/wrong/${session.id}`;
   const reviewPath = adapter?.reviewPath(session.id) ?? `/review/${session.id}`;
   const chapterStats = Array.from(
@@ -282,7 +268,7 @@ export function ResultPage() {
           title={session.title}
           sectionTitle="채점 결과"
           logoTo={subjectDashboardPath}
-          logoLabel="문제 풀이 대시보드로 이동"
+          logoLabel="풀이 세션 목록으로 이동"
         >
           {allowCsvDownload ? (
             <button
@@ -297,7 +283,7 @@ export function ResultPage() {
             to={subjectDashboardPath}
             className="app-button-secondary rounded-xl px-3 py-2 text-center text-sm font-semibold sm:px-4"
           >
-            <ReturnLinkLabel>문제 대시보드로</ReturnLinkLabel>
+            <ReturnLinkLabel>풀이 세션으로</ReturnLinkLabel>
           </Link>
         </DashboardHeaderTitle>
 

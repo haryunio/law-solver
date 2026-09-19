@@ -15,13 +15,7 @@ import {
   listPremiumProblemSets,
   type PremiumAttemptSummary,
 } from "../lib/premiumApi";
-import { formatElapsedTime } from "../lib/time";
-
-const orderLabel = {
-  number: "번호 순서",
-  "chapter-random": "챕터별 랜덤",
-  random: "전체 랜덤",
-} as const;
+import { SessionListItem } from "../components/session/SessionListItem";
 
 const retryLabel = (attempt: PremiumAttemptSummary) => {
   if (attempt.retryMode === "all") return "전체 다시 풀기";
@@ -31,83 +25,23 @@ const retryLabel = (attempt: PremiumAttemptSummary) => {
   return attempt.attemptNumber === 1 ? "첫 풀이" : "새로 풀기";
 };
 
-const attemptDateFormatter = new Intl.DateTimeFormat("ko-KR", {
-  year: "numeric",
-  month: "numeric",
-  day: "numeric",
-  hour: "2-digit",
-  minute: "2-digit",
-});
-
 function AttemptListItem({ attempt }: { attempt: PremiumAttemptSummary }) {
-  const isCompleted = attempt.status === "submitted";
-  const destination = isCompleted
-    ? `/premium/results/${attempt.id}`
-    : `/premium/attempts/${attempt.id}`;
-
+  const completed = attempt.status === "submitted";
   return (
-    <article className="app-card app-problem-card rounded-2xl border px-4 py-3 sm:px-5">
-      <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
-        <div className="flex min-w-0 flex-1 items-start gap-3">
-          <span className="inline-flex h-9 shrink-0 items-center rounded-lg border border-red-100 bg-red-50 px-2.5 text-xs font-black text-red-700 dark:border-red-900/50 dark:bg-red-950/30 dark:text-red-400">
-            {attempt.attemptNumber}회차
-          </span>
-          <div className="min-w-0 flex-1">
-            <div className="flex flex-wrap items-center gap-1.5">
-              <h2 className="truncate text-sm font-bold text-stone-900 dark:text-stone-100">
-                {retryLabel(attempt)}
-              </h2>
-              <span className={[
-                "rounded-full border px-2 py-0.5 text-[10px] font-bold",
-                isCompleted
-                  ? "border-blue-100 bg-blue-50 text-blue-700 dark:border-blue-900/50 dark:bg-blue-950/30 dark:text-blue-400"
-                  : "border-red-100 bg-red-50 text-red-700 dark:border-red-900/50 dark:bg-red-950/30 dark:text-red-400",
-              ].join(" ")}>
-                {isCompleted ? "채점 완료" : "풀이 중"}
-              </span>
-              <span className="rounded-full border border-stone-200 bg-stone-50 px-2 py-0.5 text-[10px] font-bold text-stone-600 dark:border-stone-700 dark:bg-stone-950/40 dark:text-stone-300">
-                {orderLabel[attempt.orderMode]}
-              </span>
-            </div>
-            <p className="mt-1 truncate text-xs text-stone-400 dark:text-stone-500">
-              {attemptDateFormatter.format(new Date(attempt.createdAt))}
-            </p>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-3 gap-2 text-xs lg:w-[360px]">
-          <div className="app-neutral-box rounded-lg px-2.5 py-2">
-            <span className="block text-[10px] text-stone-500">진행</span>
-            <strong className="mt-0.5 block text-stone-900 dark:text-stone-100">
-              {attempt.solvedQuestions}/{attempt.totalQuestions}
-            </strong>
-          </div>
-          <div className="app-neutral-box rounded-lg px-2.5 py-2">
-            <span className="block text-[10px] text-stone-500">시간</span>
-            <strong className="mt-0.5 block text-stone-900 dark:text-stone-100">
-              {formatElapsedTime(attempt.elapsedSeconds)}
-            </strong>
-          </div>
-          <div className="app-neutral-box rounded-lg px-2.5 py-2">
-            <span className="block text-[10px] text-stone-500">점수</span>
-            <strong className="mt-0.5 block text-stone-900 dark:text-stone-100">
-              {isCompleted ? `${attempt.scorePercent ?? 0}%` : "풀이 중"}
-            </strong>
-          </div>
-        </div>
-
-        <Link
-          to={destination}
-          state={isCompleted ? undefined : { solveEntry: "resume" }}
-          className={[
-            "shrink-0 rounded-xl px-4 py-2.5 text-center text-sm font-bold lg:min-w-[116px]",
-            isCompleted ? "app-button-secondary" : "app-button-primary",
-          ].join(" ")}
-        >
-          {isCompleted ? "결과 확인" : "이어서 풀기"}
-        </Link>
-      </div>
-    </article>
+    <SessionListItem
+      attemptNumber={attempt.attemptNumber}
+      title={attempt.title}
+      modeLabel={retryLabel(attempt)}
+      completed={completed}
+      orderMode={attempt.orderMode}
+      createdAt={attempt.createdAt}
+      solvedQuestions={attempt.solvedQuestions}
+      totalQuestions={attempt.totalQuestions}
+      elapsedSeconds={attempt.elapsedSeconds}
+      scorePercent={attempt.scorePercent}
+      destination={completed ? `/premium/results/${attempt.id}` : `/premium/attempts/${attempt.id}`}
+      destinationState={completed ? undefined : { solveEntry: "resume" }}
+    />
   );
 }
 

@@ -27,7 +27,7 @@
 | `--app-bg`, `--app-bg-soft` | 화면의 미색 배경과 보조 배경 |
 | `--app-surface`, `--app-surface-solid` | 일반 카드와 불투명 입력/모달 표면 |
 | `--app-surface-muted` | 카드 안의 보조 설명 영역 |
-| `--app-surface-problem` | 문제 세션 카드의 순백색 표면 |
+| `--app-surface-problem` | 문제 카드와 세션 목록의 순백색 표면 |
 | `--app-surface-neutral`, `--app-border-neutral` | 진행률, 시간, 점수 같은 중립 정보 상자 |
 | `--app-surface-landing` | 랜딩 단계 카드와 기능 카드의 공통 표면 |
 | `--app-border`, `--app-border-strong` | 카드 경계와 입력 요소 경계 |
@@ -48,12 +48,12 @@
 | --- | --- |
 | `app-page` | 랜딩을 제외한 일반 화면의 가장 바깥 영역 |
 | `app-card` | 주요 콘텐츠 카드와 OMR 패널 |
-| `app-problem-card` | 문제 세션 카드의 표면 보정. 필요하면 `app-card`와 함께 사용 |
+| `app-problem-card` | 문제 카드와 세션 목록의 표면 보정. 필요하면 `app-card`와 함께 사용 |
 | `app-subtle-surface` | 카드 안의 보조 설명이나 설정 묶음 |
 | `app-neutral-box` | 결과 지표, 진행률, 시간, 점수 |
 | `app-topbar` | 풀이와 복기 화면의 상단 바 |
 | `app-control` | input과 textarea의 공통 표면과 포커스 |
-| `app-result-link` | 완료된 문제 세션 카드의 결과 이동 영역 |
+| `app-result-link` | 문제 카드 하단의 세션 목록 이동 영역 |
 | `app-modal-backdrop`, `app-modal-surface` | 대화상자와 모바일 bottom sheet |
 | `app-progress-gradient` | 작은 진행률 영역 |
 | `app-focus-page` | 학습 화면의 단색 CTA와 정적인 상호작용 범위 |
@@ -79,6 +79,7 @@
 | 속성 | 기본값과 동작 |
 | --- | --- |
 | `variant` | `secondary`. `primary`, `danger`, `success`도 지원 |
+| `size` | `md`. 좁은 상품 카드에는 `sm`을 지정해 패딩과 글자 크기를 함께 조정 |
 | `type` | `button`. 폼 제출 버튼은 `type="submit"`을 직접 지정 |
 | `pending` | `false`. 진행 중에는 클릭을 막고 `aria-busy`와 인라인 스피너 표시 |
 | `pendingLabel` | `처리 중`. 사용자가 기다리는 작업을 구체적으로 적기 |
@@ -148,6 +149,10 @@ const titleId = useId();
 | `RichTextContent` | 문제와 해설의 제한적 HTML 및 일반 텍스트 줄바꿈 |
 | `Toast` | 일시적인 성공, 오류, 경고, 안내 |
 | `AsyncLoading`의 컴포넌트 | 스피너, 버튼 진행 상태, 화면 작업 오버레이 |
+| `BookCover`, `BookGrid` | 오프라인 과목, 온라인 과목, 구매 상품의 책 표지와 반응형 책장 |
+| `SubjectBookCard` | 과목 이동 링크와 오프라인 과목 통계를 BookCover에 연결 |
+| `CourseProductCard` | 책 표지 아래 별도 가격, 이용 조건, 구매 CTA 영역 |
+| `SessionListItem` | 온라인과 오프라인의 얇은 풀이 세션 목록과 우측 CTA |
 
 `ThemeSelect`를 사용할 때 바깥 클릭, Escape, 방향키, Home/End, Enter/Space 동작을 유지합니다. `RichTextContent`를 통하지 않고 문제 문자열을 HTML로 주입하지 않습니다. HTML 표는 카드 폭에 맞추고 셀 안의 글자는 모바일 12px, 데스크톱 13px을 기준으로 유지합니다.
 
@@ -155,7 +160,13 @@ const titleId = useId();
 
 대시보드 GNB는 모바일에서 액션을 2열 전체 너비로 표시하고 `sm` 이상에서는 텍스트 폭의 버튼을 우측 정렬합니다. 두 줄인 `sm`과 `md` 구간은 가로 구분선 위아래에 카드 패딩만큼 여백을 둡니다. `lg`의 한 줄 GNB에서는 구분선과 그 추가 여백을 없앱니다.
 
-오프라인 과목 목록(`/dashboard`)은 `SubjectBookCard`를 사용합니다. 모바일 2열에서 시작해 `sm` 3열, `md` 4열, `lg` 5열, `xl` 6열로 늘리며 카드 높이는 224px로 유지합니다. 기존 과목 팔레트의 그라데이션을 표지에 남기고 제목과 통계는 단색 표면에 표시합니다. 전체 개수, 풀이 중, 채점 완료는 기존과 같은 풀이 세션 수이며, 과목 순서와 카드 이동, 과목 관리 동작은 유지합니다. Premium 과목 목록과 계정의 상품 카드는 기존 `SubjectCardCover`를 계속 사용합니다.
+과목 목록과 과목 이용권 상품은 `BookCover`와 `BookGrid`를 공유합니다. 모바일 2열에서 시작해 `sm` 3열, `md` 4열, `lg` 5열, `xl` 6열로 늘리며 표지 높이는 224px로 유지합니다. 표지의 상단과 책등에는 팔레트 그라데이션을 남기고 제목과 통계는 단색 표면에 표시합니다. 긴 제목은 3줄까지, 하단 정보가 많은 온라인 과목은 2줄까지 표시하며 전체 제목은 title 속성으로 보존합니다. 표지 컴포넌트는 이동을 직접 수행하지 않고 호출부가 링크나 관리 동작을 연결합니다.
+
+오프라인 `SubjectBookCard`의 전체 개수는 등록된 문제 수입니다. 풀이 중과 채점 완료는 그 문제들에 속한 세션 수입니다. 과목 관리의 드래그 손잡이, 키보드 이동과 모바일 스크롤은 기존 동작을 유지합니다. 온라인 과목도 같은 높이와 열 배치를 사용하며 공통 Premium 배지와 서버가 제공한 이용 기한을 표시합니다. 로딩 스켈레톤도 이 책장 배치를 따릅니다.
+
+상품은 `CourseProductCard`로 책 표지와 하단 구매 영역을 구분합니다. 하단의 별도 카드에 금액, 이용 기간, 풀이 횟수와 구매 CTA를 모읍니다. 구매 가능 여부와 결제 처리는 계정 페이지가 소유하고 이 컴포넌트는 전달받은 상태만 표시합니다. 결제 수단 선택은 기존 `PurchaseMethodModal`을 사용합니다.
+
+과목 안의 문제는 `app-card app-problem-card` 카드로 표시합니다. 오프라인 문제 카드는 제목, 유형, 등록 시각, 원본 문항 수와 세션 수를 보여주고 하단 링크로 세션 목록에 진입합니다. 세션은 `SessionListItem`으로 회차, 제목, 풀이 방식, 상태와 생성 시각을 왼쪽에, 진행도, 시간, 점수와 CTA를 오른쪽에 배치합니다. 모바일에서는 통계와 CTA가 다음 줄로 내려갑니다. 오프라인은 마지막 풀이 시각을 추가하며 기록이 없는 구형 세션은 이를 명시합니다. 온라인 API에 없는 마지막 풀이 시각은 만들어 표시하지 않습니다. 이름 변경과 삭제 같은 보조 동작은 actions 영역에서 제공합니다.
 
 결과 화면은 지표, 문제 확인, 다시 풀기의 세 카드를 2:1:1 비율로 사용합니다. 결과 통계는 작은 표로, 상세 분석은 아래 전체 폭으로 표시합니다. 모바일에서도 문제 확인과 다시 풀기 버튼의 크기를 축소하지 않습니다.
 

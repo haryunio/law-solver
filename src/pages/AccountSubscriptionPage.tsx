@@ -1,4 +1,4 @@
-import type { CSSProperties, FormEvent } from "react";
+import type { FormEvent } from "react";
 import { useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import {
@@ -16,14 +16,11 @@ import { DashboardHeaderTitle } from "../components/ui/DashboardHeaderTitle";
 import { PremiumBadge } from "../components/ui/PremiumBadge";
 import { ProfileAvatar } from "../components/ui/ProfileAvatar";
 import { ReturnLinkLabel } from "../components/ui/ReturnLinkLabel";
-import { SubjectCardCover } from "../components/ui/SubjectCardCover";
+import { BookGrid } from "../components/ui/BookGrid";
+import { CourseProductCard } from "../components/premium/CourseProductCard";
 import { Toast, type ToastTone } from "../components/ui/Toast";
 import { PrivacyPolicyLink } from "../components/ui/PrivacyPolicyLink";
 import { TermsOfServiceLink } from "../components/ui/TermsOfServiceLink";
-import {
-  getPremiumSubjectCoverStyle,
-  premiumOrangeAccentColor,
-} from "../lib/subjectCover";
 import type { MarketplaceProduct } from "../lib/premiumApi";
 import { getPremiumMembershipPeriod } from "../lib/premiumEntitlements";
 import { useAccountStore } from "../store/useAccountStore";
@@ -489,10 +486,9 @@ export function AccountSubscriptionPage() {
                 <div className="app-card rounded-2xl border p-8 text-center text-sm text-stone-500 dark:text-stone-400">
                   현재 구매 가능한 과목 이용권이 없습니다.
                 </div>
-              ) : <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+              ) : <BookGrid>
                 {packageCatalog.map((item) => {
                   const isActive = packageIds.includes(item.code);
-                  const courseName = item.courseName ?? item.name;
                   const actionLabel = !isSignedIn
                   ? "로그인 후 구매"
                   : !isPremiumActive
@@ -502,51 +498,19 @@ export function AccountSubscriptionPage() {
                       : "이용권 구매";
 
                   return (
-                    <article
-                    key={item.id}
-                    className="app-card app-subject-card group flex flex-col overflow-hidden rounded-2xl border transition hover:-translate-y-0.5 hover:shadow-[var(--app-shadow-hover)]"
-                    style={
-                      {
-                        "--subject-accent": premiumOrangeAccentColor,
-                      } as CSSProperties
-                    }
-                  >
-                    <SubjectCardCover
-                      title={item.name}
-                      coverStyle={getPremiumSubjectCoverStyle(courseName)}
-                      titleLines={2}
+                    <CourseProductCard
+                      key={item.id}
+                      product={item}
+                      priceLabel={formatPrice(item.priceKrw)}
+                      actionLabel={actionLabel}
+                      active={isActive}
+                      disabled={!configured || !initialized || isLoading || isActive || purchasingCode === item.code}
+                      pending={purchasingCode === item.code}
+                      onAction={() => handlePackageAction(item)}
                     />
-                    <div className="flex min-w-0 flex-1 flex-col p-5">
-                      <dl className="app-subtle-surface divide-y divide-stone-200 overflow-hidden rounded-xl border px-4 text-sm dark:divide-stone-700">
-                        {[
-                          ["금액", formatPrice(item.priceKrw)],
-                          ["이용 기간", `${item.durationDays}일`],
-                          ["다시 풀기", item.maxAttempts === null ? "무제한" : `문제별 ${item.maxAttempts}회`],
-                        ].map(([label, value]) => (
-                          <div key={label} className="flex items-center justify-between gap-4 py-3">
-                            <dt className="text-stone-500 dark:text-stone-400">{label}</dt>
-                            <dd className="font-bold text-stone-900 dark:text-stone-100">{value}</dd>
-                          </div>
-                        ))}
-                      </dl>
-                      <button
-                        type="button"
-                        onClick={() => handlePackageAction(item)}
-                        disabled={!configured || !initialized || isLoading || isActive || purchasingCode === item.code}
-                        className={[
-                          "mt-5 inline-flex h-12 w-full items-center justify-center rounded-xl px-4 text-sm font-semibold",
-                          isActive ? "app-button-secondary cursor-not-allowed" : "app-button-primary",
-                        ].join(" ")}
-                      >
-                        {purchasingCode === item.code
-                          ? <ButtonLoadingContent label="결제 처리 중" />
-                          : actionLabel}
-                      </button>
-                    </div>
-                    </article>
                   );
                 })}
-              </div>
+              </BookGrid>
             )}
           </section>
         ) : null}

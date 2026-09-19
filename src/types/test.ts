@@ -24,6 +24,45 @@ export interface ParsedQuestion {
   originalRow: Record<string, string>;
 }
 
+export type OfflineQuestion = Omit<ParsedQuestion, "my_answer" | "wrong_note" | "bookmark">;
+
+export interface OfflineProblemSet {
+  id: string;
+  title: string;
+  type: TestType;
+  subject_id: string | null;
+  created_at: string;
+  updated_at: string;
+  questions: OfflineQuestion[];
+}
+
+export interface OfflineSessionResponse {
+  answer: string;
+  wrong_note: string;
+  bookmark: boolean;
+}
+
+export type OfflineRetryMode = "all" | "incorrect" | "bookmarked";
+
+export interface OfflineSession {
+  id: string;
+  problem_set_id: string;
+  title: string;
+  order_mode: SolveOrder;
+  total_questions: number;
+  solved_questions: number;
+  score: number;
+  elapsed_time: number;
+  created_at: string;
+  last_played_at: string | null;
+  submitted_at: string | null;
+  status: SessionStatus;
+  question_order: string[];
+  responses: Record<string, OfflineSessionResponse>;
+  attempt_number: number;
+  source_session_id: string | null;
+  retry_mode: OfflineRetryMode | null;
+}
 
 export interface TestSession {
   id: string;
@@ -46,14 +85,12 @@ export interface Subject {
   cover_palette?: SubjectCoverPalette;
 }
 
-export type SessionSubjectMap = Record<TestSession["id"], Subject["id"]>;
-
 export interface DashboardBackupData {
   app: "law-solver";
-  version: 3;
+  version: 4;
   exported_at: string;
   data_modified_at: string;
-  sessions: TestSession[];
+  problemSets: OfflineProblemSet[];
+  sessions: OfflineSession[];
   subjects: Subject[];
-  sessionSubjectMap: SessionSubjectMap;
 }

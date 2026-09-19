@@ -1,22 +1,26 @@
 import { LoadingRegion, SkeletonBlock } from "../ui/AsyncLoading";
+import { BookGrid } from "../ui/BookGrid";
 
 const items = (count: number) => Array.from({ length: count }, (_, index) => index);
 
+function BookCoverSkeleton() {
+  return (
+    <div className="app-card app-subject-book relative flex h-56 flex-col overflow-hidden rounded-l-md rounded-r-xl border px-3 pb-3 pl-6 pt-[68px]">
+      <SkeletonBlock className="absolute inset-x-0 top-0 h-14 rounded-none" />
+      <SkeletonBlock className="h-3 w-14 rounded-full" />
+      <SkeletonBlock className="mt-3 h-4 w-full rounded-full" />
+      <SkeletonBlock className="mt-2 h-4 w-3/4 rounded-full" />
+      <SkeletonBlock className="mt-auto h-8 w-full rounded-lg" />
+    </div>
+  );
+}
+
 export function PremiumCourseCatalogSkeleton() {
   return (
-    <LoadingRegion label="온라인 과목을 불러오는 중입니다" className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-      {items(3).map((index) => (
-        <article key={index} className="app-card overflow-hidden rounded-2xl border">
-          <SkeletonBlock className="h-[104px] rounded-none" />
-          <div className="h-[104px] p-4">
-            <div className="flex justify-between gap-3">
-              <SkeletonBlock className="h-3 w-16 rounded-full" />
-              <SkeletonBlock className="h-3 w-24 rounded-full" />
-            </div>
-            <SkeletonBlock className="mt-4 h-11 w-full rounded-xl" />
-          </div>
-        </article>
-      ))}
+    <LoadingRegion label="온라인 과목을 불러오는 중입니다">
+      <BookGrid>
+        {items(6).map((index) => <BookCoverSkeleton key={index} />)}
+      </BookGrid>
     </LoadingRegion>
   );
 }
@@ -113,16 +117,23 @@ export function PremiumMembershipSkeleton() {
 
 export function PremiumPackageGridSkeleton() {
   return (
-    <LoadingRegion label="과목 이용권을 확인하는 중입니다" className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-      {items(4).map((index) => (
-        <article key={index} className="app-card overflow-hidden rounded-2xl border">
-          <SkeletonBlock className="h-[104px] rounded-none" />
-          <div className="p-5">
-            <SkeletonBlock className="h-32 rounded-xl" />
-            <SkeletonBlock className="mt-5 h-12 rounded-xl" />
-          </div>
-        </article>
-      ))}
+    <LoadingRegion label="과목 이용권을 확인하는 중입니다">
+      <BookGrid>
+        {items(6).map((index) => (
+          <article key={index} className="flex min-w-0 flex-col gap-3">
+            <BookCoverSkeleton />
+            <div className="app-card rounded-xl border p-3">
+              <SkeletonBlock className="h-3 w-8 rounded-full" />
+              <SkeletonBlock className="mt-2 h-6 w-20 max-w-full rounded-lg" />
+              <div className="mt-3 space-y-3 border-t border-stone-200 pt-3 dark:border-stone-700">
+                <SkeletonBlock className="h-4 w-full rounded-full" />
+                <SkeletonBlock className="h-4 w-full rounded-full" />
+              </div>
+              <SkeletonBlock className="mt-4 h-12 rounded-lg" />
+            </div>
+          </article>
+        ))}
+      </BookGrid>
     </LoadingRegion>
   );
 }

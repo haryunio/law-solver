@@ -39,6 +39,7 @@ export function SettingsPage() {
   const { darkMode, toggleDarkMode, fontFamily, setFontFamily } = useSettingsStore();
   const sessions = useTestStore((state) => state.sessions);
   const subjects = useTestStore((state) => state.subjects);
+  const problemSets = useTestStore((state) => state.problemSets);
   const resetSessions = useTestStore((state) => state.resetSessions);
   const importDashboardData = useTestStore((state) => state.importDashboardData);
   const getDashboardBackupData = useTestStore((state) => state.getDashboardBackupData);
@@ -76,12 +77,7 @@ export function SettingsPage() {
           onConfirm: async () => {
             setDataOperation("restore");
             try {
-              await importDashboardData({
-                sessions: data.sessions,
-                subjects: data.subjects,
-                sessionSubjectMap: data.sessionSubjectMap,
-                dataModifiedAt: data.data_modified_at,
-              });
+              await importDashboardData(data);
               setDialog({
                 title: "불러오기가 완료되었습니다.",
                 description: "백업 파일의 오프라인 문제 풀이 데이터가 이 브라우저에 반영되었습니다.",
@@ -266,10 +262,14 @@ export function SettingsPage() {
                       오프라인으로 등록한 과목, 문제와 풀이 기록을 관리합니다. Premium 온라인 문제 풀이 데이터는 포함되지 않습니다.
                     </p>
                   </div>
-                  <div className="app-neutral-box grid shrink-0 grid-cols-2 overflow-hidden rounded-xl text-center">
+                  <div className="app-neutral-box grid shrink-0 grid-cols-3 overflow-hidden rounded-xl text-center">
                     <div className="border-r border-stone-200 px-4 py-3 dark:border-stone-700">
                       <p className="text-[11px] text-stone-500">과목</p>
                       <p className="mt-1 font-bold tabular-nums">{subjects.length}</p>
+                    </div>
+                    <div className="border-r border-stone-200 px-4 py-3 dark:border-stone-700">
+                      <p className="text-[11px] text-stone-500">문제</p>
+                      <p className="mt-1 font-bold tabular-nums">{problemSets.length}</p>
                     </div>
                     <div className="px-4 py-3">
                       <p className="text-[11px] text-stone-500">세션</p>

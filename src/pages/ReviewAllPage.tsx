@@ -11,14 +11,14 @@ import {
   toAnalyticsQuestionType,
   trackEvent,
 } from "../lib/analytics";
-import { useTestStore } from "../store/useTestStore";
+import { useOfflineSession } from "../hooks/useOfflineSession";
 
 export function ReviewAllPage() {
   const { sessionId = "" } = useParams();
   const location = useLocation();
   const navigate = useNavigate();
   const adapter = useSessionPageAdapter();
-  const localSession = useTestStore((state) => state.sessions.find((item) => item.id === sessionId));
+  const { session: localSession } = useOfflineSession(adapter ? "" : sessionId);
   const session = adapter?.session ?? localSession;
   
   const searchParams = new URLSearchParams(location.search);

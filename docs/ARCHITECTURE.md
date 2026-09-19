@@ -27,7 +27,7 @@
 
 라우트 경로가 바뀌면 화면 경계를 다시 만듭니다. 같은 종류의 화면에서 과목 ID나 풀이 ID가 바뀌어도 이전 화면의 로컬 상태가 남지 않습니다. 검색 파라미터 변경은 이 경계를 다시 만들지 않아 계정 화면의 탭 전환 상태를 유지합니다.
 
-`OfflineDataHydrationGate`는 `/settings`, `/dashboard`, `/dashboard/:subjectId`, `/solve/:sessionId`, `/result/:sessionId`, `/wrong/:sessionId`, `/review/:sessionId`에서 사용합니다. 이 화면들은 저장소 초기화와 이전이 끝나기 전 데이터를 읽거나 수정할 수 없습니다. 랜딩, 계정, 온라인 학습, 미니 앱은 오프라인 저장소 장애 때문에 막히지 않습니다.
+`OfflineDataHydrationGate`는 `/settings`, `/dashboard`, `/dashboard/:subjectId`, `/dashboard/:subjectId/problem-sets/:problemSetId`, `/solve/:sessionId`, `/result/:sessionId`, `/wrong/:sessionId`, `/review/:sessionId`에서 사용합니다. 이 화면들은 저장소 초기화와 이전이 끝나기 전 데이터를 읽거나 수정할 수 없습니다. 랜딩, 계정, 온라인 학습, 미니 앱은 오프라인 저장소 장애 때문에 막히지 않습니다.
 
 새 화면이 오프라인 store를 읽거나 변경한다면 라우트에 이 gate를 적용하세요. Premium 화면에 오프라인 store 접근을 추가해 이 경계를 우회하지 마세요.
 
@@ -60,6 +60,7 @@
 
 - `CbtSolveScreen`이 오프라인과 Premium 문제 카드, OMR, 선택, 이동, 중단, 제출 UI를 공유합니다.
 - `premiumSession.ts`가 서버 구조를 기존 화면용 TestSession으로 변환합니다.
+- `useOfflineSession`은 현재 문제 원본과 세션 기록만 선택하고 `materializeOfflineSession`으로 같은 화면 계약을 만듭니다. 조합한 문항 배열은 영구 저장하지 않습니다.
 - `SessionPageContext`의 adapter가 `ResultPage`, `WrongAnswersPage`, `ReviewAllPage`에 이동 경로, 재풀이, 오답 노트 저장 동작을 제공합니다.
 - Premium 정답과 해설은 현재 문항의 별도 조회나 제출 결과에서만 받습니다. Premium 콘텐츠에는 CSV 내보내기를 제공하지 않습니다.
 - Premium 채점은 서버가 수행합니다. 프론트 채점 결과를 서버의 정답 판정으로 사용하지 마세요.
@@ -69,3 +70,5 @@
 오프라인 저장은 DB `law-solver-offline`, object store `persisted-state`, key `law-solver-storage`를 사용합니다. 레거시 localStorage의 같은 key는 정상 이전과 영구 저장 확인 뒤 제거합니다. 환경설정 key `law-solver-settings`는 그대로 유지합니다.
 
 저장 구조 변경은 `offlineDataStorage.ts`, `useTestStore.ts`, `dashboardBackup.ts`와 기존 버전 fixture를 함께 검토하세요. 복구와 초기화는 영구 저장 성공 뒤 메모리 상태를 바꿉니다. IndexedDB 쓰기 실패를 성공 안내로 덮거나 기존 데이터를 먼저 지우지 마세요.
+
+v4는 `problemSets`에 원본 문항을, `sessions`에 문항 참조와 학습 기록을 보관합니다. CSV 등록과 세션 생성을 분리하며 구형 세션은 문제 하나와 세션 하나로 이전합니다. 로컬 hydration과 파일 복구, 복호화된 클라우드 백업은 같은 검증 경계를 사용합니다. 날짜와 재풀이 참조, 백업 개수의 의미는 [OFFLINE_DATA_MODEL.md](OFFLINE_DATA_MODEL.md)에 정리되어 있습니다.

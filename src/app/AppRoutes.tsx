@@ -5,6 +5,7 @@ import { RouteAnchorScroll } from "./RouteAnchorScroll";
 import { LandingPage } from "../pages/LandingPage";
 
 const OfflineDataHydrationGate = lazy(() => import("../components/storage/OfflineDataHydrationGate").then((module) => ({ default: module.OfflineDataHydrationGate })));
+const OfflineProblemSetSessionsPage = lazy(() => import("../pages/OfflineProblemSetSessionsPage").then((module) => ({ default: module.OfflineProblemSetSessionsPage })));
 const DashboardPage = lazy(() => import("../pages/DashboardPage").then((module) => ({ default: module.DashboardPage })));
 const ResultPage = lazy(() => import("../pages/ResultPage").then((module) => ({ default: module.ResultPage })));
 const ReviewAllPage = lazy(() => import("../pages/ReviewAllPage").then((module) => ({ default: module.ReviewAllPage })));
@@ -57,6 +58,7 @@ export function AppRoutes() {
           <Route path="/premium/review/:attemptId" element={<PremiumSessionPage view="review" />} />
           <Route path="/dashboard" element={<OfflineDataHydrationGate><SubjectListPage /></OfflineDataHydrationGate>} />
           <Route path="/dashboard/:subjectId" element={<OfflineDataHydrationGate><DashboardPage /></OfflineDataHydrationGate>} />
+          <Route path="/dashboard/:subjectId/problem-sets/:problemSetId" element={<OfflineDataHydrationGate><OfflineProblemSetSessionsPage /></OfflineDataHydrationGate>} />
           <Route path="/solve/:sessionId" element={<OfflineDataHydrationGate><SolvePage /></OfflineDataHydrationGate>} />
           <Route path="/result/:sessionId" element={<OfflineDataHydrationGate><ResultPage /></OfflineDataHydrationGate>} />
           <Route path="/wrong/:sessionId" element={<OfflineDataHydrationGate><WrongAnswersPage /></OfflineDataHydrationGate>} />

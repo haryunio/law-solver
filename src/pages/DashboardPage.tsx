@@ -1,409 +1,154 @@
-import { FormEvent, useMemo, useState } from "react";
+import { FormEvent, useEffect, useId, useMemo, useRef, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { CsvUploadPanel } from "../components/upload/CsvUploadPanel";
 import { ConfirmDialog } from "../components/ui/ConfirmDialog";
 import { AppFooter } from "../components/ui/AppFooter";
+import { Button } from "../components/ui/Button";
 import { DashboardHeaderTitle } from "../components/ui/DashboardHeaderTitle";
+import { Dialog } from "../components/ui/Dialog";
 import { IconCloseButton } from "../components/ui/IconCloseButton";
 import { OverflowTooltipTitle } from "../components/ui/OverflowTooltipTitle";
 import { ReturnLinkLabel } from "../components/ui/ReturnLinkLabel";
 import { ThemeSelect } from "../components/ui/ThemeSelect";
-import { formatElapsedTime } from "../lib/time";
+import { getOfflineProblemSetPath } from "../lib/offlineSession";
 import { useTestStore } from "../store/useTestStore";
-import { NO_SUBJECT_ID } from "../types/test";
+import { NO_SUBJECT_ID, type OfflineProblemSet } from "../types/test";
 
-const orderModeLabel = {
-  number: "번호 순서",
-  "chapter-random": "챕터별 랜덤",
-  random: "전체 랜덤",
-} as const;
-
-const typeLabel = {
-  OX: "OX",
-  "5-choice": "5지선다",
-  short: "단답형",
-} as const;
-
+const typeLabel = { OX: "OX", "5-choice": "5지선다", short: "단답형" } as const;
 const typeStyle = {
   OX: "border-red-100 bg-red-50 text-red-700 dark:border-red-900/50 dark:bg-red-950/30 dark:text-red-400",
   "5-choice": "border-orange-100 bg-orange-50 text-orange-700 dark:border-orange-900/50 dark:bg-orange-950/30 dark:text-orange-400",
   short: "border-amber-100 bg-amber-50 text-amber-700 dark:border-amber-900/50 dark:bg-amber-950/30 dark:text-amber-400",
 } as const;
-
-const sessionDateTimeFormatter = new Intl.DateTimeFormat("ko-KR", {
-  year: "numeric",
-  month: "numeric",
-  day: "numeric",
-  hour: "2-digit",
-  minute: "2-digit",
+const dateFormatter = new Intl.DateTimeFormat("ko-KR", {
+  year: "numeric", month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit",
 });
-
-type DialogState = {
-  title: string;
-  description?: string;
-  confirmLabel?: string;
-  cancelLabel?: string;
-  variant?: "default" | "danger" | "success";
-  onConfirm: () => void;
-  onCancel?: () => void;
-};
 
 export function DashboardPage() {
   const { subjectId = NO_SUBJECT_ID } = useParams();
+  const problemSets = useTestStore((state) => state.problemSets);
   const sessions = useTestStore((state) => state.sessions);
   const subjects = useTestStore((state) => state.subjects);
-  const sessionSubjectMap = useTestStore((state) => state.sessionSubjectMap);
-  const deleteSession = useTestStore((state) => state.deleteSession);
-  const updateSessionTitle = useTestStore((state) => state.updateSessionTitle);
-  const assignSessionSubject = useTestStore((state) => state.assignSessionSubject);
+  const deleteProblemSet = useTestStore((state) => state.deleteProblemSet);
+  const updateProblemSet = useTestStore((state) => state.updateProblemSet);
   const navigate = useNavigate();
   const [openUpload, setOpenUpload] = useState(false);
-  const [editingSessionId, setEditingSessionId] = useState<string | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [editingTitle, setEditingTitle] = useState("");
   const [editingSubjectId, setEditingSubjectId] = useState(NO_SUBJECT_ID);
-  const [openSessionMenuId, setOpenSessionMenuId] = useState<string | null>(null);
-  const [dialog, setDialog] = useState<DialogState | null>(null);
+  const [openMenuId, setOpenMenuId] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState<OfflineProblemSet | null>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
+  const uploadTitleId = useId();
+  const editTitleId = useId();
 
   const isNoSubject = subjectId === NO_SUBJECT_ID;
   const currentSubject = isNoSubject ? null : subjects.find((subject) => subject.id === subjectId);
   const currentSubjectName = currentSubject?.name ?? "과목 없음";
-  const isInvalidSubject = !isNoSubject && !currentSubject;
+  const sortedProblemSets = useMemo(() => problemSets
+    .filter((problemSet) => isNoSubject ? !problemSet.subject_id : problemSet.subject_id === subjectId)
+    .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()),
+  [isNoSubject, problemSets, subjectId]);
+  const sessionCounts = useMemo(() => {
+    const counts = new Map<string, number>();
+    for (const session of sessions) counts.set(session.problem_set_id, (counts.get(session.problem_set_id) ?? 0) + 1);
+    return counts;
+  }, [sessions]);
 
-  const sortedSessions = useMemo(
-    () =>
-      sessions
-        .filter((session) =>
-          isNoSubject
-            ? !sessionSubjectMap[session.id]
-            : sessionSubjectMap[session.id] === subjectId,
-        )
-        .sort(
-          (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
-        ),
-    [isNoSubject, sessionSubjectMap, sessions, subjectId],
-  );
+  useEffect(() => {
+    if (!openMenuId) return;
+    const closeOutside = (event: PointerEvent) => {
+      if (event.target instanceof Node && !menuRef.current?.contains(event.target)) setOpenMenuId(null);
+    };
+    const closeEscape = (event: KeyboardEvent) => { if (event.key === "Escape") setOpenMenuId(null); };
+    document.addEventListener("pointerdown", closeOutside);
+    document.addEventListener("keydown", closeEscape);
+    return () => { document.removeEventListener("pointerdown", closeOutside); document.removeEventListener("keydown", closeEscape); };
+  }, [openMenuId]);
 
-  const handleDeleteSession = (sessionId: string, title: string) => {
-    setDialog({
-      title: "이 세션을 삭제할까요?",
-      description: `${title}\n\n삭제하면 해당 문제와 풀이 기록을 복구할 수 없습니다.`,
-      confirmLabel: "삭제",
-      variant: "danger",
-      onCancel: () => setDialog(null),
-      onConfirm: () => {
-        deleteSession(sessionId);
-        setDialog(null);
-      },
-    });
+  const openEdit = (problemSet: OfflineProblemSet) => {
+    setOpenMenuId(null); setEditingId(problemSet.id); setEditingTitle(problemSet.title);
+    setEditingSubjectId(problemSet.subject_id ?? NO_SUBJECT_ID);
   };
-
-  const openEditModal = (sessionId: string, title: string) => {
-    setOpenSessionMenuId(null);
-    setEditingSessionId(sessionId);
-    setEditingTitle(title);
-    setEditingSubjectId(sessionSubjectMap[sessionId] ?? NO_SUBJECT_ID);
-  };
-
-  const closeEditModal = () => {
-    setEditingSessionId(null);
-    setEditingTitle("");
-    setEditingSubjectId(NO_SUBJECT_ID);
-  };
-
-  const handleEditSubmit = (event: FormEvent) => {
+  const saveEdit = (event: FormEvent) => {
     event.preventDefault();
-    if (!editingSessionId || !editingTitle.trim()) return;
-    updateSessionTitle(editingSessionId, editingTitle.trim());
-    assignSessionSubject(
-      editingSessionId,
-      editingSubjectId === NO_SUBJECT_ID ? null : editingSubjectId,
-    );
-    closeEditModal();
+    if (!editingId || !editingTitle.trim()) return;
+    updateProblemSet(editingId, {
+      title: editingTitle.trim(), subjectId: editingSubjectId === NO_SUBJECT_ID ? null : editingSubjectId,
+    });
+    setEditingId(null);
   };
 
-  if (isInvalidSubject) {
-    return (
-      <div className="app-page px-4 py-8 md:px-6">
-        <div className="app-card mx-auto max-w-2xl rounded-2xl border p-8 text-center">
-          <p className="text-stone-700 dark:text-stone-300">과목을 찾을 수 없습니다. 과목 목록에서 다시 선택해 주세요.</p>
-          <Link
-            to="/dashboard"
-            className="app-button-primary mt-4 inline-flex rounded-lg px-4 py-2 text-sm font-semibold"
-          >
-            <ReturnLinkLabel variant="solid">과목 목록으로</ReturnLinkLabel>
-          </Link>
-        </div>
-      </div>
-    );
-  }
+  if (!isNoSubject && !currentSubject) return (
+    <div className="app-page px-4 py-8 md:px-6"><div className="app-card mx-auto max-w-2xl rounded-2xl border p-8 text-center">
+      <p className="text-stone-700 dark:text-stone-300">과목을 찾을 수 없습니다. 과목 목록에서 다시 선택해 주세요.</p>
+      <Link to="/dashboard" className="app-button-primary mt-4 inline-flex rounded-lg px-4 py-2 text-sm font-semibold"><ReturnLinkLabel variant="solid">과목 목록으로</ReturnLinkLabel></Link>
+    </div></div>
+  );
 
   return (
     <div className="app-page px-4 py-8 transition-colors duration-300 md:px-6">
       <div className="mx-auto max-w-6xl">
-        <DashboardHeaderTitle
-          title={currentSubjectName}
-          sectionTitle="문제 풀이 대시보드"
-          logoTo="/dashboard"
-          logoLabel="과목 대시보드로 이동"
-        >
-          <button
-            type="button"
-            onClick={() => setOpenUpload(true)}
-            className="app-button-primary app-button-primary-standalone rounded-xl px-3 py-2 text-sm font-semibold sm:px-4"
-          >
-            새 문제 등록
-          </button>
-          <Link
-            to="/dashboard"
-            className="app-button-secondary rounded-xl px-3 py-2 text-center text-sm font-semibold sm:px-4"
-          >
-            <ReturnLinkLabel>과목 목록으로</ReturnLinkLabel>
-          </Link>
+        <DashboardHeaderTitle title={currentSubjectName} sectionTitle="문제 목록" logoTo="/dashboard" logoLabel="과목 목록으로 이동">
+          <button type="button" onClick={() => setOpenUpload(true)} className="app-button-primary app-button-primary-standalone rounded-xl px-3 py-2 text-sm font-semibold sm:px-4">새 문제 등록</button>
+          <Link to="/dashboard" className="app-button-secondary rounded-xl px-3 py-2 text-center text-sm font-semibold sm:px-4"><ReturnLinkLabel>과목 목록으로</ReturnLinkLabel></Link>
         </DashboardHeaderTitle>
-
-        {sortedSessions.length === 0 ? (
+        <p className="mb-4 text-sm text-stone-500 dark:text-stone-400">등록한 문제 {sortedProblemSets.length}개</p>
+        {sortedProblemSets.length === 0 ? (
           <div className="app-card rounded-2xl border border-dashed p-10 text-center">
-            <p className="text-base font-medium text-stone-700 dark:text-stone-300">등록된 문제 세션이 없습니다.</p>
-            <p className="mt-1 text-sm text-stone-500 dark:text-stone-500">
-              이 과목에 CSV 업로드로 OX, 5지선다 또는 단답형 문제를 시작하세요.
-            </p>
+            <p className="text-base font-medium text-stone-700 dark:text-stone-300">아직 등록한 문제가 없습니다.</p>
+            <p className="mt-2 text-sm leading-6 text-stone-500">CSV 파일을 등록하고, 문제마다 원하는 만큼 풀이 세션을 만들어 보세요.</p>
           </div>
         ) : (
           <div className="grid gap-3 md:grid-cols-2">
-            {sortedSessions.map((session) => {
-              const progressPercent =
-                session.total_questions > 0
-                  ? Math.round((session.solved_questions / session.total_questions) * 100)
-                  : 0;
-              const averageSecondsPerQuestion =
-                session.total_questions > 0
-                  ? Math.round(session.elapsed_time / session.total_questions)
-                  : 0;
-              const isCompleted = session.status === "completed";
-
-              return (
-                <article
-                  key={session.id}
-                  className="app-card app-problem-card flex min-w-0 flex-col overflow-visible rounded-2xl border"
-                >
-                  <div className="relative px-4 pb-2 pt-4 pr-12">
-                    <OverflowTooltipTitle
-                      as="h2"
-                      text={session.title}
-                      className="text-base font-bold leading-snug text-stone-900 dark:text-stone-100"
-                    />
-                    <button
-                      type="button"
-                      onClick={() =>
-                        setOpenSessionMenuId((currentId) =>
-                          currentId === session.id ? null : session.id,
-                        )
-                      }
-                      className="absolute right-3 top-3 flex h-7 w-7 items-center justify-center rounded-full border border-stone-200 bg-white text-base font-bold leading-none text-stone-500 shadow-sm transition hover:bg-stone-50 hover:text-stone-800 dark:border-stone-700 dark:bg-stone-900 dark:text-stone-400 dark:hover:bg-stone-800 dark:hover:text-stone-100"
-                      aria-label={`${session.title} 메뉴 열기`}
-                      aria-expanded={openSessionMenuId === session.id}
-                    >
-                      ⋮
-                    </button>
-                    {openSessionMenuId === session.id ? (
-                      <div className="absolute right-3 top-12 z-20 w-32 overflow-hidden rounded-xl border border-stone-200 bg-white py-1 shadow-xl dark:border-stone-700 dark:bg-stone-900">
-                        <button
-                          type="button"
-                          onClick={() => openEditModal(session.id, session.title)}
-                          className="block w-full px-4 py-2 text-left text-sm font-semibold text-stone-700 transition hover:bg-stone-50 dark:text-stone-200 dark:hover:bg-stone-800"
-                        >
-                          편집
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setOpenSessionMenuId(null);
-                            handleDeleteSession(session.id, session.title);
-                          }}
-                          className="block w-full px-4 py-2 text-left text-sm font-semibold text-red-700 transition hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/30"
-                        >
-                          삭제
-                        </button>
+            {sortedProblemSets.map((problemSet) => (
+              <article key={problemSet.id} className="app-card app-problem-card flex min-w-0 flex-col rounded-2xl border">
+                <div className="relative px-4 pb-3 pt-4 pr-12">
+                  <OverflowTooltipTitle as="h2" text={problemSet.title} className="text-base font-bold leading-snug text-stone-900 dark:text-stone-100" />
+                  <div className="absolute right-3 top-3" ref={openMenuId === problemSet.id ? menuRef : undefined}>
+                    <button type="button" onClick={() => setOpenMenuId((current) => current === problemSet.id ? null : problemSet.id)} className="app-button-secondary flex h-7 w-7 items-center justify-center rounded-full text-base font-bold" aria-label={`${problemSet.title} 메뉴 열기`} aria-expanded={openMenuId === problemSet.id}>⋮</button>
+                    {openMenuId === problemSet.id ? (
+                      <div className="app-card absolute right-0 top-9 z-20 w-32 overflow-hidden rounded-xl border py-1 shadow-xl">
+                        <button type="button" onClick={() => openEdit(problemSet)} className="block w-full px-4 py-2 text-left text-sm font-semibold text-stone-700 hover:bg-stone-50 dark:text-stone-200 dark:hover:bg-stone-800">편집</button>
+                        <button type="button" onClick={() => { setOpenMenuId(null); setDeleting(problemSet); }} className="block w-full px-4 py-2 text-left text-sm font-semibold text-red-700 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/30">삭제</button>
                       </div>
                     ) : null}
                   </div>
-
-                  <div className="flex flex-wrap items-center gap-2 px-4 pb-3">
-                    <span
-                      className={[
-                        "rounded-full border px-2.5 py-0.5 text-[11px] font-bold",
-                        typeStyle[session.type],
-                      ].join(" ")}
-                    >
-                      {typeLabel[session.type]}
-                    </span>
-                    <span
-                      className={[
-                        "rounded-full border px-2.5 py-0.5 text-[11px] font-bold",
-                        isCompleted
-                          ? "border-blue-100 bg-blue-50 text-blue-700 dark:border-blue-900/50 dark:bg-blue-950/30 dark:text-blue-400"
-                          : "border-red-100 bg-red-50 text-red-700 dark:border-red-900/50 dark:bg-red-950/30 dark:text-red-400",
-                      ].join(" ")}
-                    >
-                      {isCompleted ? "채점 완료" : "풀이 중"}
-                    </span>
-                    <span className="rounded-full border border-stone-200 bg-stone-50 px-2.5 py-0.5 text-[11px] font-bold text-stone-600 dark:border-stone-700 dark:bg-stone-950/40 dark:text-stone-300">
-                      {orderModeLabel[session.order_mode ?? "number"]}
-                    </span>
-                    <span className="ml-auto text-xs text-stone-400 dark:text-stone-500 max-sm:ml-0 max-sm:w-full">
-                      {sessionDateTimeFormatter.format(new Date(session.created_at))}
-                    </span>
-                  </div>
-
-                  <div className="flex-1 px-4 pb-3">
-                    <div className="grid grid-cols-2 gap-2 text-sm sm:grid-cols-3">
-                      <div className="app-neutral-box col-span-2 min-w-0 rounded-xl px-3 py-2 sm:col-span-1">
-                        <p className="text-[11px] font-medium text-stone-500 dark:text-stone-500">진행률</p>
-                        <p className="mt-1 truncate font-bold text-stone-900 dark:text-stone-100">
-                          {session.solved_questions}/{session.total_questions}
-                        </p>
-                        <div className="mt-1.5 h-1 overflow-hidden rounded-full bg-stone-200 dark:bg-stone-800">
-                          <div
-                            className={[
-                              "h-full rounded-full transition-all",
-                              isCompleted ? "bg-blue-600 dark:bg-blue-500" : "app-progress-gradient",
-                            ].join(" ")}
-                            style={{ width: `${progressPercent}%` }}
-                          />
-                        </div>
-                      </div>
-                      <div className="app-neutral-box min-w-0 rounded-xl px-3 py-2">
-                        <p className="text-[11px] font-medium text-stone-500 dark:text-stone-500">시간</p>
-                        <p className="mt-1 truncate font-bold text-stone-900 dark:text-stone-100">
-                          {formatElapsedTime(session.elapsed_time)}
-                        </p>
-                        <p className="mt-0.5 truncate text-[10px] font-light leading-none text-stone-400 dark:text-stone-500">
-                          문제당 {formatElapsedTime(averageSecondsPerQuestion)}
-                        </p>
-                      </div>
-                      <div className="app-neutral-box min-w-0 rounded-xl px-3 py-2">
-                        <p className="text-[11px] font-medium text-stone-500 dark:text-stone-500">점수</p>
-                        <p className="mt-1 truncate text-base font-bold leading-tight text-stone-900 dark:text-stone-100">
-                          {isCompleted ? `${session.score}%` : "풀이 중"}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-
-                  {isCompleted ? (
-                    <Link
-                      to={`/result/${session.id}`}
-                      className="app-result-link block rounded-b-[calc(1rem-1px)] border-t px-4 py-3 text-center text-sm font-bold shadow-[0_-1px_0_rgba(0,0,0,0.02)]"
-                    >
-                      결과 확인하기
-                    </Link>
-                  ) : (
-                    <Link
-                      to={`/solve/${session.id}`}
-                      state={{ solveEntry: "resume" }}
-                      className="app-button-primary block rounded-b-[calc(1rem-1px)] border-t px-4 py-3 text-center text-sm font-bold"
-                    >
-                      이어서 풀기
-                    </Link>
-                  )}
-                </article>
-              );
-            })}
+                </div>
+                <div className="px-4 pb-4">
+                  <span className={`inline-flex rounded-full border px-2.5 py-0.5 text-[11px] font-bold ${typeStyle[problemSet.type]}`}>{typeLabel[problemSet.type]}</span>
+                  <dl className="mt-3 grid grid-cols-2 gap-2">
+                    <div className="app-neutral-box rounded-xl px-3 py-2"><dt className="text-[11px] text-stone-500">전체 문항</dt><dd className="mt-1 text-sm font-semibold text-stone-900 dark:text-stone-100">{problemSet.questions.length}문항</dd></div>
+                    <div className="app-neutral-box rounded-xl px-3 py-2"><dt className="text-[11px] text-stone-500">풀이 세션</dt><dd className="mt-1 text-sm font-semibold text-stone-900 dark:text-stone-100">{sessionCounts.get(problemSet.id) ?? 0}개</dd></div>
+                  </dl>
+                  <p className="mt-3 text-xs text-stone-400 dark:text-stone-500">문제 등록 <time dateTime={problemSet.created_at}>{Number.isFinite(new Date(problemSet.created_at).getTime()) ? dateFormatter.format(new Date(problemSet.created_at)) : "날짜 기록 없음"}</time></p>
+                </div>
+                <Link to={getOfflineProblemSetPath(problemSet.id, problemSet.subject_id)} className="app-result-link mt-auto flex items-center justify-center rounded-b-2xl border-t px-4 py-3 text-sm font-semibold">풀이 세션 보기</Link>
+              </article>
+            ))}
           </div>
         )}
-
         <AppFooter />
       </div>
-
       {openUpload ? (
-        <div className="fixed inset-0 z-50">
-          <button onClick={() => setOpenUpload(false)} className="app-modal-backdrop absolute inset-0" />
-          <div className="absolute left-1/2 top-1/2 w-[92vw] max-w-lg -translate-x-1/2 -translate-y-1/2">
-            <IconCloseButton
-              onClick={() => setOpenUpload(false)}
-              label="새 문제 등록 닫기"
-              className="absolute right-3 top-3 z-10"
-            />
-            <CsvUploadPanel
-              subjectId={isNoSubject ? null : subjectId}
-              onCreated={(sessionId) => {
-                setOpenUpload(false);
-                navigate(`/solve/${sessionId}`, { state: { solveEntry: "upload" } });
-              }}
-            />
-          </div>
-        </div>
+        <Dialog labelledBy={uploadTitleId} onClose={() => setOpenUpload(false)}>
+          <CsvUploadPanel headingId={uploadTitleId} onCancel={() => setOpenUpload(false)} subjectId={isNoSubject ? null : subjectId} onCreated={(problemSetId) => {
+            setOpenUpload(false); navigate(getOfflineProblemSetPath(problemSetId, isNoSubject ? null : subjectId));
+          }} />
+        </Dialog>
       ) : null}
-
-      {editingSessionId ? (
-        <div className="fixed inset-0 z-50">
-          <button onClick={closeEditModal} className="app-modal-backdrop absolute inset-0" />
-          <div className="absolute left-1/2 top-1/2 w-[92vw] max-w-md -translate-x-1/2 -translate-y-1/2">
-            <form
-              onSubmit={handleEditSubmit}
-              className="app-modal-surface space-y-4 rounded-2xl border p-6"
-            >
-              <div className="flex items-center justify-between">
-                <h2 className="text-lg font-semibold text-stone-900 dark:text-stone-100">문제 편집</h2>
-                <IconCloseButton onClick={closeEditModal} label="문제 편집 닫기" />
-              </div>
-
-              <label className="block space-y-2">
-                <span className="text-sm font-medium text-stone-700 dark:text-stone-300">제목</span>
-                <input
-                  autoFocus
-                  value={editingTitle}
-                  onChange={(event) => setEditingTitle(event.target.value)}
-                  className="app-control w-full rounded-lg px-3 py-2 text-sm"
-                  placeholder="문제 세션 제목"
-                />
-              </label>
-
-              <div className="space-y-2">
-                <span className="text-sm font-medium text-stone-700 dark:text-stone-300">과목</span>
-                <ThemeSelect
-                  value={editingSubjectId}
-                  onChange={setEditingSubjectId}
-                  ariaLabel="과목 선택"
-                  options={[
-                    { value: NO_SUBJECT_ID, label: "과목 없음" },
-                    ...subjects.map((subject) => ({ value: subject.id, label: subject.name })),
-                  ]}
-                />
-              </div>
-
-              <div className="flex justify-end gap-2 pt-2">
-                <button
-                  type="button"
-                  onClick={closeEditModal}
-                  className="app-button-secondary rounded-lg px-4 py-2 text-sm font-semibold"
-                >
-                  취소
-                </button>
-                <button
-                  type="submit"
-                  disabled={!editingTitle.trim()}
-                  className="app-button-primary rounded-lg px-4 py-2 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-50"
-                >
-                  저장
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
+      {editingId ? (
+        <Dialog labelledBy={editTitleId} onClose={() => setEditingId(null)} surfaceClassName="max-h-[calc(100dvh-2rem)] max-w-md overflow-y-auto rounded-2xl border p-5">
+          <form onSubmit={saveEdit} className="space-y-4">
+            <div className="flex items-center justify-between gap-3"><h2 id={editTitleId} className="text-lg font-semibold text-stone-900 dark:text-stone-100">문제 편집</h2><IconCloseButton onClick={() => setEditingId(null)} label="문제 편집 닫기" /></div>
+            <label className="block space-y-2"><span className="text-sm font-medium text-stone-700 dark:text-stone-300">문제 제목</span><input required value={editingTitle} onChange={(event) => setEditingTitle(event.target.value)} className="app-control w-full rounded-lg px-3 py-2 text-sm" /></label>
+            <div className="space-y-2"><span className="text-sm font-medium text-stone-700 dark:text-stone-300">과목</span><ThemeSelect value={editingSubjectId} onChange={setEditingSubjectId} ariaLabel="과목 선택" options={[{ value: NO_SUBJECT_ID, label: "과목 없음" }, ...subjects.map((subject) => ({ value: subject.id, label: subject.name }))]} /></div>
+            <p className="text-xs leading-5 text-stone-500">과목을 옮기면 이 문제의 모든 풀이 세션도 함께 이동합니다.</p>
+            <div className="flex justify-end gap-2"><Button onClick={() => setEditingId(null)}>취소</Button><Button type="submit" variant="primary" disabled={!editingTitle.trim()}>저장</Button></div>
+          </form>
+        </Dialog>
       ) : null}
-
-      {dialog ? (
-        <ConfirmDialog
-          title={dialog.title}
-          description={dialog.description}
-          confirmLabel={dialog.confirmLabel}
-          cancelLabel={dialog.cancelLabel}
-          variant={dialog.variant}
-          onConfirm={dialog.onConfirm}
-          onCancel={dialog.onCancel}
-        />
-      ) : null}
+      {deleting ? <ConfirmDialog title="이 문제를 삭제할까요?" description={`${deleting.title}\n\n문제와 연결된 풀이 세션 ${sessionCounts.get(deleting.id) ?? 0}개가 함께 삭제됩니다. 삭제한 데이터는 복구할 수 없습니다.`} confirmLabel="문제 삭제" variant="danger" onCancel={() => setDeleting(null)} onConfirm={() => { deleteProblemSet(deleting.id); setDeleting(null); }} /> : null}
     </div>
   );
 }

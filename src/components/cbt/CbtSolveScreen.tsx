@@ -11,7 +11,7 @@ import {
   trackEvent,
 } from "../../lib/analytics";
 import { downloadSessionCsv } from "../../lib/csv";
-import { getSubjectDashboardPath } from "../../lib/subject";
+import { useOfflineSession } from "../../hooks/useOfflineSession";
 import { formatElapsedTime } from "../../lib/time";
 import { useTestStore } from "../../store/useTestStore";
 import { AnswerValue, TestSession } from "../../types/test";
@@ -46,18 +46,18 @@ export function CbtSolveScreen({
   allowCsvDownload = true,
 }: CbtSolveScreenProps) {
   const navigate = useNavigate();
-  const sessions = useTestStore((state) => state.sessions);
-  const sessionSubjectMap = useTestStore((state) => state.sessionSubjectMap);
+  const { session: storedSession, sessionsPath } = useOfflineSession(sessionOverride ? "" : sessionId);
+  const markSessionPlayed = useTestStore((state) => state.markSessionPlayed);
   const updateAnswer = useTestStore((state) => state.updateAnswer);
   const toggleBookmark = useTestStore((state) => state.toggleBookmark);
   const tickElapsedTime = useTestStore((state) => state.tickElapsedTime);
   const submitSession = useTestStore((state) => state.submitSession);
 
-  const storedSession = useMemo(
-    () => sessions.find((item) => item.id === sessionId),
-    [sessions, sessionId],
-  );
   const session = sessionOverride ?? storedSession;
+
+  useEffect(() => {
+    if (!sessionOverride && storedSession?.status === "in-progress") markSessionPlayed(sessionId);
+  }, [sessionId, sessionOverride, storedSession?.status, markSessionPlayed]);
 
   const [index, setIndex] = useState(0);
   const [showAnswer, setShowAnswer] = useState(false);
@@ -160,7 +160,7 @@ export function CbtSolveScreen({
 
   const answeredCount = session.questions.filter((q) => q.my_answer !== "").length;
   const unansweredCount = session.questions.length - answeredCount;
-  const subjectDashboardPath = getSubjectDashboardPath(sessionSubjectMap[session.id]);
+  const subjectDashboardPath = sessionsPath;
   const questionPanelMinHeight =
     session.type === "OX"
       ? "md:min-h-[min(420px,calc(100vh-112px))]"

@@ -13,12 +13,13 @@ import {
 } from "../lib/analytics";
 import { getWrongQuestions } from "../lib/session";
 import { useTestStore } from "../store/useTestStore";
+import { useOfflineSession } from "../hooks/useOfflineSession";
 
 export function WrongAnswersPage() {
   const { sessionId = "" } = useParams();
   const navigate = useNavigate();
   const adapter = useSessionPageAdapter();
-  const localSession = useTestStore((state) => state.sessions.find((item) => item.id === sessionId));
+  const { session: localSession } = useOfflineSession(adapter ? "" : sessionId);
   const session = adapter?.session ?? localSession;
   const updateWrongNote = useTestStore((state) => state.updateWrongNote);
   

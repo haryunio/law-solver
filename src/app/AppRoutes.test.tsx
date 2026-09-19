@@ -24,7 +24,7 @@ describe("application route boundaries", () => {
     },
   );
 
-  it.each(["/settings", "/dashboard", "/dashboard/subject", "/solve/session", "/result/session", "/wrong/session", "/review/session"])(
+  it.each(["/settings", "/dashboard", "/dashboard/subject", "/dashboard/subject/problem-sets/problem", "/solve/session", "/result/session", "/wrong/session", "/review/session"])(
     "requires restored data before opening %s", async (path) => {
       render(<MemoryRouter initialEntries={[path]}><AppRoutes /></MemoryRouter>);
       expect(await screen.findByText("오프라인 저장소 확인")).toBeTruthy();

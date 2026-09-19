@@ -49,6 +49,8 @@ describe("SEO metadata", () => {
     expect(dashboard.indexable).toBe(true);
     expect(dashboard.canonicalPath).toBe("/dashboard/");
     expect(getSeoMetadata("/dashboard/private-subject").indexable).toBe(false);
+    expect(getSeoMetadata("/dashboard/private-subject/problem-sets/private-problem").indexable).toBe(false);
+    expect(getCanonicalUrl(getSeoMetadata("/dashboard/private-subject/problem-sets/private-problem"))).toBeNull();
   });
 
   it("only includes canonical public pages in the sitemap path list", () => {

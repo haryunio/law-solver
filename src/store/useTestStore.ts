@@ -1,8 +1,10 @@
-import { createId } from "../lib/id";
-import { orderQuestions } from "../lib/order";
-import { reorderSubjects, SubjectDropPlacement } from "../lib/subject";
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import { createId } from "../lib/id";
+import { orderQuestions } from "../lib/order";
+import { reorderSubjects, type SubjectDropPlacement } from "../lib/subject";
+import { DASHBOARD_BACKUP_VERSION, parseDashboardBackup, validateDashboardBackupVersion } from "../lib/dashboardBackup";
+import { emptyOfflineResponse, materializeOfflineSession, toOfflineQuestion } from "../lib/offlineProblemSets";
 import {
   createOfflineDataStorage,
   getOfflineDataStorageMessage,
@@ -11,167 +13,82 @@ import {
   type OfflineDataStorageBackend,
 } from "../lib/offlineDataStorage";
 import {
-  AnswerValue,
-  DashboardBackupData,
   NO_SUBJECT_ID,
-  ParsedQuestion,
-  SessionSubjectMap,
-  SolveOrder,
-  Subject,
-  SubjectCoverPalette,
-  TestSession,
-  TestType,
+  type AnswerValue,
+  type DashboardBackupData,
+  type OfflineProblemSet,
+  type OfflineRetryMode,
+  type OfflineSession,
+  type OfflineSessionResponse,
+  type ParsedQuestion,
+  type SolveOrder,
+  type Subject,
+  type SubjectCoverPalette,
+  type TestSession,
+  type TestType,
 } from "../types/test";
 
-interface CreateSessionInput {
+interface CreateProblemSetInput {
   title: string;
   type: TestType;
-  orderMode: SolveOrder;
   questions: ParsedQuestion[];
   subjectId?: string | null;
 }
-
-interface ImportDashboardDataInput {
-  sessions: TestSession[];
-  subjects?: Subject[];
-  sessionSubjectMap?: SessionSubjectMap;
-  dataModifiedAt?: string;
+interface CreateSessionInput {
+  problemSetId: string;
+  title?: string;
+  orderMode?: SolveOrder;
+  sourceSessionId?: string;
+  retryMode?: OfflineRetryMode;
 }
-
 export interface PersistedTestState {
-  sessions: TestSession[];
+  problemSets: OfflineProblemSet[];
+  sessions: OfflineSession[];
   subjects: Subject[];
-  sessionSubjectMap: SessionSubjectMap;
   dataUpdatedAt: string;
 }
-
-interface TestStore {
-  sessions: TestSession[];
-  subjects: Subject[];
-  sessionSubjectMap: SessionSubjectMap;
-  dataUpdatedAt: string;
+interface TestStore extends PersistedTestState {
+  createProblemSet: (input: CreateProblemSetInput) => string;
+  updateProblemSet: (id: string, updates: { title?: string; subjectId?: string | null }) => void;
+  deleteProblemSet: (id: string) => void;
   createSession: (input: CreateSessionInput) => string;
-  deleteSession: (sessionId: string) => void;
-  updateSessionTitle: (sessionId: string, title: string) => void;
+  deleteSession: (id: string) => void;
+  updateSessionTitle: (id: string, title: string) => void;
   createSubject: (name: string, coverPalette?: SubjectCoverPalette) => string;
-  renameSubject: (subjectId: string, name: string) => void;
-  updateSubject: (
-    subjectId: string,
-    updates: { name?: string; coverPalette?: SubjectCoverPalette },
-  ) => void;
-  reorderSubject: (
-    sourceSubjectId: string,
-    targetSubjectId: string,
-    placement?: SubjectDropPlacement,
-  ) => void;
-  deleteSubject: (subjectId: string) => void;
-  assignSessionSubject: (sessionId: string, subjectId: string | null) => void;
-  getSessionSubjectId: (sessionId: string) => string | null;
+  renameSubject: (id: string, name: string) => void;
+  updateSubject: (id: string, updates: { name?: string; coverPalette?: SubjectCoverPalette }) => void;
+  reorderSubject: (sourceId: string, targetId: string, placement?: SubjectDropPlacement) => void;
+  deleteSubject: (id: string) => void;
+  getSessionSubjectId: (id: string) => string | null;
   getDashboardBackupData: () => DashboardBackupData;
   updateAnswer: (sessionId: string, questionId: string, answer: AnswerValue) => void;
   updateWrongNote: (sessionId: string, questionId: string, note: string) => void;
   toggleBookmark: (sessionId: string, questionId: string) => void;
-  tickElapsedTime: (sessionId: string) => void;
-  submitSession: (sessionId: string) => void;
-  getSessionById: (sessionId: string) => TestSession | undefined;
+  tickElapsedTime: (id: string) => void;
+  markSessionPlayed: (id: string) => void;
+  submitSession: (id: string) => void;
+  getSessionById: (id: string) => TestSession | undefined;
   resetSessions: () => Promise<void>;
   importSessions: (sessions: TestSession[]) => Promise<void>;
-  importDashboardData: (data: ImportDashboardDataInput) => Promise<void>;
+  importDashboardData: (data: unknown) => Promise<void>;
 }
 
-const calcSolved = (questions: ParsedQuestion[]) =>
-  questions.filter((q) => q.my_answer !== "").length;
-
-const calcScore = (questions: ParsedQuestion[]) => {
-  if (!questions.length) return 0;
-  const correct = questions.filter((q) => q.my_answer !== "" && q.my_answer === q.answer).length;
-  return Math.round((correct / questions.length) * 100);
-};
-
 const modifiedNow = () => new Date().toISOString();
-
-const isRecord = (value: unknown): value is Record<string, unknown> =>
-  typeof value === "object" && value !== null;
-
-const subjectCoverPalettes: SubjectCoverPalette[] = ["warm", "green", "blue", "purple", "gray"];
-
-const normalizeSubjectCoverPalette = (value: unknown): SubjectCoverPalette | undefined =>
-  typeof value === "string" && subjectCoverPalettes.includes(value as SubjectCoverPalette)
-    ? (value as SubjectCoverPalette)
-    : undefined;
-
-const normalizeSubjects = (value: unknown): Subject[] => {
-  if (!Array.isArray(value)) return [];
-
-  const seen = new Set<string>();
-  return value.flatMap((subject) => {
-    if (!isRecord(subject)) return [];
-    const id = typeof subject.id === "string" ? subject.id : "";
-    const name = typeof subject.name === "string" ? subject.name.trim() : "";
-    const createdAt =
-      typeof subject.created_at === "string" ? subject.created_at : new Date().toISOString();
-    const coverPalette = normalizeSubjectCoverPalette(subject.cover_palette);
-
-    if (!id || id === NO_SUBJECT_ID || !name || seen.has(id)) return [];
-    seen.add(id);
-    return [{ id, name, created_at: createdAt, cover_palette: coverPalette }];
-  });
+const emptyState = (): PersistedTestState => ({ problemSets: [], sessions: [], subjects: [], dataUpdatedAt: modifiedNow() });
+const persistedTestState = ({ problemSets, sessions, subjects, dataUpdatedAt }: PersistedTestState): PersistedTestState =>
+  ({ problemSets, sessions, subjects, dataUpdatedAt });
+const normalizedState = (value: unknown): PersistedTestState => {
+  const data = parseDashboardBackup(value);
+  return { problemSets: data.problemSets, sessions: data.sessions, subjects: data.subjects, dataUpdatedAt: data.data_modified_at };
 };
-
-const normalizeSessionSubjectMap = (
-  value: unknown,
-  sessions: TestSession[],
-  subjects: Subject[],
-): SessionSubjectMap => {
-  if (!isRecord(value)) return {};
-
-  const sessionIds = new Set(sessions.map((session) => session.id));
-  const subjectIds = new Set(subjects.map((subject) => subject.id));
-
-  return Object.entries(value).reduce<SessionSubjectMap>((acc, [sessionId, subjectId]) => {
-    if (
-      sessionIds.has(sessionId) &&
-      typeof subjectId === "string" &&
-      subjectId !== NO_SUBJECT_ID &&
-      subjectIds.has(subjectId)
-    ) {
-      acc[sessionId] = subjectId;
-    }
-    return acc;
-  }, {});
+const selectedSubject = (subjectId: string | null | undefined, subjects: Subject[]): string | null => {
+  if (!subjectId || subjectId === NO_SUBJECT_ID) return null;
+  if (!subjects.some((subject) => subject.id === subjectId)) throw new Error("문제를 옮길 과목을 다시 선택해 주세요.");
+  return subjectId;
 };
-
-const normalizeDashboardData = (value: unknown): ImportDashboardDataInput => {
-  const state = isRecord(value) ? value : {};
-  const sessions = Array.isArray(state.sessions) ? (state.sessions as TestSession[]) : [];
-  const subjects = normalizeSubjects(state.subjects);
-
-  return {
-    sessions,
-    subjects,
-    sessionSubjectMap: normalizeSessionSubjectMap(state.sessionSubjectMap, sessions, subjects),
-    dataModifiedAt: typeof state.dataUpdatedAt === "string"
-      ? state.dataUpdatedAt
-      : typeof state.dataModifiedAt === "string"
-      ? state.dataModifiedAt
-      : modifiedNow(),
-  };
-};
-
-const persistedTestState = ({
-  sessions,
-  subjects,
-  sessionSubjectMap,
-  dataUpdatedAt,
-}: Pick<TestStore, "sessions" | "subjects" | "sessionSubjectMap" | "dataUpdatedAt">): PersistedTestState => ({
-  sessions,
-  subjects,
-  sessionSubjectMap,
-  dataUpdatedAt,
-});
+const solvedCount = (responses: Record<string, OfflineSessionResponse>) => Object.values(responses).filter((response) => response.answer !== "").length;
 
 export const offlineDataStorage = createOfflineDataStorage<PersistedTestState>();
-
 const flushImportantOfflineChange = () => {
   queueMicrotask(() => void offlineDataStorage.flush().catch(() => undefined));
 };
@@ -180,16 +97,10 @@ export type OfflineDataInitializationStatus =
   | { phase: "idle" | "loading"; backend: null; message: null }
   | { phase: "ready"; backend: OfflineDataStorageBackend; message: null }
   | { phase: "error"; backend: null; message: string };
-
 let hydrationError: unknown = null;
 let initializationPromise: Promise<void> | null = null;
-let initializationStatus: OfflineDataInitializationStatus = {
-  phase: "idle",
-  backend: null,
-  message: null,
-};
+let initializationStatus: OfflineDataInitializationStatus = { phase: "idle", backend: null, message: null };
 const initializationListeners = new Set<() => void>();
-
 const updateInitializationStatus = (status: OfflineDataInitializationStatus) => {
   initializationStatus = status;
   initializationListeners.forEach((listener) => listener());
@@ -197,294 +108,191 @@ const updateInitializationStatus = (status: OfflineDataInitializationStatus) => 
 
 export const useTestStore = create<TestStore>()(
   persist<TestStore, [], [], PersistedTestState>(
-    (set, get) => ({
-      sessions: [],
-      subjects: [],
-      sessionSubjectMap: {},
-      dataUpdatedAt: modifiedNow(),
-      createSession: ({ title, type, orderMode, questions, subjectId }) => {
-        const id = createId();
-        const orderedQuestions = orderQuestions(questions, orderMode);
-        const session: TestSession = {
-          id,
-          title,
-          type,
-          order_mode: orderMode,
-          total_questions: orderedQuestions.length,
-          solved_questions: 0,
-          score: 0,
-          elapsed_time: 0,
-          created_at: new Date().toISOString(),
-          status: "in-progress",
-          questions: orderedQuestions,
-        };
+    (set, get) => {
+      const changeSession = (id: string, update: (session: OfflineSession) => OfflineSession) => {
         set((state) => {
-          const shouldAssign =
-            subjectId &&
-            subjectId !== NO_SUBJECT_ID &&
-            state.subjects.some((subject) => subject.id === subjectId);
-
-          return {
-            sessions: [session, ...state.sessions],
-            dataUpdatedAt: modifiedNow(),
-            sessionSubjectMap: shouldAssign
-              ? { ...state.sessionSubjectMap, [id]: subjectId }
-              : state.sessionSubjectMap,
-          };
+          const current = state.sessions.find((session) => session.id === id);
+          if (!current) return state;
+          const next = update(current);
+          if (next === current) return state;
+          return { sessions: state.sessions.map((session) => session.id === id ? next : session), dataUpdatedAt: modifiedNow() };
         });
-        return id;
-      },
-      deleteSession: (sessionId) =>
-        set((state) => {
-          const { [sessionId]: _deleted, ...nextMap } = state.sessionSubjectMap;
-          return {
-            sessions: state.sessions.filter((session) => session.id !== sessionId),
-            sessionSubjectMap: nextMap,
-            dataUpdatedAt: modifiedNow(),
+      };
+      const changeResponse = (id: string, questionId: string, update: (response: OfflineSessionResponse) => OfflineSessionResponse, activeOnly = false) => {
+        changeSession(id, (session) => {
+          if ((activeOnly && session.status === "completed") || !Object.prototype.hasOwnProperty.call(session.responses, questionId)) return session;
+          const responses = { ...session.responses, [questionId]: update(session.responses[questionId]!) };
+          return { ...session, responses, solved_questions: solvedCount(responses), ...(activeOnly ? { last_played_at: modifiedNow() } : {}) };
+        });
+        flushImportantOfflineChange();
+      };
+      return {
+        ...emptyState(),
+        createProblemSet: ({ title, type, questions, subjectId }) => {
+          const id = createId();
+          const now = modifiedNow();
+          const state = get();
+          const problem: OfflineProblemSet = {
+            id, title: title.trim(), type, subject_id: selectedSubject(subjectId, state.subjects),
+            created_at: now, updated_at: now, questions: questions.map(toOfflineQuestion),
           };
-        }),
-      updateSessionTitle: (sessionId, title) =>
-        set((state) => ({
-          sessions: state.sessions.map((session) =>
-            session.id === sessionId ? { ...session, title } : session,
-          ),
+          // Validate imported source before it becomes authoritative persisted data.
+          const normalized = normalizedState({ ...persistedTestState(state), problemSets: [problem, ...state.problemSets], dataUpdatedAt: now });
+          set(normalized);
+          return id;
+        },
+        updateProblemSet: (id, updates) => {
+          set((state) => {
+            const problem = state.problemSets.find((item) => item.id === id);
+            if (!problem) return state;
+            const title = updates.title?.trim();
+            const subjectId = updates.subjectId === undefined ? problem.subject_id : selectedSubject(updates.subjectId, state.subjects);
+            const now = modifiedNow();
+            return {
+              problemSets: state.problemSets.map((item) => item.id === id ? { ...item, ...(title ? { title } : {}), subject_id: subjectId, updated_at: now } : item),
+              dataUpdatedAt: now,
+            };
+          });
+        },
+        deleteProblemSet: (id) => set((state) => ({
+          problemSets: state.problemSets.filter((problem) => problem.id !== id),
+          sessions: state.sessions.filter((session) => session.problem_set_id !== id),
           dataUpdatedAt: modifiedNow(),
         })),
-      createSubject: (name, coverPalette = "warm") => {
-        const trimmedName = name.trim();
-        if (!trimmedName) return "";
-
-        const id = createId();
-        const subject: Subject = {
-          id,
-          name: trimmedName,
-          created_at: new Date().toISOString(),
-          cover_palette: coverPalette,
-        };
-        set((state) => ({ subjects: [subject, ...state.subjects], dataUpdatedAt: modifiedNow() }));
-        return id;
-      },
-      renameSubject: (subjectId, name) => {
-        const trimmedName = name.trim();
-        if (!trimmedName || subjectId === NO_SUBJECT_ID) return;
-
-        set((state) => ({
-          subjects: state.subjects.map((subject) =>
-            subject.id === subjectId ? { ...subject, name: trimmedName } : subject,
-          ),
+        createSession: ({ problemSetId, title, orderMode = "number", sourceSessionId, retryMode }) => {
+          const state = get();
+          const problem = state.problemSets.find((item) => item.id === problemSetId);
+          if (!problem) throw new Error("풀이를 시작할 문제를 다시 선택해 주세요.");
+          const source = sourceSessionId ? state.sessions.find((item) => item.id === sourceSessionId) : undefined;
+          if ((sourceSessionId && (!source || source.problem_set_id !== problemSetId)) || (retryMode && !source)) {
+            throw new Error("재풀이할 세션을 다시 선택해 주세요.");
+          }
+          const mode = source ? retryMode ?? "all" : null;
+          const selected = source
+            ? materializeOfflineSession(problem, source).questions.filter((question) => mode === "incorrect"
+              ? question.my_answer !== question.answer : mode === "bookmarked" ? question.bookmark : true)
+            : problem.questions.map((question) => ({ ...question, my_answer: "" }));
+          if (!selected.length) throw new Error("풀이할 문항이 없습니다. 문제나 재풀이 방식을 다시 선택해 주세요.");
+          const id = createId();
+          const now = modifiedNow();
+          const order = orderQuestions(selected, orderMode).map((question) => question.id);
+          const attemptNumber = state.sessions.reduce((max, session) => session.problem_set_id === problemSetId ? Math.max(max, session.attempt_number) : max, 0) + 1;
+          const session: OfflineSession = {
+            id, problem_set_id: problemSetId, title: title?.trim() || problem.title, order_mode: orderMode,
+            total_questions: order.length, solved_questions: 0, score: 0, elapsed_time: 0,
+            created_at: now, last_played_at: null, submitted_at: null, status: "in-progress",
+            question_order: order, responses: Object.fromEntries(order.map((questionId) => [questionId, emptyOfflineResponse()])),
+            attempt_number: attemptNumber, source_session_id: source?.id ?? null, retry_mode: mode,
+          };
+          set({ sessions: [session, ...state.sessions], dataUpdatedAt: now });
+          return id;
+        },
+        deleteSession: (id) => set((state) => ({
+          sessions: state.sessions.filter((session) => session.id !== id).map((session) => session.source_session_id === id ? { ...session, source_session_id: null } : session),
           dataUpdatedAt: modifiedNow(),
-        }));
-      },
-      updateSubject: (subjectId, updates) => {
-        if (subjectId === NO_SUBJECT_ID) return;
-
-        set((state) => ({
-          subjects: state.subjects.map((subject) => {
-            if (subject.id !== subjectId) return subject;
-            const nextName = updates.name?.trim();
-
-            return {
+        })),
+        updateSessionTitle: (id, title) => {
+          const next = title.trim();
+          if (next) changeSession(id, (session) => ({ ...session, title: next }));
+        },
+        createSubject: (name, coverPalette = "warm") => {
+          const trimmed = name.trim();
+          if (!trimmed) return "";
+          const id = createId();
+          const now = modifiedNow();
+          set((state) => ({ subjects: [{ id, name: trimmed, created_at: now, cover_palette: coverPalette }, ...state.subjects], dataUpdatedAt: now }));
+          return id;
+        },
+        renameSubject: (id, name) => get().updateSubject(id, { name }),
+        updateSubject: (id, updates) => {
+          if (id === NO_SUBJECT_ID) return;
+          set((state) => ({
+            subjects: state.subjects.map((subject) => subject.id === id ? {
               ...subject,
-              ...(nextName ? { name: nextName } : {}),
+              ...(updates.name?.trim() ? { name: updates.name.trim() } : {}),
               ...(updates.coverPalette ? { cover_palette: updates.coverPalette } : {}),
-            };
-          }),
-          dataUpdatedAt: modifiedNow(),
-        }));
-      },
-      reorderSubject: (sourceSubjectId, targetSubjectId, placement = "before") =>
-        set((state) => ({
-          subjects: reorderSubjects(
-            state.subjects,
-            sourceSubjectId,
-            targetSubjectId,
-            placement,
-          ),
-          dataUpdatedAt: modifiedNow(),
-        })),
-      deleteSubject: (subjectId) =>
-        set((state) => {
-          if (subjectId === NO_SUBJECT_ID) return state;
-
-          return {
-            subjects: state.subjects.filter((subject) => subject.id !== subjectId),
-            sessionSubjectMap: Object.entries(state.sessionSubjectMap).reduce<SessionSubjectMap>(
-              (acc, [sessionId, mappedSubjectId]) => {
-                if (mappedSubjectId !== subjectId) {
-                  acc[sessionId] = mappedSubjectId;
-                }
-                return acc;
-              },
-              {},
-            ),
+            } : subject),
             dataUpdatedAt: modifiedNow(),
-          };
-        }),
-      assignSessionSubject: (sessionId, subjectId) =>
-        set((state) => {
-          const { [sessionId]: _previous, ...nextMap } = state.sessionSubjectMap;
-          const shouldAssign =
-            subjectId &&
-            subjectId !== NO_SUBJECT_ID &&
-            state.subjects.some((subject) => subject.id === subjectId);
-
+          }));
+        },
+        reorderSubject: (sourceId, targetId, placement = "before") => set((state) => ({
+          subjects: reorderSubjects(state.subjects, sourceId, targetId, placement), dataUpdatedAt: modifiedNow(),
+        })),
+        deleteSubject: (id) => {
+          if (id === NO_SUBJECT_ID) return;
+          const now = modifiedNow();
+          set((state) => ({
+            subjects: state.subjects.filter((subject) => subject.id !== id),
+            problemSets: state.problemSets.map((problem) => problem.subject_id === id ? { ...problem, subject_id: null, updated_at: now } : problem),
+            dataUpdatedAt: now,
+          }));
+        },
+        getSessionSubjectId: (id) => {
+          const state = get();
+          const session = state.sessions.find((item) => item.id === id);
+          return state.problemSets.find((problem) => problem.id === session?.problem_set_id)?.subject_id ?? null;
+        },
+        getDashboardBackupData: () => {
+          const state = get();
           return {
-            sessionSubjectMap: shouldAssign
-              ? { ...nextMap, [sessionId]: subjectId }
-              : nextMap,
-            dataUpdatedAt: modifiedNow(),
+            app: "law-solver", version: DASHBOARD_BACKUP_VERSION, exported_at: modifiedNow(), data_modified_at: state.dataUpdatedAt,
+            problemSets: state.problemSets, sessions: state.sessions, subjects: state.subjects,
           };
-        }),
-      getSessionSubjectId: (sessionId) => get().sessionSubjectMap[sessionId] ?? null,
-      getDashboardBackupData: () => ({
-        app: "law-solver",
-        version: 3,
-        exported_at: new Date().toISOString(),
-        data_modified_at: get().dataUpdatedAt,
-        sessions: get().sessions,
-        subjects: get().subjects,
-        sessionSubjectMap: get().sessionSubjectMap,
-      }),
-      updateAnswer: (sessionId, questionId, answer) => {
-        set((state) => ({
-          sessions: state.sessions.map((session) => {
-            if (session.id !== sessionId || session.status === "completed") return session;
-
-            const nextQuestions = session.questions.map((question) =>
-              question.id === questionId ? { ...question, my_answer: answer } : question,
-            );
-            return {
-              ...session,
-              questions: nextQuestions,
-              solved_questions: calcSolved(nextQuestions),
-            };
-          }),
-          dataUpdatedAt: modifiedNow(),
-        }));
-        flushImportantOfflineChange();
-      },
-      updateWrongNote: (sessionId, questionId, note) =>
-        set((state) => ({
-          sessions: state.sessions.map((session) => {
-            if (session.id !== sessionId) return session;
-            return {
-              ...session,
-              questions: session.questions.map((q) =>
-                q.id === questionId ? { ...q, wrong_note: note } : q,
-              ),
-            };
-          }),
-          dataUpdatedAt: modifiedNow(),
-        })),
-      toggleBookmark: (sessionId, questionId) => {
-        set((state) => ({
-          sessions: state.sessions.map((session) => {
-            if (session.id !== sessionId) return session;
-            return {
-              ...session,
-              questions: session.questions.map((q) =>
-                q.id === questionId ? { ...q, bookmark: !q.bookmark } : q,
-              ),
-            };
-          }),
-          dataUpdatedAt: modifiedNow(),
-        }));
-        flushImportantOfflineChange();
-      },
-      tickElapsedTime: (sessionId) =>
-        set((state) => ({
-          sessions: state.sessions.map((session) =>
-            session.id === sessionId && session.status === "in-progress"
-              ? { ...session, elapsed_time: session.elapsed_time + 1 }
-              : session,
-          ),
-          dataUpdatedAt: modifiedNow(),
-        })),
-      submitSession: (sessionId) => {
-        set((state) => ({
-          sessions: state.sessions.map((session) => {
-            if (session.id !== sessionId) return session;
-            return {
-              ...session,
-              solved_questions: calcSolved(session.questions),
-              score: calcScore(session.questions),
-              status: "completed",
-            };
-          }),
-          dataUpdatedAt: modifiedNow(),
-        }));
-        flushImportantOfflineChange();
-      },
-      getSessionById: (sessionId) => get().sessions.find((session) => session.id === sessionId),
-      resetSessions: async () => {
-        const next = {
-          sessions: [],
-          subjects: [],
-          sessionSubjectMap: {},
-          dataUpdatedAt: modifiedNow(),
-        } satisfies PersistedTestState;
-        await offlineDataStorage.writeDurably(OFFLINE_DATA_STORAGE_KEY, {
-          state: next,
-          version: 3,
-        });
-        set(next);
-      },
-      importSessions: async (sessions) => {
-        const next = {
-          sessions,
-          subjects: [],
-          sessionSubjectMap: {},
-          dataUpdatedAt: modifiedNow(),
-        } satisfies PersistedTestState;
-        await offlineDataStorage.writeDurably(OFFLINE_DATA_STORAGE_KEY, {
-          state: next,
-          version: 3,
-        });
-        set(next);
-      },
-      importDashboardData: async (data) => {
-        const normalized = normalizeDashboardData(data);
-        const next = {
-          sessions: normalized.sessions,
-          subjects: normalized.subjects ?? [],
-          sessionSubjectMap: normalized.sessionSubjectMap ?? {},
-          dataUpdatedAt: normalized.dataModifiedAt ?? modifiedNow(),
-        } satisfies PersistedTestState;
-        await offlineDataStorage.writeDurably(OFFLINE_DATA_STORAGE_KEY, {
-          state: next,
-          version: 3,
-        });
-        set(next);
-      },
-    }),
+        },
+        updateAnswer: (id, questionId, answer) => changeResponse(id, questionId, (response) => ({ ...response, answer }), true),
+        updateWrongNote: (id, questionId, wrong_note) => changeResponse(id, questionId, (response) => ({ ...response, wrong_note })),
+        toggleBookmark: (id, questionId) => changeResponse(id, questionId, (response) => ({ ...response, bookmark: !response.bookmark })),
+        tickElapsedTime: (id) => changeSession(id, (session) => session.status === "in-progress"
+          ? { ...session, elapsed_time: session.elapsed_time + 1, last_played_at: modifiedNow() } : session),
+        markSessionPlayed: (id) => changeSession(id, (session) => session.status === "in-progress" ? { ...session, last_played_at: modifiedNow() } : session),
+        submitSession: (id) => {
+          const state = get();
+          changeSession(id, (session) => {
+            if (session.status === "completed") return session;
+            const problem = state.problemSets.find((item) => item.id === session.problem_set_id);
+            if (!problem) return session;
+            const materialized = materializeOfflineSession(problem, session);
+            const correct = materialized.questions.filter((question) => question.my_answer !== "" && question.my_answer === question.answer).length;
+            const now = modifiedNow();
+            return { ...session, solved_questions: solvedCount(session.responses), score: session.total_questions ? Math.round(correct / session.total_questions * 100) : 0,
+              status: "completed", last_played_at: now, submitted_at: now };
+          });
+          flushImportantOfflineChange();
+        },
+        getSessionById: (id) => {
+          const state = get();
+          const session = state.sessions.find((item) => item.id === id);
+          const problem = state.problemSets.find((item) => item.id === session?.problem_set_id);
+          return session && problem ? materializeOfflineSession(problem, session) : undefined;
+        },
+        resetSessions: async () => {
+          const next = emptyState();
+          await offlineDataStorage.writeDurably(OFFLINE_DATA_STORAGE_KEY, { state: next, version: DASHBOARD_BACKUP_VERSION });
+          set(next);
+        },
+        importSessions: async (sessions) => get().importDashboardData(sessions),
+        importDashboardData: async (data) => {
+          const next = normalizedState(data);
+          await offlineDataStorage.writeDurably(OFFLINE_DATA_STORAGE_KEY, { state: next, version: DASHBOARD_BACKUP_VERSION });
+          set(next);
+        },
+      };
+    },
     {
       name: OFFLINE_DATA_STORAGE_KEY,
-      version: 3,
+      version: DASHBOARD_BACKUP_VERSION,
       storage: offlineDataStorage.storage,
       skipHydration: true,
       partialize: persistedTestState,
-      migrate: (persistedState) => {
-        const normalized = normalizeDashboardData(persistedState);
-        return {
-          sessions: normalized.sessions,
-          subjects: normalized.subjects ?? [],
-          sessionSubjectMap: normalized.sessionSubjectMap ?? {},
-          dataUpdatedAt: normalized.dataModifiedAt ?? modifiedNow(),
-        };
+      migrate: (persistedState, version) => {
+        // Zustand's version lives outside state; retain it for future-version rejection.
+        validateDashboardBackupVersion(version);
+        if (typeof persistedState !== "object" || persistedState === null || Array.isArray(persistedState)) return normalizedState(persistedState);
+        return normalizedState({ ...persistedState, version });
       },
-      merge: (persistedState, currentState) => {
-        const normalized = normalizeDashboardData(persistedState);
-        return {
-          ...currentState,
-          sessions: normalized.sessions,
-          subjects: normalized.subjects ?? [],
-          sessionSubjectMap: normalized.sessionSubjectMap ?? {},
-          dataUpdatedAt: normalized.dataModifiedAt ?? modifiedNow(),
-        };
-      },
-      onRehydrateStorage: () => (_state, error) => {
-        hydrationError = error ?? null;
-      },
+      merge: (persistedState, currentState) => persistedState === undefined
+        ? currentState : { ...currentState, ...normalizedState(persistedState) },
+      onRehydrateStorage: () => (_state, error) => { hydrationError = error ?? null; },
     },
   ),
 );
@@ -501,7 +309,7 @@ export const getOfflineDataInitializationStatus = () => initializationStatus;
 export const persistCurrentOfflineData = async () => {
   await offlineDataStorage.writeDurably(OFFLINE_DATA_STORAGE_KEY, {
     state: persistedTestState(useTestStore.getState()),
-    version: 3,
+    version: DASHBOARD_BACKUP_VERSION,
   });
 };
 
