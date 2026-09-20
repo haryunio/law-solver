@@ -11,11 +11,12 @@ interface ProblemSetCardMetadataProps {
   type: TestType;
   questionCount: number;
   sessionCount: number;
+  inProgressCount: number;
 }
 
-export function ProblemSetCardMetadata({ type, questionCount, sessionCount }: ProblemSetCardMetadataProps) {
+export function ProblemSetCardMetadata({ type, questionCount, sessionCount, inProgressCount }: ProblemSetCardMetadataProps) {
   return (
-    <dl className="grid grid-cols-[minmax(0,1.5fr)_repeat(2,minmax(0,1fr))] gap-2 text-xs sm:grid-cols-3">
+    <dl className="grid grid-cols-[minmax(max-content,1fr)_minmax(max-content,0.7fr)_minmax(0,1.7fr)] gap-2 text-xs">
       <div className="app-neutral-box app-radius-inset flex h-11 min-w-0 items-center justify-between gap-1 rounded-lg px-2">
         <dt className="shrink-0 text-[11px] text-stone-500 dark:text-stone-400">유형</dt>
         <dd className={`app-radius-tag inline-flex h-6 items-center whitespace-nowrap rounded-full border px-2 text-[11px] font-semibold leading-none ${typeStyle[type]}`}>
@@ -28,7 +29,10 @@ export function ProblemSetCardMetadata({ type, questionCount, sessionCount }: Pr
       </div>
       <div className="app-neutral-box app-radius-inset flex h-11 min-w-0 items-center justify-between gap-1 rounded-lg px-2">
         <dt className="shrink-0 text-[11px] text-stone-500 dark:text-stone-400">세션</dt>
-        <dd className="whitespace-nowrap font-semibold tabular-nums text-stone-900 dark:text-stone-100">{sessionCount}</dd>
+        <dd className="flex min-w-0 flex-wrap items-center justify-end gap-x-1 text-right leading-4 tabular-nums">
+          <span className="font-semibold text-stone-900 dark:text-stone-100">{sessionCount}</span>
+          <span className="whitespace-nowrap text-[11px] font-normal text-stone-500 dark:text-stone-400">({inProgressCount} 풀이 중)</span>
+        </dd>
       </div>
     </dl>
   );

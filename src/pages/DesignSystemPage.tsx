@@ -96,7 +96,7 @@ function ProblemCardPreview({ title, type, premium, onEdit }: {
             <ActionMenu label="예시 문제 관리 메뉴" items={[{ id: "edit", label: "편집", onSelect: onEdit }]} />
           )}
         </div>
-        <ProblemSetCardMetadata type={type} questionCount={15} sessionCount={premium ? 1 : 3} />
+        <ProblemSetCardMetadata type={type} questionCount={15} sessionCount={premium ? 1 : 3} inProgressCount={premium ? 1 : 2} />
       </div>
       <a
         href="#ds-sessions"
@@ -289,7 +289,7 @@ export function DesignSystemPage() {
           </DemoSection>
 
           <DemoSection id="problems" title="문제 카드" description="제목 아래 한 줄에 유형, 문항 수, 세션 수를 담습니다. 등록 시각과 목록 이동은 하단에 배치합니다.">
-            <div className="grid gap-3 md:grid-cols-2">
+            <div className="grid gap-3 lg:grid-cols-2">
               {[false, true].map((premium) => (
                 <ProblemCardPreview
                   key={String(premium)} title={problemTitle || "민법 기초 확인 문제"} type={questionType} premium={premium}

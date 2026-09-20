@@ -11,6 +11,7 @@ import { usePremiumResource } from "../hooks/usePremiumResource";
 import {
   listPremiumCourses,
   listPremiumProblemSets,
+  listPremiumProblemSetAttempts,
   type PremiumQuestionType,
 } from "../lib/premiumApi";
 import type { TestType } from "../types/test";
@@ -28,7 +29,16 @@ export function PremiumCoursePage() {
   const load = useCallback(async () => {
     if (!courseId) throw new Error("Missing course");
     const [courses, problemSets] = await Promise.all([listPremiumCourses(), listPremiumProblemSets(courseId)]);
-    return { title: courses.find((course) => course.id === courseId)?.name, problemSets };
+    const summaries = await Promise.all(problemSets.map(async (problemSet) => {
+      if (problemSet.attempt_count === 0) return { ...problemSet, inProgressCount: 0 };
+      const attempts = await listPremiumProblemSetAttempts(problemSet.id);
+      return {
+        ...problemSet,
+        attempt_count: attempts.length,
+        inProgressCount: attempts.filter((attempt) => attempt.status !== "submitted").length,
+      };
+    }));
+    return { title: courses.find((course) => course.id === courseId)?.name, problemSets: summaries };
   }, [courseId]);
   const { data, error, isLoading, reload } = usePremiumResource(
     courseId ?? "",
@@ -60,7 +70,7 @@ export function PremiumCoursePage() {
         ) : error ? (
           <PremiumLoadError message={error} onRetry={reload} backTo="/premium" />
         ) : problemSets.length > 0 ? (
-          <div className="app-content-stagger grid gap-3 md:grid-cols-2">
+          <div className="app-content-stagger grid gap-3 lg:grid-cols-2">
             {problemSets.map((problemSet) => (
               <article
                 key={problemSet.id}
@@ -73,7 +83,7 @@ export function PremiumCoursePage() {
                     </h2>
                     <PremiumBadge />
                   </div>
-                  <ProblemSetCardMetadata type={questionType[problemSet.question_type]} questionCount={problemSet.question_count} sessionCount={problemSet.attempt_count} />
+                  <ProblemSetCardMetadata type={questionType[problemSet.question_type]} questionCount={problemSet.question_count} sessionCount={problemSet.attempt_count} inProgressCount={problemSet.inProgressCount} />
                 </div>
                 <Link
                   to={`/premium/courses/${courseId}/problem-sets/${problemSet.id}`}

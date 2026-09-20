@@ -57,6 +57,19 @@ async function openNewSession(title: string, random = false) {
 }
 
 describe("offline problem and session workflow", () => {
+  it("shows the total and unfinished session counts for each problem", () => {
+    const { subjectId, problemSetId } = seed();
+    const store = useTestStore.getState();
+    const completedId = store.createSession({ problemSetId, title: "완료한 풀이" });
+    store.submitSession(completedId);
+    store.createSession({ problemSetId, title: "첫 번째 진행 중 풀이" });
+    store.createSession({ problemSetId, title: "두 번째 진행 중 풀이" });
+    renderRoute(`/dashboard/${subjectId}`);
+    const card = screen.getByRole("heading", { name: "민법 문제" }).closest("article")!;
+    expect(within(card).getByText("3")).toBeTruthy();
+    expect(within(card).getByText("(2 풀이 중)")).toBeTruthy();
+  });
+
   it("registers multiple CSV files in the current subject and stays on its problem list", async () => {
     const subjectId = useTestStore.getState().createSubject("민법");
     renderRoute(`/dashboard/${subjectId}`);
