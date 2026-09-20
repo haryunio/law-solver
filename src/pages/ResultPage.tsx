@@ -11,7 +11,7 @@ import { IconCloseButton } from "../components/ui/IconCloseButton";
 import { ReturnLinkLabel } from "../components/ui/ReturnLinkLabel";
 import { ThemeSelect } from "../components/ui/ThemeSelect";
 import { Toast } from "../components/ui/Toast";
-import { getAnswerToken } from "../lib/answer";
+import { getAnswerToken, getQuestionAnswerToken } from "../lib/answer";
 import {
   RetryType,
   toAnalyticsQuestionType,
@@ -24,10 +24,10 @@ import {
   downloadCsvFile,
 } from "../lib/csv";
 import { getCorrectCount, getWrongQuestions, isCorrectQuestion } from "../lib/session";
-import { getSubjectDashboardPath } from "../lib/subject";
+import { useOfflineSession } from "../hooks/useOfflineSession";
 import { formatElapsedTime } from "../lib/time";
 import { useTestStore } from "../store/useTestStore";
-import { ParsedQuestion, SolveOrder } from "../types/test";
+import { SolveOrder } from "../types/test";
 
 type ResultTab = "omr" | "chapter";
 
@@ -61,10 +61,9 @@ export function ResultPage() {
   const { sessionId = "" } = useParams();
   const navigate = useNavigate();
   const adapter = useSessionPageAdapter();
-  const localSession = useTestStore((state) => state.sessions.find((item) => item.id === sessionId));
+  const { session: localSession, problemSet, sessionsPath } = useOfflineSession(adapter ? "" : sessionId);
   const session = adapter?.session ?? localSession;
   const allowCsvDownload = adapter?.allowCsvDownload ?? true;
-  const sessionSubjectMap = useTestStore((state) => state.sessionSubjectMap);
   const createSession = useTestStore((state) => state.createSession);
 
   const [isRetryModalOpen, setIsRetryModalOpen] = useState(false);
@@ -118,24 +117,11 @@ export function ResultPage() {
     e.preventDefault();
     if (!retryTitle.trim()) return;
 
-    let sourceQuestions = session.questions;
-    if (options.onlyWrong) {
-      sourceQuestions = getWrongQuestions(session);
-    } else if (options.onlyBookmark) {
-      sourceQuestions = session.questions.filter((q) => q.bookmark);
-    }
     const retryType: RetryType = options.onlyWrong
       ? "wrong"
       : options.onlyBookmark
         ? "bookmarked"
         : "all";
-
-    const resetQuestions: ParsedQuestion[] = sourceQuestions.map((q) => ({
-      ...q,
-      my_answer: "",
-      wrong_note: "", // 새 풀이에서는 오답 노트를 비움
-      bookmark: false, // 새 풀이에서는 책갈피를 비움
-    }));
 
     const retryMode: SessionRetryMode = options.onlyWrong
       ? "incorrect"
@@ -156,10 +142,10 @@ export function ResultPage() {
           })
         : createSession({
             title: retryTitle.trim(),
-            type: session.type,
+            problemSetId: problemSet!.id,
             orderMode: retryOrderMode,
-            questions: resetQuestions,
-            subjectId: sessionSubjectMap[session.id] ?? null,
+            sourceSessionId: session.id,
+            retryMode,
           });
     } catch (cause) {
       setError(
@@ -227,7 +213,7 @@ export function ResultPage() {
 
   const correctCount = getCorrectCount(session.questions);
   const wrongCount = getWrongQuestions(session).length;
-  const unansweredCount = session.questions.filter((q) => !q.my_answer).length;
+  const unansweredCount = session.questions.filter((q) => !q.my_answer && !isCorrectQuestion(q)).length;
   const incorrectCount = session.questions.filter(
     (q) => q.my_answer && !isCorrectQuestion(q),
   ).length;
@@ -236,7 +222,7 @@ export function ResultPage() {
     session.total_questions > 0
       ? Math.round(session.elapsed_time / session.total_questions)
       : 0;
-  const subjectDashboardPath = adapter?.dashboardPath ?? getSubjectDashboardPath(sessionSubjectMap[session.id]);
+  const subjectDashboardPath = adapter?.dashboardPath ?? sessionsPath;
   const wrongPath = adapter?.wrongPath(session.id) ?? `/wrong/${session.id}`;
   const reviewPath = adapter?.reviewPath(session.id) ?? `/review/${session.id}`;
   const chapterStats = Array.from(
@@ -257,7 +243,7 @@ export function ResultPage() {
         current.total += 1;
         current.correct += isCorrect ? 1 : 0;
         current.wrong += question.my_answer && !isCorrect ? 1 : 0;
-        current.unanswered += question.my_answer ? 0 : 1;
+        current.unanswered += !question.my_answer && !isCorrect ? 1 : 0;
         acc.set(chapter, current);
         return acc;
       },
@@ -282,7 +268,7 @@ export function ResultPage() {
           title={session.title}
           sectionTitle="채점 결과"
           logoTo={subjectDashboardPath}
-          logoLabel="문제 풀이 대시보드로 이동"
+          logoLabel="풀이 세션 목록으로 이동"
         >
           {allowCsvDownload ? (
             <button
@@ -297,11 +283,11 @@ export function ResultPage() {
             to={subjectDashboardPath}
             className="app-button-secondary rounded-xl px-3 py-2 text-center text-sm font-semibold sm:px-4"
           >
-            <ReturnLinkLabel>문제 대시보드로</ReturnLinkLabel>
+            <ReturnLinkLabel>풀이 세션으로</ReturnLinkLabel>
           </Link>
         </DashboardHeaderTitle>
 
-        <div className="grid items-stretch gap-3 md:grid-cols-[minmax(0,2fr)_minmax(0,1fr)_minmax(0,1fr)]">
+        <div className="app-content-stagger grid items-stretch gap-3 md:grid-cols-[minmax(0,2fr)_minmax(0,1fr)_minmax(0,1fr)]">
           <section className="app-card flex flex-col rounded-2xl border p-3">
             <div className="flex flex-wrap items-center justify-between gap-2">
               <div className="flex items-center gap-2">
@@ -433,7 +419,7 @@ export function ResultPage() {
           </section>
         </div>
 
-        <section className="app-card mt-4 min-w-0 rounded-2xl border p-4 md:p-5">
+        <section className="app-content-enter app-card mt-4 min-w-0 rounded-2xl border p-4 md:p-5">
           <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <h2 className="text-sm font-semibold text-stone-900 dark:text-stone-100">상세 분석</h2>
@@ -476,9 +462,9 @@ export function ResultPage() {
                 <div className="max-h-[58vh] overflow-y-auto">
                   {session.questions.map((question, idx) => {
                     const isCorrect = isCorrectQuestion(question);
-                    const isUnanswered = !question.my_answer;
+                    const isUnanswered = !question.my_answer && !isCorrect;
                     const myAnswerLabel = getAnswerToken(question.my_answer);
-                    const answerLabel = getAnswerToken(question.answer);
+                    const answerLabel = getQuestionAnswerToken(question);
                     const chapterLabel = question.chapter?.trim() || "—";
                     return (
                       <div

@@ -40,7 +40,7 @@ export function OverflowTooltipTitle({
       {isOverflowing ? (
         <div
           className={[
-            "pointer-events-none absolute left-0 top-full z-20 mt-1 hidden rounded-md border border-stone-200 bg-white px-2 py-1 text-xs font-medium text-stone-700 shadow-lg group-hover:block dark:border-stone-700 dark:bg-stone-800 dark:text-stone-200",
+            "app-radius-tag pointer-events-none absolute left-0 top-full z-20 mt-1 hidden rounded-md border border-stone-200 bg-white px-2 py-1 text-xs font-medium text-stone-700 shadow-lg group-hover:block dark:border-stone-700 dark:bg-stone-800 dark:text-stone-200",
             tooltipClassName,
           ].join(" ")}
         >

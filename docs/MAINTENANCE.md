@@ -20,7 +20,7 @@ npm run dev:local
 | URL 추가 | `src/app/AppRoutes.tsx`, `src/lib/seo.ts` | 새로고침, canonical, robots, 정적 shell, sitemap, analytics 정규화 |
 | 공통 화면과 모달 | `src/index.css`, `src/components/ui/` | 모바일, 다크 모드, Tab과 Escape, 포커스 복원 |
 | 오프라인 CSV | `src/lib/csv.ts`, `src/components/upload/CsvUploadPanel.tsx` | 기존 헤더, 세 문제 유형, 박스형 지문, 제목 제안 |
-| 저장이나 백업 | `src/lib/offlineDataStorage.ts`, `src/lib/dashboardBackup.ts`, `src/store/useTestStore.ts` | 구형 데이터 이전, 저장 용량 부족, 충돌, 복구 실패 |
+| 저장이나 백업 | `OFFLINE_DATA_MODEL.md`, `src/lib/offlineDataStorage.ts`, `src/lib/dashboardBackup.ts`, `src/store/useTestStore.ts` | v1~v3의 문제와 세션 1:1 이전, 암호화 백업 복구, 저장 용량 부족, 탭 충돌 |
 | Premium 통신 | `src/lib/premiumApi.ts`, `src/lib/premium/` | 401 1회 재시도, 요청 body와 멱등키 유지, 원문 오류 비공개 |
 | 온라인 조회 | `src/hooks/usePremiumResource.ts` | 빠른 경로 변경, 느린 이전 응답, 실패 후 재시도, 빈 목록 |
 | 풀이 동작 | `src/components/cbt/CbtSolveScreen.tsx`, `src/pages/PremiumSolvePage.tsx` | 실패한 답안 보존, 저장 전 제출 차단, 오프라인 동일 UI |
@@ -49,7 +49,7 @@ npm run preview -- --host 127.0.0.1 --port 4164 --strictPort
 수동 검증에서는 다음 사용자 흐름을 확인합니다.
 
 1. 랜딩에서 시작하고 `/apps`, `/account`, `/premium`에 직접 접속합니다. 오프라인 저장소 오류가 이 화면들을 막지 않아야 합니다.
-2. 샘플 CSV를 새 과목에 등록하고 답안 선택, 중단, 재접속, 제출, 오답 노트와 재풀이를 확인합니다.
+2. 샘플 CSV를 새 과목에 등록하고 빈 세션 목록을 확인합니다. 세션 두 개를 만들어 답안과 노트가 독립적인지 확인하고 중단, 재접속, 제출, 재풀이 후에도 문제 원본이 하나인지 확인합니다. 구형 JSON과 암호화 백업을 복구해 기존 기록과 과목 연결이 유지되는지도 확인합니다.
 3. 온라인 문제를 푸는 중 저장 요청을 실패시켜 답안이 남고 제출이 중단되는지 확인합니다. 연결이 돌아오면 저장 후 제출할 수 있어야 합니다.
 4. JSON 복구나 클라우드 복구 실패 시 기존 데이터가 유지되고 확인 모달이 남아 있는지 확인합니다.
 5. 모바일과 데스크톱, 라이트와 다크 모드에서 모달의 Tab 순환, Escape, 닫은 후 포커스 복원을 확인합니다.
@@ -69,3 +69,5 @@ npm run preview -- --host 127.0.0.1 --port 4164 --strictPort
 6. 운영 릴리즈는 별도로 결정합니다. 프론트는 `develop`에서 `main`으로 PR을 보내고 병합 커밋에 새 버전 태그를 붙입니다. 서버는 자체 수동 배포 절차를 따릅니다.
 
 이미 발행한 태그와 적용된 서버 migration을 수정해 이력을 덮지 마세요. 운영 장애를 되돌릴 때는 문제가 생긴 변경의 revert PR을 검증하며, DB 변경은 서버의 배포 문서에 따라 별도 판단합니다.
+
+오프라인 v4 저장 구조는 하향 이전을 제공하지 않습니다. v4가 사용자 브라우저에 저장된 뒤에는 v3만 지원하는 앱으로 롤백하지 말고 v4 호환 수정 버전을 배포하세요. 이 구조 변경의 검증 기준과 데이터 복구 절차는 [OFFLINE_DATA_MODEL.md](OFFLINE_DATA_MODEL.md)를 따릅니다.

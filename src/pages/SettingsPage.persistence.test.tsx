@@ -67,8 +67,12 @@ describe("SettingsPage durable file restore", () => {
       })),
     });
     const confirm = await openFileRestoreConfirmation();
+    expect(useTestStore.getState().importDashboardData).not.toHaveBeenCalled();
 
     fireEvent.click(confirm);
+    expect(useTestStore.getState().importDashboardData).toHaveBeenCalledWith(expect.objectContaining({
+      app: "law-solver", version: 4, problemSets: [], sessions: [], subjects: [],
+    }));
     expect(screen.getByText("저장하는 중")).toBeTruthy();
     expect(screen.getByRole("heading", { name: "오프라인 문제 풀이 데이터를 불러올까요?" }))
       .toBeTruthy();

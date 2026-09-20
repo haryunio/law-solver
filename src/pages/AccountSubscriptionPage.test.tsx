@@ -1,16 +1,84 @@
 // @vitest-environment jsdom
 
-import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { afterEach, describe, expect, it } from "vitest";
 import { useAccountStore } from "../store/useAccountStore";
 import { AccountSubscriptionPage } from "./AccountSubscriptionPage";
+import type { MarketplaceProduct } from "../lib/premiumApi";
 
 const initialAccountState = useAccountStore.getState();
+
+const courseProduct: MarketplaceProduct = {
+  id: "course-product",
+  code: "civil-law_90d",
+  name: "민법 기본 문제 90일 이용권",
+  description: "",
+  kind: "course_pass",
+  courseId: "civil-law",
+  courseCode: "civil-law",
+  courseName: "민법",
+  priceKrw: 15000,
+  currency: "KRW",
+  durationDays: 90,
+  maxAttempts: 5,
+  requiresPremium: true,
+};
 
 afterEach(() => {
   cleanup();
   useAccountStore.setState(initialAccountState, true);
+});
+
+describe("AccountSubscriptionPage course products", () => {
+  const renderProducts = (state: Partial<ReturnType<typeof useAccountStore.getState>> = {}) => {
+    useAccountStore.setState({
+      configured: true,
+      initialized: true,
+      isLoading: false,
+      isSignedIn: true,
+      isPremiumActive: true,
+      packageIds: [],
+      purchasingCode: null,
+      marketplaceProducts: [courseProduct],
+      ...state,
+    });
+    render(
+      <MemoryRouter initialEntries={["/account?tab=packages"]}>
+        <AccountSubscriptionPage />
+      </MemoryRouter>,
+    );
+  };
+
+  it("keeps the selected product and price when opening the purchase methods", () => {
+    renderProducts();
+    const product = screen.getByRole("article");
+    expect(within(product).getByRole("heading", { name: courseProduct.name })).toBeTruthy();
+    expect(within(product).getByText("15,000원")).toBeTruthy();
+    expect(within(product).getByText("90일")).toBeTruthy();
+    expect(within(product).getByText("문제별 5회")).toBeTruthy();
+
+    fireEvent.click(within(product).getByRole("button", { name: "이용권 구매" }));
+    const dialog = screen.getByRole("dialog", { name: "결제 방법 선택" });
+    expect(within(dialog).getByText(courseProduct.name)).toBeTruthy();
+    expect(within(dialog).getByText("15,000원")).toBeTruthy();
+  });
+
+  it("keeps an owned product unavailable for another purchase", () => {
+    renderProducts({ packageIds: [courseProduct.code] });
+    expect(screen.getByRole("button", { name: "이용 중" })).toHaveProperty("disabled", true);
+    expect(screen.queryByRole("dialog")).toBeNull();
+  });
+
+  it.each([
+    { isSignedIn: false, isPremiumActive: false, action: "로그인 후 구매", tab: "계정" },
+    { isSignedIn: true, isPremiumActive: false, action: "Premium 회원권 필요", tab: "Law Solver Premium" },
+  ])("keeps the prerequisite navigation for $action", ({ isSignedIn, isPremiumActive, action, tab }) => {
+    renderProducts({ isSignedIn, isPremiumActive });
+    fireEvent.click(screen.getByRole("button", { name: action }));
+    expect(screen.getByRole("tab", { name: tab }).getAttribute("aria-selected")).toBe("true");
+    expect(screen.queryByRole("dialog")).toBeNull();
+  });
 });
 
 describe("AccountSubscriptionPage Premium membership", () => {

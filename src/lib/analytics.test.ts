@@ -6,6 +6,7 @@ import {
 
 describe("analytics helpers", () => {
   it("normalizes dynamic routes into page types without identifiers", () => {
+    expect(getAnalyticsPage("/dashboard/private-subject/problem-sets/private-problem")?.pagePath).toBe("/dashboard/subject");
     expect(getAnalyticsPage("/")?.pageType).toBe("main");
     expect(getAnalyticsPage("/apps")?.pageType).toBe("mini_apps");
     expect(getAnalyticsPage("/apps/lbti/result/private-result")?.pagePath).toBe("/apps/mini-app");

@@ -49,6 +49,8 @@ describe("SEO metadata", () => {
     expect(dashboard.indexable).toBe(true);
     expect(dashboard.canonicalPath).toBe("/dashboard/");
     expect(getSeoMetadata("/dashboard/private-subject").indexable).toBe(false);
+    expect(getSeoMetadata("/dashboard/private-subject/problem-sets/private-problem").indexable).toBe(false);
+    expect(getCanonicalUrl(getSeoMetadata("/dashboard/private-subject/problem-sets/private-problem"))).toBeNull();
   });
 
   it("only includes canonical public pages in the sitemap path list", () => {
@@ -59,6 +61,15 @@ describe("SEO metadata", () => {
     expect(INDEXABLE_PATHS).toContain("/apps/hoban-course-registration");
     expect(INDEXABLE_PATHS).not.toContain("/apps/lbti/test");
     expect(new Set(INDEXABLE_PATHS).size).toBe(INDEXABLE_PATHS.length);
+  });
+
+  it("serves the direct-only design system without indexing it", () => {
+    const metadata = getSeoMetadata("/debug/designsystem/");
+    expect(metadata.title).toBe("Law Solver | 디자인 시스템");
+    expect(metadata.indexable).toBe(false);
+    expect(getCanonicalUrl(metadata)).toBeNull();
+    expect(INDEXABLE_PATHS).not.toContain("/debug/designsystem");
+    expect(STATIC_APP_SHELL_PATHS).toContain("/debug/designsystem");
   });
 
   it("creates a refreshable shell for the non-indexed LBTI test without adding it to the sitemap", () => {

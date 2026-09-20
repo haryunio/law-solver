@@ -1,5 +1,6 @@
 import { useLayoutEffect, useRef, type ReactNode } from "react";
 import { createPortal } from "react-dom";
+import { useStandardUiScope } from "./StandardUiScope";
 
 interface DialogProps {
   labelledBy: string;
@@ -36,6 +37,7 @@ export function Dialog({
   surfaceClassName = "max-h-[calc(100dvh-2rem)] max-w-lg overflow-y-auto rounded-2xl border p-5",
   children,
 }: DialogProps) {
+  const standardUi = useStandardUiScope();
   const sourceRef = useRef<HTMLSpanElement>(null);
   const layerRef = useRef<HTMLDivElement>(null);
   const surfaceRef = useRef<HTMLDivElement>(null);
@@ -119,7 +121,7 @@ export function Dialog({
           aria-modal="true"
           aria-labelledby={labelledBy}
           aria-describedby={describedBy}
-          className={`fixed inset-0 flex items-center justify-center p-4 ${className}`}
+          className={`${standardUi ? "app-standard-ui " : ""}fixed inset-0 flex items-center justify-center p-4 ${className}`}
         >
           <button
             type="button"

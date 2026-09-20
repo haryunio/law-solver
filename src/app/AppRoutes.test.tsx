@@ -9,6 +9,7 @@ vi.mock("../components/storage/OfflineDataHydrationGate", () => ({
 }));
 vi.mock("../pages/LandingPage", () => ({ LandingPage: () => <p>서비스 소개</p> }));
 vi.mock("../pages/AppHomePage", () => ({ AppHomePage: () => <p>서비스 홈</p> }));
+vi.mock("../pages/DesignSystemPage", () => ({ DesignSystemPage: () => <p>디자인 시스템</p> }));
 vi.mock("../pages/PremiumDashboardPage", () => ({ PremiumDashboardPage: () => <p>온라인 학습</p> }));
 vi.mock("../pages/SideAppsPage", () => ({ SideAppsPage: () => <p>미니 앱</p> }));
 vi.mock("../pages/PremiumCoursePage", () => ({ PremiumCoursePage: () => { throw new Error("internal render detail"); } }));
@@ -16,7 +17,7 @@ vi.mock("../pages/PremiumCoursePage", () => ({ PremiumCoursePage: () => { throw 
 afterEach(() => { cleanup(); vi.restoreAllMocks(); });
 
 describe("application route boundaries", () => {
-  it.each([["/", "서비스 소개"], ["/home", "서비스 홈"], ["/premium", "온라인 학습"], ["/apps", "미니 앱"]])(
+  it.each([["/", "서비스 소개"], ["/home", "서비스 홈"], ["/premium", "온라인 학습"], ["/apps", "미니 앱"], ["/debug/designsystem", "디자인 시스템"]])(
     "opens %s independently of offline storage", async (path, heading) => {
       render(<MemoryRouter initialEntries={[path]}><AppRoutes /></MemoryRouter>);
       expect(await screen.findByText(heading)).toBeTruthy();
@@ -24,7 +25,7 @@ describe("application route boundaries", () => {
     },
   );
 
-  it.each(["/settings", "/dashboard", "/dashboard/subject", "/solve/session", "/result/session", "/wrong/session", "/review/session"])(
+  it.each(["/settings", "/dashboard", "/dashboard/subject", "/dashboard/subject/problem-sets/problem", "/solve/session", "/result/session", "/wrong/session", "/review/session"])(
     "requires restored data before opening %s", async (path) => {
       render(<MemoryRouter initialEntries={[path]}><AppRoutes /></MemoryRouter>);
       expect(await screen.findByText("오프라인 저장소 확인")).toBeTruthy();

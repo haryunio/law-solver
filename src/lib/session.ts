@@ -1,10 +1,11 @@
 import { ParsedQuestion, TestSession } from "../types/test";
+import { isCorrectAnswer } from "./answer";
 
 export const getCorrectCount = (questions: ParsedQuestion[]) =>
-  questions.filter((q) => q.my_answer !== "" && q.my_answer === q.answer).length;
+  questions.filter(isCorrectQuestion).length;
 
 export const getWrongQuestions = (session: TestSession) =>
-  session.questions.filter((q) => q.my_answer !== q.answer);
+  session.questions.filter((q) => !isCorrectQuestion(q));
 
 export const isCorrectQuestion = (question: ParsedQuestion) =>
-  question.my_answer !== "" && question.my_answer === question.answer;
+  isCorrectAnswer(question, question.my_answer);

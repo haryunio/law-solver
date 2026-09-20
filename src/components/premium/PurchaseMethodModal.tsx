@@ -93,7 +93,7 @@ export function PurchaseMethodModal({
                       disabled={!method.enabled}
                       onClick={() => method.enabled && setStep("promotion")}
                       className={[
-                        "flex min-h-[68px] w-full items-center justify-between rounded-xl border px-4 py-3 text-left",
+                        "app-radius-control flex min-h-[68px] w-full items-center justify-between rounded-xl border px-4 py-3 text-left",
                         method.enabled
                           ? "border-amber-300 bg-amber-50 text-amber-950 transition-colors hover:bg-amber-100 dark:border-amber-700/70 dark:bg-amber-950/30 dark:text-amber-100 dark:hover:bg-amber-950/50"
                           : "cursor-not-allowed border-stone-200 bg-stone-50 text-stone-400 opacity-70 dark:border-stone-800 dark:bg-stone-900/50 dark:text-stone-600",

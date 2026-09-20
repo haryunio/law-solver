@@ -1,5 +1,4 @@
 import {
-  CSSProperties,
   FormEvent,
   KeyboardEvent,
   PointerEvent,
@@ -14,10 +13,10 @@ import { AppFooter } from "../components/ui/AppFooter";
 import { DashboardHeaderTitle } from "../components/ui/DashboardHeaderTitle";
 import { IconCloseButton } from "../components/ui/IconCloseButton";
 import { ReturnLinkLabel } from "../components/ui/ReturnLinkLabel";
-import { SubjectCardCover } from "../components/ui/SubjectCardCover";
-import { getSubjectDashboardPath, SubjectDropPlacement } from "../lib/subject";
+import { BookGrid } from "../components/ui/BookGrid";
+import { SubjectBookCard } from "../components/ui/SubjectBookCard";
+import { SubjectDropPlacement } from "../lib/subject";
 import {
-  getSubjectAccentColor,
   getSubjectCoverStyle,
   subjectCoverPalettes as coverPalettes,
 } from "../lib/subjectCover";
@@ -46,8 +45,8 @@ interface SubjectCardData {
 
 export function SubjectListPage() {
   const sessions = useTestStore((state) => state.sessions);
+  const problemSets = useTestStore((state) => state.problemSets);
   const subjects = useTestStore((state) => state.subjects);
-  const sessionSubjectMap = useTestStore((state) => state.sessionSubjectMap);
   const createSubject = useTestStore((state) => state.createSubject);
   const updateSubject = useTestStore((state) => state.updateSubject);
   const reorderSubject = useTestStore((state) => state.reorderSubject);
@@ -93,15 +92,16 @@ export function SubjectListPage() {
   const subjectCards = useMemo<SubjectCardData[]>(() => {
     const makeStats = (subject: Subject | null): SubjectCardData => {
       const id = subject?.id ?? NO_SUBJECT_ID;
-      const relatedSessions = sessions.filter((session) => {
-        const mappedSubjectId = sessionSubjectMap[session.id];
-        return subject ? mappedSubjectId === subject.id : !mappedSubjectId;
-      });
+      const relatedProblems = problemSets.filter((problemSet) => subject
+        ? problemSet.subject_id === subject.id
+        : !problemSet.subject_id);
+      const problemIds = new Set(relatedProblems.map((problemSet) => problemSet.id));
+      const relatedSessions = sessions.filter((session) => problemIds.has(session.problem_set_id));
 
       return {
         id,
         name: subject?.name ?? "과목 없음",
-        total: relatedSessions.length,
+        total: relatedProblems.length,
         completed: relatedSessions.filter((session) => session.status === "completed").length,
         inProgress: relatedSessions.filter((session) => session.status === "in-progress").length,
         isDefault: !subject,
@@ -110,7 +110,7 @@ export function SubjectListPage() {
     };
 
     return [makeStats(null), ...subjects.map((subject) => makeStats(subject))];
-  }, [sessions, sessionSubjectMap, subjects]);
+  }, [sessions, problemSets, subjects]);
 
   const hasDuplicateSubjectName = (name: string, ignoredSubjectId?: string) =>
     subjects.some(
@@ -373,7 +373,7 @@ export function SubjectListPage() {
           type="button"
           onClick={() => onSelect(palette.id)}
           className={[
-            "flex items-center gap-2 rounded-full border px-2.5 py-2 text-xs font-semibold transition",
+            "app-radius-control flex items-center gap-2 rounded-full border px-2.5 py-2 text-xs font-semibold transition",
             selectedPalette === palette.id
               ? "border-red-500 bg-red-50 text-red-700 dark:border-red-600 dark:bg-red-950/30 dark:text-red-400"
               : "border-stone-200 bg-white text-stone-600 hover:bg-stone-50 dark:border-stone-700 dark:bg-stone-900 dark:text-stone-300 dark:hover:bg-stone-800",
@@ -390,15 +390,13 @@ export function SubjectListPage() {
   );
 
   const handleDeleteSubject = (subject: Subject) => {
-    const affectedCount = sessions.filter(
-      (session) => sessionSubjectMap[session.id] === subject.id,
-    ).length;
+    const affectedCount = problemSets.filter((problemSet) => problemSet.subject_id === subject.id).length;
 
     setDialog({
       title: "과목을 삭제할까요?",
       description:
         affectedCount > 0
-          ? `${subject.name}\n\n이 과목에 배정된 ${affectedCount}개 문제는 '과목 없음'으로 이동합니다.`
+          ? `${subject.name}\n\n이 과목의 문제 ${affectedCount}개와 연결된 풀이 세션은 '과목 없음'으로 이동합니다.`
           : `${subject.name}\n\n삭제 후에도 문제 데이터는 유지됩니다.`,
       confirmLabel: "삭제",
       variant: "danger",
@@ -433,44 +431,11 @@ export function SubjectListPage() {
           </Link>
         </DashboardHeaderTitle>
 
-        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+        <BookGrid className="app-content-stagger">
           {subjectCards.map((subject) => (
-            <Link
-              key={subject.id}
-              to={getSubjectDashboardPath(subject.id)}
-              className="app-card app-subject-card group overflow-hidden rounded-2xl border transition hover:-translate-y-0.5 hover:shadow-[var(--app-shadow-hover)]"
-              style={
-                {
-                  "--subject-accent": getSubjectAccentColor(subject.coverPalette ?? "warm"),
-                } as CSSProperties
-              }
-            >
-              <SubjectCardCover
-                title={subject.name}
-                coverStyle={getSubjectCoverStyle(
-                  subject.name,
-                  subject.coverPalette ?? "warm",
-                )}
-                badge={(
-                  <span className="shrink-0 rounded-full border border-white/25 bg-white/25 px-2.5 py-1 text-xs font-bold text-white shadow-sm backdrop-blur">
-                    {subject.total}개
-                  </span>
-                )}
-              />
-
-              <div className="grid h-[104px] grid-cols-2 gap-2 p-4 text-sm">
-                <div className="app-subtle-surface flex flex-col justify-center rounded-xl border p-3">
-                  <p className="text-xs text-stone-500 dark:text-stone-500">풀이 중</p>
-                  <p className="mt-1 font-semibold text-red-600 dark:text-red-500">{subject.inProgress}</p>
-                </div>
-                <div className="app-subtle-surface flex flex-col justify-center rounded-xl border p-3">
-                  <p className="text-xs text-stone-500 dark:text-stone-500">채점 완료</p>
-                  <p className="mt-1 font-semibold text-blue-600 dark:text-blue-400">{subject.completed}</p>
-                </div>
-              </div>
-            </Link>
+            <SubjectBookCard key={subject.id} {...subject} />
           ))}
-        </div>
+        </BookGrid>
 
         <AppFooter />
       </div>
@@ -497,7 +462,7 @@ export function SubjectListPage() {
                 className="mt-5 max-h-[42vh] space-y-2 overflow-y-auto overscroll-contain px-1"
               >
                 {subjects.length === 0 ? (
-                  <p className="rounded-xl border border-dashed border-stone-200 bg-stone-50 p-4 text-center text-sm text-stone-500 dark:border-stone-800 dark:bg-stone-950/50 dark:text-stone-500">
+                  <p className="app-radius-inset rounded-xl border border-dashed border-stone-200 bg-stone-50 p-4 text-center text-sm text-stone-500 dark:border-stone-800 dark:bg-stone-950/50 dark:text-stone-500">
                     아직 추가한 과목이 없습니다.
                   </p>
                 ) : (
@@ -510,7 +475,7 @@ export function SubjectListPage() {
                         key={subject.id}
                         data-subject-drop-id={subject.id}
                         className={[
-                          "relative flex select-none items-center gap-3 rounded-xl border border-stone-200 bg-white p-3 transition-[border-color,background-color,box-shadow] duration-100 hover:border-red-200 hover:bg-red-50/30 dark:border-stone-800 dark:bg-stone-900 dark:hover:border-red-900/60 dark:hover:bg-red-950/10",
+                          "app-radius-inset relative flex select-none items-center gap-3 rounded-xl border border-stone-200 bg-white p-3 transition-[border-color,background-color,box-shadow] duration-100 hover:border-red-200 hover:bg-red-50/30 dark:border-stone-800 dark:bg-stone-900 dark:hover:border-red-900/60 dark:hover:bg-red-950/10",
                           draggingSubjectId === subject.id
                             ? "z-20 border-red-300 bg-white shadow-xl ring-2 ring-red-100 will-change-transform dark:border-red-800 dark:bg-stone-900 dark:ring-red-900/40"
                             : "",
@@ -542,7 +507,7 @@ export function SubjectListPage() {
                           onPointerCancel={(event) => handleSubjectPointerEnd(event, false)}
                           onLostPointerCapture={handleSubjectLostPointerCapture}
                           onKeyDown={(event) => handleSubjectDragKeyDown(event, subject.id)}
-                          className="grid h-10 w-8 shrink-0 touch-none cursor-grab select-none place-content-center rounded-md border border-transparent text-stone-400 outline-none transition-colors duration-100 hover:border-stone-200 hover:bg-stone-100 hover:text-stone-600 focus-visible:border-red-300 focus-visible:ring-2 focus-visible:ring-red-100 active:cursor-grabbing dark:text-stone-500 dark:hover:border-stone-700 dark:hover:bg-stone-800 dark:hover:text-stone-300 dark:focus-visible:border-red-800 dark:focus-visible:ring-red-900/50"
+                          className="app-radius-control grid h-10 w-8 shrink-0 touch-none cursor-grab select-none place-content-center rounded-md border border-transparent text-stone-400 outline-none transition-colors duration-100 hover:border-stone-200 hover:bg-stone-100 hover:text-stone-600 focus-visible:border-red-300 focus-visible:ring-2 focus-visible:ring-red-100 active:cursor-grabbing dark:text-stone-500 dark:hover:border-stone-700 dark:hover:bg-stone-800 dark:hover:text-stone-300 dark:focus-visible:border-red-800 dark:focus-visible:ring-red-900/50"
                         >
                           <span aria-hidden="true" className="flex flex-col items-center gap-[3px]">
                             <span className="h-[2px] w-3.5 rounded-full bg-current" />
@@ -556,7 +521,7 @@ export function SubjectListPage() {
                             {subject.name}
                           </p>
                           <p className="text-xs text-stone-500 dark:text-stone-500">
-                            {sessions.filter((session) => sessionSubjectMap[session.id] === subject.id).length}개 문제
+                            {problemSets.filter((problemSet) => problemSet.subject_id === subject.id).length}개 문제
                           </p>
                         </div>
                         <div className="flex shrink-0 items-center gap-2">
@@ -568,7 +533,7 @@ export function SubjectListPage() {
                           </button>
                           <button
                             onClick={() => handleDeleteSubject(subject)}
-                            className="rounded-lg border border-red-200 bg-red-50 px-3 py-1.5 text-xs font-semibold text-red-700 transition hover:bg-red-100 dark:border-red-900/50 dark:bg-red-950/30 dark:text-red-400 dark:hover:bg-red-900/30"
+                            className="app-radius-control rounded-lg border border-red-200 bg-red-50 px-3 py-1.5 text-xs font-semibold text-red-700 transition hover:bg-red-100 dark:border-red-900/50 dark:bg-red-950/30 dark:text-red-400 dark:hover:bg-red-900/30"
                           >
                             삭제
                           </button>
