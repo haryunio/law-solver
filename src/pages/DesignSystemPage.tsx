@@ -31,7 +31,7 @@ import type { TestType } from "../types/test";
 import type { MarketplaceProduct } from "../lib/premiumApi";
 
 const sections = [
-  ["tokens", "색상과 표면"], ["type", "글자와 곡률"], ["controls", "버튼과 입력"],
+  ["navigation", "상단 내비게이션"], ["tokens", "색상과 표면"], ["type", "글자와 곡률"], ["controls", "버튼과 입력"],
   ["tags", "태그와 프로필"], ["books", "책 표지"], ["problems", "문제 카드"],
   ["sessions", "세션 목록"], ["feedback", "모달과 알림"], ["loading", "로딩"], ["motion", "모션"],
 ] as const;
@@ -114,6 +114,7 @@ function ProblemCardPreview({ title, type, premium, onEdit }: {
 
 /** Isolated component examples. No account or offline study data is read or changed. */
 export function DesignSystemPage() {
+  const [headerTitle, setHeaderTitle] = useState("민법 채권총론 중간고사 대비 사례형 연습 문제");
   const [problemTitle, setProblemTitle] = useState("민법 기초 확인 문제");
   const [questionType, setQuestionType] = useState<TestType>("5-choice");
   const [memo, setMemo] = useState("");
@@ -153,6 +154,17 @@ export function DesignSystemPage() {
         </div>
 
         <main className="space-y-12">
+          <DemoSection id="navigation" title="상단 내비게이션" description="768px 이상에서는 제목과 버튼을 한 줄에 표시합니다. 긴 제목은 말줄임표로 줄이고, 그보다 좁아지면 제목 크기를 줄이면서 버튼을 아래로 옮깁니다.">
+            <label className="block space-y-2 text-sm font-medium">
+              <span>미리보기 제목</span>
+              <input className="app-control w-full rounded-xl px-3 py-2.5" value={headerTitle} onChange={(event) => setHeaderTitle(event.target.value)} />
+            </label>
+            <DashboardHeaderTitle title={headerTitle} sectionTitle="문제 목록" logoTo="#ds-navigation" logoLabel="내비게이션 예시로 이동">
+              <Button variant="primary" onClick={() => notify("새 문제 등록 버튼을 눌렀습니다.")}>새 문제 등록</Button>
+              <Button onClick={() => notify("과목 목록 버튼을 눌렀습니다.", "info")}>과목 목록</Button>
+            </DashboardHeaderTitle>
+          </DemoSection>
+
           <DemoSection id="tokens" title="색상과 표면" description="페이지 배경, 콘텐츠 표면, 정보 박스를 구분합니다. 아래 색상은 실제 CSS 토큰을 사용합니다.">
             <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
               {colors.map(([label, token]) => (

@@ -16,6 +16,8 @@ import { TimestampTag } from "../components/ui/TimestampTag";
 import { Toast } from "../components/ui/Toast";
 import { getOfflineProblemSetPath } from "../lib/offlineSession";
 import { useTestStore } from "../store/useTestStore";
+import { useSettingsStore } from "../store/useSettingsStore";
+import { sortProblemSets } from "../lib/problemSort";
 import { NO_SUBJECT_ID, type OfflineProblemSet } from "../types/test";
 
 export function DashboardPage() {
@@ -23,6 +25,8 @@ export function DashboardPage() {
   const problemSets = useTestStore((state) => state.problemSets);
   const sessions = useTestStore((state) => state.sessions);
   const subjects = useTestStore((state) => state.subjects);
+  const problemSortKey = useSettingsStore((state) => state.problemSortKey);
+  const problemSortDirection = useSettingsStore((state) => state.problemSortDirection);
   const deleteProblemSet = useTestStore((state) => state.deleteProblemSet);
   const updateProblemSet = useTestStore((state) => state.updateProblemSet);
   const navigate = useNavigate();
@@ -38,10 +42,11 @@ export function DashboardPage() {
   const isNoSubject = subjectId === NO_SUBJECT_ID;
   const currentSubject = isNoSubject ? null : subjects.find((subject) => subject.id === subjectId);
   const currentSubjectName = currentSubject?.name ?? "과목 없음";
-  const sortedProblemSets = useMemo(() => problemSets
-    .filter((problemSet) => isNoSubject ? !problemSet.subject_id : problemSet.subject_id === subjectId)
-    .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()),
-  [isNoSubject, problemSets, subjectId]);
+  const sortedProblemSets = useMemo(() => sortProblemSets(
+    problemSets.filter((problemSet) => isNoSubject ? !problemSet.subject_id : problemSet.subject_id === subjectId),
+    problemSortKey,
+    problemSortDirection,
+  ), [isNoSubject, problemSets, subjectId, problemSortKey, problemSortDirection]);
   const sessionCounts = useMemo(() => {
     const counts = new Map<string, { total: number; inProgress: number }>();
     for (const session of sessions) {
