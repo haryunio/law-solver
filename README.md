@@ -206,7 +206,7 @@ LBTI의 네 지표와 16개 유형은 [`lbti-framework.json`](src/mini-apps/lbti
 - `/wrong/:sessionId`: 오답 확인 및 오답노트 작성
 - `/review/:sessionId`: 전체 문항 또는 책갈피 문항 확인
 
-문제 원본, 세션별 풀이 기록, 과목은 IndexedDB의 `law-solver-offline` 데이터베이스, `persisted-state` object store에 `law-solver-storage` 키로 저장됩니다. 환경설정은 기존처럼 `law-solver-settings` 키로 localStorage에 저장됩니다.
+문제 원본, 세션별 풀이 기록, 과목은 IndexedDB의 `law-solver-offline` 데이터베이스, `persisted-state` object store에 `law-solver-storage` 키로 저장됩니다. 환경설정은 기존처럼 `law-solver-settings` 키로 localStorage에 저장됩니다. 화면 설정에서 오프라인 문제 목록의 제목/등록 기준과 오름차순/내림차순을 선택할 수 있으며, 기본은 등록 내림차순입니다. 변경한 선택은 브라우저에 자동 저장됩니다.
 
 IndexedDB 전환 전 localStorage의 `law-solver-storage`에 저장된 v1~v3 데이터는 환경설정이나 오프라인 학습 화면에 처음 들어갈 때 자동 이전합니다. IndexedDB transaction 완료, 재조회, Zustand hydration과 정규화된 최종 저장까지 모두 성공한 뒤에만 기존 localStorage 원본을 제거합니다. 이전에 실패하면 기존 원본을 보존하고 데이터 화면 대신 재시도 안내를 표시합니다.
 
