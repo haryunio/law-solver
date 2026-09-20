@@ -94,16 +94,18 @@ export function LandingPage() {
                 직접 만든 CSV 문제와 Premium 온라인 문제를 같은 화면에서 풀어 보세요. 채점 후에는 오답과 책갈피를 모아 다시 공부할 수 있어요.
               </p>
 
-              <div className="mt-9 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
-                <Link to="/home" className="landing-primary-cta">
+              <div className="mt-9 flex flex-col items-start gap-3">
+                <Link to="/home" className="landing-primary-cta w-full sm:w-auto">
                   문제 풀이 시작하기 <span className="landing-arrow" aria-hidden="true">→</span>
                 </Link>
-                <a href="#how-it-works" className="landing-secondary-cta">
-                  사용법 먼저 보기 <span aria-hidden="true">↓</span>
-                </a>
-                <Link to="/apps" className="landing-secondary-cta">
-                  더 많은 미니 앱 보기 <span aria-hidden="true">→</span>
-                </Link>
+                <div className="grid w-full grid-cols-2 gap-3 sm:w-auto">
+                  <a href="#how-it-works" className="landing-secondary-cta !gap-2 !px-3 text-sm sm:!px-5 sm:text-base">
+                    사용법 먼저 보기 <span aria-hidden="true">↓</span>
+                  </a>
+                  <Link to="/apps" className="landing-secondary-cta !gap-2 !px-3 text-sm sm:!px-5 sm:text-base">
+                    미니 앱 보기 <span aria-hidden="true">→</span>
+                  </Link>
+                </div>
               </div>
 
               <p className="mt-8 text-sm text-stone-500 dark:text-stone-400">
