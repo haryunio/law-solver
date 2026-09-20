@@ -26,8 +26,8 @@ export function DashboardHeaderTitle({
   return (
     <header className="app-card mb-5 rounded-2xl border">
       <div className="p-3 md:p-4">
-        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between lg:gap-3">
-          <div className="flex min-w-0 flex-col sm:flex-row sm:items-center sm:gap-3">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between md:gap-3">
+          <div className="flex min-w-0 flex-col sm:flex-row sm:items-center sm:gap-3 md:flex-1">
             <Link
               to={logoTo}
               className={[
@@ -56,7 +56,7 @@ export function DashboardHeaderTitle({
                       {title ? (
                         <h1
                           title={title}
-                          className="flex h-7 min-w-0 items-center truncate text-base font-semibold leading-none tracking-[-0.02em] text-stone-900 md:text-lg dark:text-stone-100"
+                          className="min-w-0 truncate text-base font-semibold leading-7 tracking-[-0.02em] text-stone-900 md:text-lg dark:text-stone-100"
                         >
                           {title}
                         </h1>
@@ -89,7 +89,7 @@ export function DashboardHeaderTitle({
           {actionChildren.length > 0 ? (
             <div
               className={[
-                "w-full gap-2 pt-3 sm:mt-3 sm:flex sm:flex-wrap sm:justify-end sm:border-t sm:border-stone-200 md:mt-4 md:pt-4 lg:mt-0 lg:w-auto lg:shrink-0 lg:border-0 lg:pt-0 dark:border-stone-800",
+                "w-full gap-2 pt-3 sm:mt-3 sm:flex sm:flex-wrap sm:justify-end sm:border-t sm:border-stone-200 md:mt-0 md:w-auto md:shrink-0 md:flex-nowrap md:border-0 md:pt-0 md:whitespace-nowrap dark:border-stone-800",
                 hasSingleAction
                   ? "flex justify-end [&>*]:w-auto"
                   : "grid grid-cols-2 [&>*]:w-full sm:[&>*]:w-auto",
