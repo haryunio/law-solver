@@ -27,7 +27,7 @@ export function PremiumCourseCatalogSkeleton() {
 
 export function PremiumProblemGridSkeleton() {
   return (
-    <LoadingRegion label="문제 목록을 불러오는 중입니다" className="grid gap-3 md:grid-cols-2">
+    <LoadingRegion label="문제 목록을 불러오는 중입니다" className="grid gap-3 lg:grid-cols-2">
       {items(4).map((index) => (
         <article key={index} className="app-card app-problem-card app-radius-card overflow-hidden rounded-2xl border">
           <div className="px-4 pb-3 pt-3.5">
@@ -35,7 +35,7 @@ export function PremiumProblemGridSkeleton() {
               <SkeletonBlock className="h-6 w-3/5 rounded-lg" />
               <SkeletonBlock className="app-radius-tag h-5 w-20 rounded-full" />
             </div>
-            <div className="mt-4 grid grid-cols-3 gap-2">
+            <div className="mt-4 grid grid-cols-[1fr_0.7fr_1.7fr] gap-2">
               {items(3).map((metric) => <SkeletonBlock key={metric} className="app-radius-inset h-11 rounded-lg" />)}
             </div>
           </div>

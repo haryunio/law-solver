@@ -43,8 +43,13 @@ export function DashboardPage() {
     .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()),
   [isNoSubject, problemSets, subjectId]);
   const sessionCounts = useMemo(() => {
-    const counts = new Map<string, number>();
-    for (const session of sessions) counts.set(session.problem_set_id, (counts.get(session.problem_set_id) ?? 0) + 1);
+    const counts = new Map<string, { total: number; inProgress: number }>();
+    for (const session of sessions) {
+      const count = counts.get(session.problem_set_id) ?? { total: 0, inProgress: 0 };
+      count.total += 1;
+      if (session.status === "in-progress") count.inProgress += 1;
+      counts.set(session.problem_set_id, count);
+    }
     return counts;
   }, [sessions]);
 
@@ -82,7 +87,7 @@ export function DashboardPage() {
             <p className="mt-2 text-sm leading-6 text-stone-500">CSV 파일을 등록하고, 문제마다 원하는 만큼 풀이 세션을 만들어 보세요.</p>
           </div>
         ) : (
-          <div className="app-content-stagger grid gap-3 md:grid-cols-2">
+          <div className="app-content-stagger grid gap-3 lg:grid-cols-2">
             {sortedProblemSets.map((problemSet) => (
               <article key={problemSet.id} className="app-card app-problem-card flex min-w-0 flex-col rounded-2xl border">
                 <div className="relative px-4 pb-4 pt-3.5 pr-12">
@@ -95,7 +100,7 @@ export function DashboardPage() {
                   </div>
                 </div>
                 <div className="px-4 pb-3">
-                  <ProblemSetCardMetadata type={problemSet.type} questionCount={problemSet.questions.length} sessionCount={sessionCounts.get(problemSet.id) ?? 0} />
+                  <ProblemSetCardMetadata type={problemSet.type} questionCount={problemSet.questions.length} sessionCount={sessionCounts.get(problemSet.id)?.total ?? 0} inProgressCount={sessionCounts.get(problemSet.id)?.inProgress ?? 0} />
                 </div>
                 <Link to={getOfflineProblemSetPath(problemSet.id, problemSet.subject_id)} aria-label="풀이 세션 보기" className="app-result-link mt-auto flex min-h-12 flex-wrap items-center justify-between gap-2 rounded-b-2xl border-t px-4 py-2.5">
                   <TimestampTag label="등록" value={problemSet.created_at} />
@@ -128,7 +133,7 @@ export function DashboardPage() {
           </form>
         </Dialog>
       ) : null}
-      {deleting ? <ConfirmDialog title="이 문제를 삭제할까요?" description={`${deleting.title}\n\n문제와 연결된 풀이 세션 ${sessionCounts.get(deleting.id) ?? 0}개가 함께 삭제됩니다. 삭제한 데이터는 복구할 수 없습니다.`} confirmLabel="문제 삭제" variant="danger" onCancel={() => setDeleting(null)} onConfirm={() => { deleteProblemSet(deleting.id); setDeleting(null); }} /> : null}
+      {deleting ? <ConfirmDialog title="이 문제를 삭제할까요?" description={`${deleting.title}\n\n문제와 연결된 풀이 세션 ${sessionCounts.get(deleting.id)?.total ?? 0}개가 함께 삭제됩니다. 삭제한 데이터는 복구할 수 없습니다.`} confirmLabel="문제 삭제" variant="danger" onCancel={() => setDeleting(null)} onConfirm={() => { deleteProblemSet(deleting.id); setDeleting(null); }} /> : null}
     </div>
   );
 }
