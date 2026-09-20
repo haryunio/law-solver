@@ -5,6 +5,7 @@ import { CloudBackupSection } from "../components/premium/CloudBackupSection";
 import { ConfirmDialog } from "../components/ui/ConfirmDialog";
 import { DashboardHeaderTitle } from "../components/ui/DashboardHeaderTitle";
 import { ReturnLinkLabel } from "../components/ui/ReturnLinkLabel";
+import { ThemeSelect } from "../components/ui/ThemeSelect";
 import { FontFamily, useSettingsStore } from "../store/useSettingsStore";
 import { useTestStore } from "../store/useTestStore";
 import {
@@ -36,7 +37,10 @@ export function SettingsPage() {
   const [activeTab, setActiveTab] = useState<SettingsTab>("appearance");
   const [dialog, setDialog] = useState<DialogState | null>(null);
   const [dataOperation, setDataOperation] = useState<"restore" | "reset" | null>(null);
-  const { darkMode, toggleDarkMode, fontFamily, setFontFamily } = useSettingsStore();
+  const {
+    darkMode, toggleDarkMode, fontFamily, setFontFamily,
+    problemSortKey, problemSortDirection, setProblemSortKey, setProblemSortDirection,
+  } = useSettingsStore();
   const sessions = useTestStore((state) => state.sessions);
   const subjects = useTestStore((state) => state.subjects);
   const problemSets = useTestStore((state) => state.problemSets);
@@ -248,6 +252,27 @@ export function SettingsPage() {
                       </span>
                     </button>
                   ))}
+                </div>
+              </article>
+              <article className="app-card rounded-2xl border p-5 sm:p-6">
+                <p className="text-xs font-bold tracking-[0.14em] text-red-600 dark:text-red-400">PROBLEM ORDER</p>
+                <h2 className="mt-2 text-xl font-bold text-stone-950 dark:text-stone-100">문제 정렬 순서</h2>
+                <p className="mt-1 text-xs leading-5 text-stone-500 dark:text-stone-400">
+                  오프라인 과목 안의 문제 목록에 적용됩니다. 선택한 순서는 이 브라우저에 자동으로 저장됩니다.
+                </p>
+                <div className="mt-5 grid grid-cols-2 gap-3">
+                  <div className="space-y-2">
+                    <p className="text-sm font-medium text-stone-700 dark:text-stone-300">정렬 기준</p>
+                    <ThemeSelect ariaLabel="문제 정렬 기준" value={problemSortKey}
+                      options={[{ value: "title", label: "제목 순서" }, { value: "created_at", label: "등록 순서" }]}
+                      onChange={(value) => setProblemSortKey(value === "title" ? "title" : "created_at")} />
+                  </div>
+                  <div className="space-y-2">
+                    <p className="text-sm font-medium text-stone-700 dark:text-stone-300">정렬 방향</p>
+                    <ThemeSelect ariaLabel="문제 정렬 방향" value={problemSortDirection}
+                      options={[{ value: "asc", label: "오름차순" }, { value: "desc", label: "내림차순" }]}
+                      onChange={(value) => setProblemSortDirection(value === "asc" ? "asc" : "desc")} />
+                  </div>
                 </div>
               </article>
             </section>

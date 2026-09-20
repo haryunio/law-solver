@@ -5,6 +5,7 @@ import { MemoryRouter } from "react-router-dom";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { OfflineDataStorageError } from "../lib/offlineDataStorage";
 import { useTestStore } from "../store/useTestStore";
+import { useSettingsStore } from "../store/useSettingsStore";
 import { SettingsPage } from "./SettingsPage";
 
 vi.mock("../components/premium/CloudBackupSection", () => ({
@@ -35,6 +36,7 @@ beforeEach(() => {
 
 afterEach(() => {
   cleanup();
+  useSettingsStore.setState({ problemSortKey: "created_at", problemSortDirection: "desc" });
   useTestStore.setState({ importDashboardData: originalImport });
   vi.restoreAllMocks();
 });
@@ -59,6 +61,17 @@ async function openFileRestoreConfirmation() {
 }
 
 describe("SettingsPage durable file restore", () => {
+  it("saves problem sorting from the appearance tab", () => {
+    render(<MemoryRouter><SettingsPage /></MemoryRouter>);
+    fireEvent.click(screen.getByRole("button", { name: "문제 정렬 기준" }));
+    fireEvent.click(screen.getByRole("option", { name: "제목 순서" }));
+    fireEvent.click(screen.getByRole("button", { name: "문제 정렬 방향" }));
+    fireEvent.click(screen.getByRole("option", { name: "오름차순" }));
+    expect(useSettingsStore.getState()).toMatchObject({ problemSortKey: "title", problemSortDirection: "asc" });
+    expect(JSON.parse(localStorage.getItem("law-solver-settings")!).state)
+      .toMatchObject({ problemSortKey: "title", problemSortDirection: "asc" });
+  });
+
   it("keeps the confirmation open until IndexedDB persistence finishes", async () => {
     let resolveImport: (() => void) | undefined;
     useTestStore.setState({
