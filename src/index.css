@@ -701,6 +701,7 @@ body {
 .app-route-enter-problems { --app-entry-duration: 280ms; --app-entry-distance: 8px; }
 .app-route-enter-sessions { --app-entry-duration: 240ms; --app-entry-distance: 6px; }
 .app-route-enter-results { --app-entry-duration: 280ms; --app-entry-distance: 8px; }
+.app-route-enter-settings { --app-entry-duration: 240ms; --app-entry-distance: 6px; }
 
 .app-route-enter > .app-page:not(.app-focus-page) .app-content-enter,
 .app-route-enter > .app-page:not(.app-focus-page) .app-content-stagger > * {
@@ -714,6 +715,12 @@ body {
 .app-content-stagger > :nth-child(n+4) { --app-entry-delay: 60ms; }
 .app-content-stagger > :nth-child(n+5) { --app-entry-delay: 80ms; }
 .app-content-stagger > :nth-child(n+6) { --app-entry-delay: 100ms; }
+
+/* Once tabs change, only the horizontal panel motion runs. */
+.app-route-enter > .app-page:not(.app-focus-page) [data-tab-switched="true"] .app-content-enter,
+.app-route-enter > .app-page:not(.app-focus-page) [data-tab-switched="true"] .app-content-stagger > * {
+  animation: none;
+}
 
 @keyframes app-route-enter {
   from { opacity: 0; transform: translateY(var(--app-entry-distance)); }
