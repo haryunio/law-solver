@@ -29,6 +29,7 @@ type DialogState = {
 
 const fontOptions: Array<{ id: FontFamily; label: string; className: string }> = [
   { id: "pretendard", label: "기본 (Pretendard)", className: "font-pretendard" },
+  { id: "noto-sans-kr", label: "Noto Sans KR", className: "font-noto-sans-kr" },
   { id: "nanum-gothic", label: "나눔고딕", className: "font-nanum-gothic" },
   { id: "nanum-myeongjo", label: "나눔명조", className: "font-nanum-myeongjo" },
 ];

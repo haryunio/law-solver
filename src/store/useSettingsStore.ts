@@ -2,7 +2,7 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import type { ProblemSortDirection, ProblemSortKey } from "../lib/problemSort";
 
-export type FontFamily = "pretendard" | "nanum-gothic" | "nanum-myeongjo";
+export type FontFamily = "pretendard" | "noto-sans-kr" | "nanum-gothic" | "nanum-myeongjo";
 
 interface SettingsStore {
   darkMode: boolean;

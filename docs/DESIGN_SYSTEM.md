@@ -19,6 +19,8 @@
 
 두 화면 이상이 같은 행동과 접근성 동작을 사용하면 공통 컴포넌트로 묶습니다. 겉모양만 비슷한 도메인 로직을 하나의 큰 컴포넌트로 합치지 않습니다. 미니 앱은 서로의 내부 파일을 가져오지 않습니다.
 
+글꼴은 환경설정에서 Pretendard, Noto Sans KR, 나눔고딕, 나눔명조를 선택합니다. 기본은 Pretendard이며 선택은 `law-solver-settings`에 저장됩니다. Noto Sans KR은 Google Fonts의 가변 글꼴(100~900)을 `display=swap`으로 불러옵니다. 새 글꼴을 추가할 때는 `FontFamily`, 설정 목록, `ThemeWatcher`의 클래스 제거 목록, Tailwind 글꼴 설정과 `index.html`의 폰트 로딩을 함께 갱신합니다.
+
 ## 2. 색상과 표면 토큰
 
 토큰의 원본은 `src/index.css`의 `:root`와 `html.dark`입니다. 다크 모드는 같은 토큰의 값을 바꾸며, 토큰을 사용하는 곳마다 다크 색상을 반복하지 않습니다.

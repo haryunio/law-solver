@@ -194,6 +194,7 @@ export function DesignSystemPage() {
           <DemoSection id="type" title="글자와 곡률" description="제목은 짧고 또렷하게, 본문은 편하게 읽히도록 구성합니다. 모서리 크기는 요소의 역할에 따라 정합니다.">
             <div className="app-card app-radius-card space-y-4 rounded-2xl border p-4 sm:p-5">
               <div><p className="text-xs text-stone-500">화면 제목</p><p className="mt-1 text-xl font-semibold tracking-tight">오늘의 공부를 이어가세요</p></div>
+              <div><p className="text-xs text-stone-500">Noto Sans KR</p><p className="font-noto-sans-kr mt-1 text-base leading-7">등록한 문제를 풀고, 해설을 읽으며 복습하세요. 0123456789</p></div>
               <div><p className="text-xs text-stone-500">카드 제목</p><p className="mt-1 text-base font-semibold">민법 사례 연습</p></div>
               <div><p className="text-xs text-stone-500">본문</p><p className="mt-1 max-w-2xl break-keep text-sm leading-6 text-stone-700 dark:text-stone-300">등록한 문제에서 새로운 풀이를 시작할 수 있습니다. 이전 답안과 오답 노트는 세션마다 따로 보관됩니다.</p></div>
               <div><p className="text-xs text-stone-500">보조 설명과 숫자</p><p className="mt-1 text-xs leading-5 text-stone-500">마지막 풀이 <span className="tabular-nums">2026.09.20 14:25</span></p></div>

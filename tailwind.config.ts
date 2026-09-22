@@ -11,6 +11,7 @@ export default {
       },
       fontFamily: {
         pretendard: ["Pretendard", "ui-sans-serif", "system-ui", "sans-serif"],
+        "noto-sans-kr": ["Noto Sans KR", "ui-sans-serif", "system-ui", "sans-serif"],
         "nanum-gothic": ["Nanum Gothic", "sans-serif"],
         "nanum-myeongjo": ["Nanum Myeongjo", "serif"],
       },
