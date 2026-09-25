@@ -12,6 +12,7 @@ import { BrandMark } from "../components/ui/BrandMark";
 import { Button } from "../components/ui/Button";
 import { ConfirmDialog } from "../components/ui/ConfirmDialog";
 import { DashboardHeaderTitle } from "../components/ui/DashboardHeaderTitle";
+import { MiniAppHeaderView } from "../components/ui/MiniAppHeader";
 import { Dialog } from "../components/ui/Dialog";
 import { IconCloseButton } from "../components/ui/IconCloseButton";
 import { PremiumBadge } from "../components/ui/PremiumBadge";
@@ -117,6 +118,7 @@ function ProblemCardPreview({ title, type, premium, onEdit }: {
 /** Isolated component examples. No account or offline study data is read or changed. */
 export function DesignSystemPage() {
   const [headerTitle, setHeaderTitle] = useState("민법 채권총론 중간고사 대비 사례형 연습 문제");
+  const [miniHeaderDark, setMiniHeaderDark] = useState(false);
   const [problemTitle, setProblemTitle] = useState("민법 기초 확인 문제");
   const [questionType, setQuestionType] = useState<TestType>("5-choice");
   const [memo, setMemo] = useState("");
@@ -166,6 +168,10 @@ export function DesignSystemPage() {
               <Button variant="primary" onClick={() => notify("새 문제 등록 버튼을 눌렀습니다.")}>새 문제 등록</Button>
               <Button onClick={() => notify("과목 목록 버튼을 눌렀습니다.", "info")}>과목 목록</Button>
             </DashboardHeaderTitle>
+            <p className="text-sm text-stone-500">개별 미니 앱은 본문 위에 자리를 유지하는 공통 헤더를 사용합니다. 모바일에서는 제목과 메뉴를 두 줄로 나눕니다.</p>
+            <div>
+              <MiniAppHeaderView title="미니 앱 예시" label="미니 앱 헤더 예시" darkMode={miniHeaderDark} onToggleTheme={() => setMiniHeaderDark((value) => !value)} />
+            </div>
             <p className="text-sm text-stone-500">랜딩은 스크롤하면 아래와 같은 플로팅 표면으로 전환됩니다.</p>
             <div className="landing-nav-wrap" data-floating="true" style={{ position: "relative", zIndex: "auto", paddingTop: 0 }}>
               <div className="landing-nav-surface">
