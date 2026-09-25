@@ -19,6 +19,7 @@ import { AnswerValue, TestSession } from "../../types/test";
 import { OmrShortcutButton } from "./OmrShortcutButton";
 import { MobileOmrSheet } from "./MobileOmrSheet";
 import { QuestionContentMotion } from "./QuestionContentMotion";
+import { useQuestionPanelHeightMotion } from "./useQuestionPanelHeightMotion";
 
 interface CbtSolveScreenProps {
   sessionId: string;
@@ -70,8 +71,14 @@ export function CbtSolveScreen({
   const [isPauseDialogOpen, setIsPauseDialogOpen] = useState(false);
   const [isSubmitDialogOpen, setIsSubmitDialogOpen] = useState(false);
   const contentRef = useRef<HTMLDivElement | null>(null);
+  const questionPanelRef = useRef<HTMLElement | null>(null);
   const viewportRef = useRef<HTMLDivElement | null>(null);
   useSolveViewport(viewportRef, Boolean(session?.questions[index]));
+  useQuestionPanelHeightMotion(
+    questionPanelRef,
+    session?.questions[index] ? `${session.id}:${session.questions[index]?.id}` : undefined,
+    showAnswer,
+  );
   const trackedSolveSessionRef = useRef<string | null>(null);
   const trackedQuestionIdsRef = useRef(new Set<string>());
   const activeQuestionIdRef = useRef<string | null>(null);
@@ -283,6 +290,7 @@ export function CbtSolveScreen({
 
       <div className="cbt-workspace mx-auto grid max-w-6xl grid-cols-1 gap-4 px-4 py-3 md:grid-cols-[1fr_220px] md:items-start md:px-6">
         <main
+          ref={questionPanelRef}
           className={[
             "cbt-question-card app-card flex w-full max-h-full flex-col overflow-hidden rounded-2xl border",
             questionPanelMinHeight,

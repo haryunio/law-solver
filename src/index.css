@@ -884,6 +884,10 @@ html.cbt-viewport { scrollbar-gutter: auto; }
   overscroll-behavior-y: contain;
 }
 
+@media (min-width: 768px) {
+  .cbt-question-content { scrollbar-gutter: stable; }
+}
+
 /* On phones the problem surface fills the space below the header. */
 @media (max-width: 767px) {
   html.cbt-viewport,
