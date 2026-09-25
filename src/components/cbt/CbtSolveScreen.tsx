@@ -294,7 +294,17 @@ export function CbtSolveScreen({
                 </span>
               ) : null}
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex shrink-0 items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setIsOmrOpen(true)}
+                aria-label="OMR 빠른 이동 열기"
+                aria-expanded={isOmrOpen}
+                title="OMR 빠른 이동"
+                className="flex h-8 w-8 items-center justify-center rounded-full border border-stone-300 bg-white text-[9px] font-bold leading-none text-stone-500 hover:border-red-500 hover:text-red-500 dark:border-stone-700 dark:bg-stone-800 dark:text-stone-400 dark:hover:border-red-500 dark:hover:text-red-500 md:hidden"
+              >
+                OMR
+              </button>
               <button
                 onClick={() => {
                   if (showAnswer) {
@@ -483,7 +493,7 @@ export function CbtSolveScreen({
           )}
           </div>
 
-          <div className="grid shrink-0 grid-cols-[2fr_1fr_2fr] overflow-hidden border-t border-stone-200 md:grid-cols-2 dark:border-stone-800">
+          <div className="grid shrink-0 grid-cols-2 overflow-hidden border-t border-stone-200 dark:border-stone-800">
             <button
               onClick={() => goToQuestion(index - 1, "previous_button")}
               disabled={index === 0}
@@ -491,13 +501,6 @@ export function CbtSolveScreen({
             >
               <span className="mr-1 text-stone-400 dark:text-stone-500">‹</span>
               이전 문제
-            </button>
-            <button
-              type="button"
-              onClick={() => setIsOmrOpen(true)}
-              className="border-r border-stone-200 bg-white px-2 py-3 text-xs font-bold text-stone-600 shadow-[0_-1px_0_rgba(0,0,0,0.02)] hover:bg-stone-50 dark:border-stone-800 dark:bg-stone-900 dark:text-stone-300 dark:hover:bg-stone-800 md:hidden"
-            >
-              OMR
             </button>
             <button
               onClick={() => goToNext("next_button")}
