@@ -24,11 +24,22 @@ npm run dev:local
 | Premium 통신 | `src/lib/premiumApi.ts`, `src/lib/premium/` | 401 1회 재시도, 요청 body와 멱등키 유지, 원문 오류 비공개 |
 | 온라인 조회 | `src/hooks/usePremiumResource.ts` | 빠른 경로 변경, 느린 이전 응답, 실패 후 재시도, 빈 목록 |
 | 풀이 동작 | `src/components/cbt/CbtSolveScreen.tsx`, `src/pages/PremiumSolvePage.tsx` | 실패한 답안 보존, 저장 전 제출 차단, 오프라인 동일 UI |
-| 결과와 복기 | `src/components/session/SessionPageContext.tsx`, `src/lib/premiumSession.ts` | 새 재풀이 세션, 오답 노트, 책갈피, Premium CSV 제한 |
+| 풀이와 복습 UI | `src/components/study/`, `src/components/cbt/SolveChoiceList.tsx`, `src/components/review/`, `src/index.css` | 선지 선택, 번호와 태그, OMR 열 정렬, 내부 스크롤, 모바일과 다크 모드 |
+| 결과와 복기 | `src/components/session/SessionPageContext.tsx`, `src/pages/PremiumSessionPage.tsx`, `src/pages/WrongAnswersPage.tsx`, `src/lib/premiumSession.ts` | 새 재풀이 세션, 오답 노트 저장 실패와 재시도, 책갈피, Premium CSV 제한 |
 | 랜딩 소개 | `src/pages/LandingPage.tsx`, `src/components/landing/`, `src/lib/seo.ts` | 실제 출시 상태, 저장 경계, 활성 결제 수단 |
 | 미니 앱 | `src/mini-apps/README.md`, 해당 앱 manifest | catalog, 저장 namespace, 경로, 앱별 테스트 |
 
 문구는 짧고 구체적인 한국어로 작성합니다. 중간점, em dash, 말줄임표, 상투적인 대비 표현을 새로 넣지 마세요. 기술적 구현 설명은 사용자가 판단하는 데 필요한 경우에만 화면에 표시하고 자세한 내용은 문서에 둡니다.
+
+## 풀이와 복습 수정
+
+보기는 `QuestionPassages`, OMR은 `StudyOmrTable`, 풀이 선지는 `SolveChoiceList`, 복습 선지는 `ChoiceReviewList`를 사용합니다. `ReviewQuestionDetails`, `ReviewNavigation`, `ReviewOmrSheet`는 복습의 공통 표시만 담당합니다. 문항 선택, 답안 저장, 오답 노트 저장과 이동 조건은 `CbtSolveScreen`, `ReviewAllPage`, `WrongAnswersPage`와 Premium adapter에 남겨 두세요. 표시를 고치면서 채점이나 저장 형식을 바꾸지 않습니다.
+
+학습 화면은 일반 `StandardUiScope` 대신 명시적인 `app-study-page` 범위에서 16px 패널, 12px 선지/보조 박스, 8px 태그/OMR 내부 표를 사용합니다. OMR 바깥 패널은 16px을 유지합니다. `StudyChoiceNumber`의 원은 16px, 숫자는 10px이며 번호 열 16px과 본문 간격 8px을 풀이와 복습이 공유합니다. 원문자 글꼴로 대체하지 마세요. 복습 태그는 640px 미만에서 본문 아래에 놓고 기존 의미 색상을 유지합니다. 표면 변경이 풀이 viewport, 내부 스크롤, 이동 버튼 위치나 짧은 모션에 영향을 주지 않는지 확인합니다.
+
+온라인 오답 노트는 문항이나 결과 화면으로 이동하기 전에 저장합니다. `PremiumSessionPage`의 `saveWrongNote` adapter는 사용자용 오류를 표시한 뒤 오류를 다시 던지고, `WrongAnswersPage`는 실패하면 이동을 멈추고 현재 문항과 초안을 유지합니다. 저장 상태는 해제되어 같은 초안을 다시 저장할 수 있어야 합니다. 이 계약을 고칠 때는 `WrongAnswersPage.test.tsx`의 다음 문항, 결과, OMR 이동 실패와 재시도 검증을 유지하세요.
+
+`/debug/designsystem#ds-study`에서 실제 공통 컴포넌트의 선택, 정답 표시, 책갈피와 복습 태그를 확인할 수 있습니다. 갤러리 상태는 메모리에만 두며 학습 저장소나 Premium API를 호출하지 않습니다. UI 상세 기준은 [DESIGN_SYSTEM.md](DESIGN_SYSTEM.md)를 함께 갱신합니다.
 
 ## 검증
 
@@ -54,6 +65,7 @@ npm run preview -- --host 127.0.0.1 --port 4164 --strictPort
 4. JSON 복구나 클라우드 복구 실패 시 기존 데이터가 유지되고 확인 모달이 남아 있는지 확인합니다.
 5. 모바일과 데스크톱, 라이트와 다크 모드에서 모달의 Tab 순환, Escape, 닫은 후 포커스 복원을 확인합니다.
 6. 공개 경로 새로고침과 존재하지 않는 경로의 홈 이동을 확인합니다. ID가 포함된 학습 경로를 sitemap에 넣지 않습니다.
+7. 풀이와 복습 UI 변경 시 긴 지문, 선택지와 단답형 답안, 마지막 OMR 행을 확인합니다. 390px 모바일, 태블릿과 데스크톱에서 선지 번호, 태그, 내부 스크롤이 맞는지 보고 온라인 오답 노트 저장 실패 후 문항과 초안이 남는지도 확인합니다. 실제 Safari의 주소창과 키보드 검증은 데스크톱 미리보기 결과와 구분해 기록합니다.
 
 자동 테스트에서는 실제 이메일, 사용자 답안, 유료 콘텐츠를 fixture에 넣지 않습니다. 시간에 따라 의미가 달라지는 테스트는 시간을 고정하거나 해당 테스트의 의미를 분명히 하는 데이터를 사용합니다. 비동기 저장 테스트는 저장 완료 또는 오류 상태를 기다리고 기존 경고를 작업 실패로 오인하지 않도록 대상 요소를 구체적으로 고릅니다.
 

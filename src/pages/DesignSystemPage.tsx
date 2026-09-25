@@ -17,6 +17,7 @@ import { LandingHeaderView } from "../components/ui/LandingHeader";
 import { ThemeToggleButton } from "../components/ui/ThemeToggleButton";
 import { OmrShortcutButton } from "../components/cbt/OmrShortcutButton";
 import { CbtMotionDemo } from "../components/cbt/CbtMotionDemo";
+import { StudyUiDemo } from "../components/study/StudyUiDemo";
 import { Dialog } from "../components/ui/Dialog";
 import { IconCloseButton } from "../components/ui/IconCloseButton";
 import { PremiumBadge } from "../components/ui/PremiumBadge";
@@ -41,7 +42,7 @@ import { DEFAULT_PRECEDENT_LINK_PROVIDER, normalizePrecedentLinkProvider, PRECED
 const sections = [
   ["navigation", "상단 내비게이션"], ["tokens", "색상과 표면"], ["type", "글자와 곡률"], ["controls", "버튼과 입력"],
   ["tags", "태그와 프로필"], ["books", "책 표지"], ["problems", "문제 카드"],
-  ["sessions", "세션 목록"], ["feedback", "모달과 알림"], ["loading", "로딩"], ["motion", "모션"],
+  ["sessions", "세션 목록"], ["study", "풀이와 복습"], ["feedback", "모달과 알림"], ["loading", "로딩"], ["motion", "모션"],
 ] as const;
 
 const colors = [
@@ -368,6 +369,10 @@ export function DesignSystemPage() {
               )}
               <SessionListItem attemptNumber={2} title="틀린 문제 다시 확인하기" modeLabel="오답 풀기" completed orderMode="random" createdAt={sampleDate} lastPlayedAt={sampleLastPlay} solvedQuestions={5} totalQuestions={5} elapsedSeconds={195} scorePercent={80} destination="/debug/designsystem#ds-feedback" />
             </div>
+          </DemoSection>
+
+          <DemoSection id="study" title="풀이와 복습" description="실제 풀이의 선지, 보기와 OMR을 사용합니다. 답안과 책갈피를 바꾸거나 복습 선지를 펼쳐 보세요. 여기서 선택한 내용은 예시 안에서만 유지됩니다.">
+            <StudyUiDemo />
           </DemoSection>
 
           <DemoSection id="feedback" title="모달과 알림" description="모달은 키보드 포커스를 안에 유지하고 닫힌 뒤 원래 버튼으로 돌려줍니다. 토스트는 문서 흐름 바깥에 표시되어 카드 위치를 바꾸지 않습니다.">

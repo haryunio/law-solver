@@ -86,7 +86,7 @@ describe("CbtSolveScreen online adapter", () => {
       </MemoryRouter>,
     );
 
-    fireEvent.click(screen.getByRole("button", { name: "② 나" }));
+    fireEvent.click(screen.getByRole("button", { name: "2 나" }));
     expect(onAnswerChange).toHaveBeenCalledWith("question-1", "2");
     expect(onQuestionLeave).not.toHaveBeenCalled();
 
@@ -160,13 +160,13 @@ describe("CbtSolveScreen online adapter", () => {
       </MemoryRouter>,
     );
     fireEvent.click(screen.getByRole("button", { name: "?" }));
-    expect(screen.getByRole("button", { name: "① 가 정답" })).toBeTruthy();
-    const selected = screen.getByRole("button", { name: "② 나 정답" });
+    expect(screen.getByRole("button", { name: "1 가 정답" })).toBeTruthy();
+    const selected = screen.getByRole("button", { name: "2 나 정답" });
     expect(selected.classList.contains("bg-emerald-50")).toBe(true);
     expect(selected.classList.contains("bg-red-50")).toBe(false);
-    expect(screen.getByRole("button", { name: "③ 다" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "3 다" })).toBeTruthy();
 
-    fireEvent.click(screen.getByRole("button", { name: "① 가 정답" }));
+    fireEvent.click(screen.getByRole("button", { name: "1 가 정답" }));
     expect(onAnswerChange).toHaveBeenCalledExactlyOnceWith("question-1", "1");
   });
 
@@ -179,9 +179,9 @@ describe("CbtSolveScreen online adapter", () => {
     fireEvent.click(screen.getByRole("button", { name: "?" }));
     expect(screen.getByText("정답 없음")).toBeTruthy();
     expect(screen.getByText("이 문항은 답을 고르지 않아도 정답으로 처리됩니다.")).toBeTruthy();
-    expect(screen.queryByRole("button", { name: /^[①②③④⑤].*정답/ })).toBeNull();
+    expect(screen.queryByRole("button", { name: /^[12345].*정답/ })).toBeNull();
     if (response) {
-      const selected = screen.getByRole("button", { name: "③ 다" });
+      const selected = screen.getByRole("button", { name: "3 다" });
       expect(selected.classList.contains("bg-emerald-50")).toBe(true);
       expect(selected.classList.contains("bg-red-50")).toBe(false);
     }
