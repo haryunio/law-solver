@@ -65,7 +65,7 @@ export function SessionListItem({
               ["시간", formatElapsedTime(elapsedSeconds)],
               ["점수", completed ? `${scorePercent ?? 0}%` : "미채점"],
             ].map(([label, value]) => (
-              <div key={label} className="app-neutral-box app-radius-inset flex h-14 min-w-0 flex-col justify-center rounded-lg border px-1 sm:px-3">
+              <div key={label} className="app-neutral-box app-radius-inset flex h-14 min-w-0 flex-col justify-center rounded-lg border px-2 sm:px-3">
                 <dt className="text-[11px] leading-4 text-stone-500 dark:text-stone-400">{label}</dt>
                 <dd className="mt-1 truncate text-xs font-semibold leading-4 tabular-nums text-stone-900 dark:text-stone-100 sm:text-sm" title={value}>{value}</dd>
               </div>
