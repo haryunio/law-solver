@@ -844,6 +844,99 @@ body {
 
 .app-focus-page .app-control:focus { transition: border-color 90ms ease, box-shadow 90ms ease !important; }
 
+/* Mobile solving owns one viewport; only the question body scrolls. */
+@media (max-width: 767px) {
+  html.cbt-mobile-viewport,
+  html.cbt-mobile-viewport body {
+    background: var(--app-surface-problem) !important;
+    overflow: hidden;
+    overscroll-behavior: none;
+  }
+
+  html.cbt-mobile-viewport { scrollbar-gutter: auto; }
+
+  .cbt-solve-page {
+    --cbt-navigation-height: 52px;
+    --cbt-navigation-bottom: max(12px, env(safe-area-inset-bottom, 0px));
+    --cbt-content-bottom: calc(var(--cbt-navigation-height) + var(--cbt-navigation-bottom) + 16px);
+    position: fixed;
+    top: var(--cbt-viewport-top, 0px);
+    right: 0;
+    left: 0;
+    display: flex;
+    flex-direction: column;
+    height: var(--cbt-viewport-height, 100vh);
+    height: var(--cbt-viewport-height, 100dvh);
+    min-height: 0;
+    overflow: hidden;
+    background: var(--app-surface-problem) !important;
+  }
+
+  .cbt-solve-page .cbt-header {
+    flex: 0 0 auto;
+    padding-top: env(safe-area-inset-top, 0px);
+  }
+
+  .cbt-solve-page .cbt-header-content {
+    padding-right: max(16px, env(safe-area-inset-right, 0px));
+    padding-left: max(16px, env(safe-area-inset-left, 0px));
+  }
+
+  .cbt-solve-page .cbt-workspace {
+    display: flex;
+    flex: 1;
+    width: 100%;
+    min-height: 0;
+    padding: 0;
+    gap: 0;
+  }
+
+  .cbt-solve-page .cbt-question-card {
+    position: relative;
+    flex: 1;
+    min-height: 0;
+    max-height: none;
+    border: 0;
+    border-radius: 0;
+    background: var(--app-surface-problem) !important;
+    box-shadow: none;
+    backdrop-filter: none;
+  }
+
+  .cbt-solve-page .cbt-question-toolbar {
+    padding: 16px max(16px, env(safe-area-inset-right, 0px)) 12px max(16px, env(safe-area-inset-left, 0px));
+  }
+
+  .cbt-solve-page .cbt-question-content {
+    padding-right: max(16px, env(safe-area-inset-right, 0px));
+    padding-bottom: var(--cbt-content-bottom);
+    padding-left: max(16px, env(safe-area-inset-left, 0px));
+    scroll-padding-bottom: var(--cbt-content-bottom);
+    overscroll-behavior-y: contain;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .cbt-solve-page .cbt-navigation {
+    position: absolute;
+    z-index: 10;
+    right: max(16px, env(safe-area-inset-right, 0px));
+    bottom: var(--cbt-navigation-bottom);
+    left: max(16px, env(safe-area-inset-left, 0px));
+    height: var(--cbt-navigation-height);
+    border: 1px solid var(--app-border);
+    border-radius: 16px;
+    background: var(--app-surface-problem);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
+  }
+
+  .cbt-solve-page .cbt-omr-layer { position: absolute; }
+  .cbt-solve-page .cbt-omr-sheet {
+    max-height: calc(100% - 24px);
+    overflow-y: auto;
+    padding-bottom: max(16px, env(safe-area-inset-bottom, 0px));
+  }
+}
+
 .app-score-card {
   border-color: rgba(239, 68, 68, 0.18) !important;
   background: linear-gradient(135deg, rgba(254, 242, 242, 0.96), rgba(255, 247, 237, 0.96)) !important;

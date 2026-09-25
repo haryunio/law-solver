@@ -12,6 +12,7 @@ import {
 } from "../../lib/analytics";
 import { downloadSessionCsv } from "../../lib/csv";
 import { useOfflineSession } from "../../hooks/useOfflineSession";
+import { useMobileSolveViewport } from "../../hooks/useMobileSolveViewport";
 import { formatElapsedTime } from "../../lib/time";
 import { useTestStore } from "../../store/useTestStore";
 import { AnswerValue, TestSession } from "../../types/test";
@@ -67,6 +68,8 @@ export function CbtSolveScreen({
   const [isPauseDialogOpen, setIsPauseDialogOpen] = useState(false);
   const [isSubmitDialogOpen, setIsSubmitDialogOpen] = useState(false);
   const contentRef = useRef<HTMLDivElement | null>(null);
+  const viewportRef = useRef<HTMLDivElement | null>(null);
+  useMobileSolveViewport(viewportRef, Boolean(session?.questions[index]));
   const trackedSolveSessionRef = useRef<string | null>(null);
   const trackedQuestionIdsRef = useRef(new Set<string>());
   const activeQuestionIdRef = useRef<string | null>(null);
@@ -245,9 +248,9 @@ export function CbtSolveScreen({
   };
 
   return (
-    <div className="app-focus-page app-page text-stone-900 dark:text-stone-100">
-      <header className="app-topbar sticky top-0 z-20 border-b">
-        <div className="mx-auto flex max-w-6xl items-center justify-between gap-2 px-4 py-2 md:px-6">
+    <div ref={viewportRef} className="cbt-solve-page app-focus-page app-page text-stone-900 dark:text-stone-100">
+      <header className="cbt-header app-topbar sticky top-0 z-20 border-b">
+        <div className="cbt-header-content mx-auto flex max-w-6xl items-center justify-between gap-2 px-4 py-2 md:px-6">
           <div className="min-w-0">
             <p className="text-[10px] font-medium leading-none text-stone-500 dark:text-stone-500">타이머</p>
             <p className="mt-0.5 text-base font-semibold leading-tight tabular-nums text-red-600 dark:text-red-500">{formatElapsedTime(session.elapsed_time)}</p>
@@ -276,14 +279,14 @@ export function CbtSolveScreen({
         </div>
       </header>
 
-      <div className="mx-auto grid max-w-6xl grid-cols-1 gap-4 px-4 py-3 md:grid-cols-[1fr_220px] md:items-start md:px-6">
+      <div className="cbt-workspace mx-auto grid max-w-6xl grid-cols-1 gap-4 px-4 py-3 md:grid-cols-[1fr_220px] md:items-start md:px-6">
         <main
           className={[
-            "app-card flex w-full max-h-[calc(100vh-112px)] flex-col overflow-hidden rounded-2xl border",
+            "cbt-question-card app-card flex w-full max-h-[calc(100vh-112px)] flex-col overflow-hidden rounded-2xl border",
             questionPanelMinHeight,
           ].join(" ")}
         >
-          <div className="shrink-0 p-5 pb-4 md:px-8 md:pt-8">
+          <div className="cbt-question-toolbar shrink-0 p-5 pb-4 md:px-8 md:pt-8">
           <div className="flex items-start justify-between gap-3">
             <div className="flex min-w-0 flex-wrap items-center gap-2">
               <span className="inline-flex rounded-full border border-stone-200 bg-stone-100 px-3 py-1 text-xs font-semibold text-stone-600 dark:border-stone-800 dark:bg-stone-800 dark:text-stone-400">
@@ -357,7 +360,7 @@ export function CbtSolveScreen({
             </div>
           </div>
           </div>
-          <div ref={contentRef} className="min-h-0 flex-auto overflow-y-auto px-5 pb-6 md:px-8">
+          <div ref={contentRef} className="cbt-question-content min-h-0 flex-auto overflow-y-auto px-5 pb-6 md:px-8">
           <RichTextContent
             content={current.question}
             className={[
@@ -485,7 +488,7 @@ export function CbtSolveScreen({
           )}
           </div>
 
-          <div className="grid shrink-0 grid-cols-2 overflow-hidden border-t border-stone-200 dark:border-stone-800">
+          <div className="cbt-navigation grid shrink-0 grid-cols-2 overflow-hidden border-t border-stone-200 dark:border-stone-800">
             <button
               onClick={() => goToQuestion(index - 1, "previous_button")}
               disabled={index === 0}
@@ -561,9 +564,9 @@ export function CbtSolveScreen({
       </div>
 
       {isOmrOpen ? (
-        <div className="fixed inset-0 z-30 md:hidden">
+        <div className="cbt-omr-layer fixed inset-0 z-30 md:hidden">
           <button onClick={() => setIsOmrOpen(false)} className="app-modal-backdrop absolute inset-0" />
-          <div className="app-modal-surface absolute bottom-0 left-0 right-0 rounded-t-2xl border-t p-4 shadow-2xl">
+          <div className="cbt-omr-sheet app-modal-surface absolute bottom-0 left-0 right-0 rounded-t-2xl border-t p-4 shadow-2xl">
             <div className="mb-3 flex items-center justify-between">
               <h3 className="text-sm font-semibold dark:text-stone-100">OMR 빠른 이동</h3>
               <button onClick={() => setIsOmrOpen(false)} className="text-sm text-stone-500 dark:text-stone-400">
