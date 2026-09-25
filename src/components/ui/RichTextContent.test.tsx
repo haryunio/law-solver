@@ -45,4 +45,45 @@ describe("RichTextContent", () => {
     expect(container.querySelectorAll("br")).toHaveLength(2);
     expect(container.textContent).toBe("ㄱ. 틀리다.ㄴ. 맞다.따라서 정답은 4번.");
   });
+
+  it("links only opted-in text, keeps line breaks and updates provider without changing content", () => {
+    const content = "99다1234 참조\r\n2001므1250 참조";
+    const { container, rerender } = render(<RichTextContent content={content} />);
+    expect(screen.queryByRole("link")).toBeNull();
+    rerender(<RichTextContent content={content} precedentLinkProvider="law-go-kr" />);
+    expect(screen.getAllByRole("link")).toHaveLength(2);
+    const first = screen.getByRole("link", { name: /99다1234/ });
+    expect(first.getAttribute("href")).toContain("evtNo=99%EB%8B%A41234");
+    expect(first.getAttribute("target")).toBe("_blank");
+    expect(first.getAttribute("rel")).toBe("noopener noreferrer");
+    expect(first.getAttribute("referrerpolicy")).toBe("no-referrer");
+    expect(container.querySelectorAll("br")).toHaveLength(1);
+    rerender(<RichTextContent content={content} precedentLinkProvider="casenote" />);
+    expect(screen.getByRole("link", { name: /2001므1250/ }).getAttribute("href")).toBe("https://casenote.kr/search/?q=2001%EB%AF%801250");
+    rerender(<RichTextContent content={content} precedentLinkProvider="off" />);
+    expect(screen.queryByRole("link")).toBeNull();
+    expect(container.textContent).toBe("99다1234 참조2001므1250 참조");
+  });
+
+  it("links sanitized HTML text while keeping tables and discarding untrusted links and attributes", () => {
+    const { container } = render(<RichTextContent precedentLinkProvider="law-go-kr" content={'<p><strong>99다1234</strong></p><table><tr><td colspan="2"><a href="javascript:alert(1)" onclick="alert(2)">2001므1250</a></td></tr></table><script>2000다999</script><img alt="2002다888" src="x"><p title="2003다777">설명</p>'} />);
+    expect(screen.getAllByRole("link")).toHaveLength(2);
+    expect(container.querySelector("strong a")?.textContent).toBe("99다1234");
+    expect(container.querySelector('td[colspan="2"] a')?.textContent).toBe("2001므1250");
+    expect(container.querySelector("a a, [onclick], img, script, [title='2003다777']")).toBeNull();
+    expect(container.textContent).toBe("99다12342001므1250설명");
+  });
+
+  it("never trusts an existing anchor's destination even without other formatting", () => {
+    render(<RichTextContent precedentLinkProvider="casenote" content={'<a href="https://untrusted.example">99다1234</a>'} />);
+    expect(screen.getByRole("link").getAttribute("href")).toBe("https://casenote.kr/search/?q=99%EB%8B%A41234");
+  });
+
+  it("keeps source markup literal when explicitly rendered as plain text", () => {
+    const content = "<strong>출처</strong> 99다1234";
+    const { container } = render(<RichTextContent content={content} plainText precedentLinkProvider="law-go-kr" />);
+    expect(container.textContent).toBe(content);
+    expect(container.querySelector("strong")).toBeNull();
+    expect(screen.getByRole("link", { name: /99다1234/ })).toBeTruthy();
+  });
 });

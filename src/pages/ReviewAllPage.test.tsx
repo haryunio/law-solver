@@ -5,16 +5,22 @@ import { MemoryRouter } from "react-router-dom";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { SessionPageProvider, type SessionPageAdapter } from "../components/session/SessionPageContext";
 import type { TestSession } from "../types/test";
+import { useSettingsStore } from "../store/useSettingsStore";
 import { ReviewAllPage } from "./ReviewAllPage";
 import { ResultPage } from "./ResultPage";
 import { WrongAnswersPage } from "./WrongAnswersPage";
 
 beforeEach(() => {
+  useSettingsStore.setState(useSettingsStore.getInitialState());
   vi.stubGlobal("ResizeObserver", class { observe() {} unobserve() {} disconnect() {} });
   HTMLElement.prototype.scrollTo = vi.fn();
   HTMLElement.prototype.scrollIntoView = vi.fn();
 });
-afterEach(() => { cleanup(); vi.unstubAllGlobals(); });
+afterEach(() => {
+  cleanup();
+  vi.unstubAllGlobals();
+  useSettingsStore.setState(useSettingsStore.getInitialState());
+});
 
 const session: TestSession = {
   id: "multiple-answers-session", title: "복수 정답 복기", type: "5-choice", order_mode: "number",
@@ -37,6 +43,38 @@ function renderReview(page: "all" | "wrong" | "result", example = session) {
     {page === "all" ? <ReviewAllPage /> : page === "wrong" ? <WrongAnswersPage /> : <ResultPage />}
   </SessionPageProvider></MemoryRouter>);
 }
+
+describe("explanation and source case links in review screens", () => {
+  it.each(["all", "wrong"] as const)("links explanation and source citations in %s review without linking questions or choices", (page) => {
+    const example: TestSession = {
+      ...session,
+      total_questions: 1,
+      solved_questions: 1,
+      questions: [{
+        ...session.questions[1]!,
+        question: "99다1234를 검토한 문제",
+        choices: ["2001므1250의 판단", "둘째 선지", "셋째 선지", "넷째 선지", "다섯째 선지"],
+        explanation: "<p>99다1234 및 <strong>2001므1250</strong> 판결을 참조한다.</p>",
+        source: "대법원 2005다73105 판결 <strong>참고 자료</strong>",
+      }],
+    };
+    renderReview(page, example);
+    const main = within(screen.getByRole("main"));
+    expect(main.getAllByRole("link")).toHaveLength(3);
+    for (const caseNumber of ["99다1234", "2001므1250", "2005다73105"]) {
+      const link = main.getByRole("link", { name: `${caseNumber}, 국가법령정보센터에서 새 탭으로 열기` });
+      expect(link.getAttribute("href")).toBe(`https://www.law.go.kr/LSW/precInfoP.do?mode=0&evtNo=${encodeURIComponent(caseNumber)}`);
+      expect(link.getAttribute("target")).toBe("_blank");
+      expect(link.getAttribute("rel")).toContain("noopener");
+    }
+    expect(main.getByText("99다1234를 검토한 문제").closest("a")).toBeNull();
+    expect(main.getByText("2001므1250의 판단").closest("a")).toBeNull();
+    expect(main.getByRole("link", { name: "2001므1250, 국가법령정보센터에서 새 탭으로 열기" }).closest("strong")).not.toBeNull();
+    const source = main.getByRole("link", { name: "2005다73105, 국가법령정보센터에서 새 탭으로 열기" }).closest("p")!;
+    expect(source.textContent).toBe("대법원 2005다73105 판결 <strong>참고 자료</strong>");
+    expect(source.querySelector("strong")).toBeNull();
+  });
+});
 
 describe("multiple accepted choices in review screens", () => {
   it("marks an accepted choice as correct in the question and both OMR views", () => {

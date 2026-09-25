@@ -1,7 +1,8 @@
 import { createElement, Fragment, useMemo, type ReactNode } from "react";
+import { getPrecedentUrl, splitPrecedentText, type PrecedentLinkProvider } from "../../lib/precedentLinks";
 
 const supportedMarkupPattern =
-  /<\/?(?:table|thead|tbody|tfoot|tr|th|td|caption|colgroup|col|br|p|div|blockquote|ul|ol|li|strong|b|em|i|u|s|del|ins|sup|sub|small|mark|code|pre|hr|span|h[1-6])\b/i;
+  /<\/?(?:table|thead|tbody|tfoot|tr|th|td|caption|colgroup|col|br|p|div|blockquote|ul|ol|li|strong|b|em|i|u|s|del|ins|sup|sub|small|mark|code|pre|hr|span|a|h[1-6])\b/i;
 
 const allowedTags = new Set([
   "table",
@@ -77,17 +78,34 @@ const getSafePositiveInteger = (element: Element, attribute: string) => {
   return Number.isInteger(value) && value >= 1 && value <= 100 ? value : undefined;
 };
 
-const renderPlainTextWithLineBreaks = (text: string): ReactNode => {
+const renderText = (text: string, provider: PrecedentLinkProvider): ReactNode => {
+  if (provider === "off") return text;
+  const destination = provider === "casenote" ? "케이스노트" : "국가법령정보센터";
+  return splitPrecedentText(text).map((part, index) => part.caseNumber ? (
+    <a
+      key={index}
+      href={getPrecedentUrl(part.caseNumber, provider)}
+      target="_blank"
+      rel="noopener noreferrer"
+      referrerPolicy="no-referrer"
+      className="app-precedent-link"
+      aria-label={`${part.text}, ${destination}에서 새 탭으로 열기`}
+      title={`${destination}에서 새 탭으로 열기`}
+    >{part.text}</a>
+  ) : part.text);
+};
+
+const renderPlainTextWithLineBreaks = (text: string, provider: PrecedentLinkProvider): ReactNode => {
   const lines = text.split(/\r\n?|\n|\u2028|\u2029/);
-  if (lines.length === 1) return text;
+  if (lines.length === 1) return renderText(text, provider);
 
   return lines.flatMap((line, index) =>
-    index === 0 ? [line] : [<br key={`plain-line-break-${index}`} />, line],
+    index === 0 ? [renderText(line, provider)] : [<br key={`plain-line-break-${index}`} />, renderText(line, provider)],
   );
 };
 
-const renderSafeNode = (node: Node, key: string): ReactNode => {
-  if (node.nodeType === 3) return node.textContent;
+const renderSafeNode = (node: Node, key: string, provider: PrecedentLinkProvider): ReactNode => {
+  if (node.nodeType === 3) return <Fragment key={key}>{renderText(node.textContent ?? "", provider)}</Fragment>;
   if (node.nodeType !== 1) return null;
 
   const element = node as Element;
@@ -95,7 +113,7 @@ const renderSafeNode = (node: Node, key: string): ReactNode => {
   if (blockedTags.has(tagName)) return null;
 
   const children = Array.from(element.childNodes).map((child, index) =>
-    renderSafeNode(child, `${key}-${index}`),
+    renderSafeNode(child, `${key}-${index}`, provider),
   );
 
   if (!allowedTags.has(tagName)) {
@@ -143,23 +161,25 @@ const renderSafeNode = (node: Node, key: string): ReactNode => {
   return createElement(renderedTag, props, children);
 };
 
-interface RichTextContentProps {
+export interface RichTextContentProps {
   content: string;
   className?: string;
   as?: "div" | "span";
+  plainText?: boolean;
+  precedentLinkProvider?: PrecedentLinkProvider;
 }
 
-export function RichTextContent({ content, className = "", as = "div" }: RichTextContentProps) {
+export function RichTextContent({ content, className = "", as = "div", plainText = false, precedentLinkProvider = "off" }: RichTextContentProps) {
   const renderedContent = useMemo(() => {
-    if (!supportedMarkupPattern.test(content) || typeof DOMParser === "undefined") {
-      return renderPlainTextWithLineBreaks(content);
+    if (plainText || !supportedMarkupPattern.test(content) || typeof DOMParser === "undefined") {
+      return renderPlainTextWithLineBreaks(content, precedentLinkProvider);
     }
 
     const document = new DOMParser().parseFromString(content, "text/html");
     return Array.from(document.body.childNodes).map((node, index) =>
-      renderSafeNode(node, `rich-content-${index}`),
+      renderSafeNode(node, `rich-content-${index}`, precedentLinkProvider),
     );
-  }, [content]);
+  }, [content, plainText, precedentLinkProvider]);
 
   return createElement(
     as,

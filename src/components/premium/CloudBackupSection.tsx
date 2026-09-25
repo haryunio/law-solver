@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type FormEvent } from "react";
+import { useEffect, useId, useMemo, useState, type FormEvent } from "react";
 import {
   CloudBackupCryptoError,
   CLOUD_BACKUP_ENCRYPTION_FORMAT_VERSION,
@@ -28,6 +28,7 @@ import type { DashboardBackupData } from "../../types/test";
 import { getOfflineDataStorageMessage } from "../../lib/offlineDataStorage";
 import { ButtonLoadingContent, SkeletonBlock } from "../ui/AsyncLoading";
 import { ConfirmDialog } from "../ui/ConfirmDialog";
+import { Dialog } from "../ui/Dialog";
 import { IconCloseButton } from "../ui/IconCloseButton";
 import { PremiumBadge } from "../ui/PremiumBadge";
 import { Toast, type ToastTone } from "../ui/Toast";
@@ -88,6 +89,7 @@ function comparisonCard({
 }
 
 export function CloudBackupSection() {
+  const modalTitleId = useId();
   const configured = useAccountStore((state) => state.configured);
   const initialized = useAccountStore((state) => state.initialized);
   const isSignedIn = useAccountStore((state) => state.isSignedIn);
@@ -382,140 +384,135 @@ export function CloudBackupSection() {
       </article>
 
       {modalMode ? (
-        <div className="fixed inset-0 z-[70]">
-          <button
-            type="button"
-            onClick={closeModal}
-            className="app-modal-backdrop absolute inset-0"
-            aria-label="클라우드 백업 대화상자 닫기"
-          />
-          <div className="absolute left-1/2 top-1/2 w-[92vw] max-w-xl -translate-x-1/2 -translate-y-1/2">
-            <section className="app-modal-surface max-h-[88vh] overflow-y-auto rounded-2xl border p-5 shadow-2xl sm:p-6">
-              <div className="flex items-start justify-between gap-4">
-                <div>
-                  <PremiumBadge />
-                  <h2 className="mt-3 text-lg font-bold text-stone-950 dark:text-stone-100">
-                    {modalMode === "upload"
-                      ? metadata?.backup ? "클라우드에 다시 백업하기" : "클라우드에 백업하기"
-                      : restoredData ? "내려받은 데이터 최종 확인" : "클라우드에서 내려받기"}
-                  </h2>
-                </div>
-                <IconCloseButton onClick={closeModal} label="클라우드 백업 닫기" />
-              </div>
-
-              <div className="mt-5 grid gap-2 sm:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] sm:items-center">
-                {comparisonCard({ label: "현재 브라우저", ...localStats })}
-                <span
-                  aria-hidden="true"
-                  className="flex h-5 items-center justify-center text-sm font-bold text-stone-400 dark:text-stone-500 sm:h-auto sm:w-4"
-                >
-                  <span className="sm:hidden">{modalMode === "upload" ? "↓" : "↑"}</span>
-                  <span className="hidden sm:inline">{modalMode === "upload" ? "→" : "←"}</span>
-                </span>
+        <Dialog
+          labelledBy={modalTitleId}
+          onClose={operation ? undefined : closeModal}
+          closeLabel="클라우드 백업 대화상자 닫기"
+          surfaceClassName="max-h-[min(88dvh,calc(100dvh-2rem))] max-w-xl overflow-y-auto rounded-2xl border p-5 sm:p-6"
+        >
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <PremiumBadge />
+              <h2 id={modalTitleId} className="mt-3 text-lg font-bold text-stone-950 dark:text-stone-100">
                 {modalMode === "upload"
-                  ? metadata?.backup
-                    ? comparisonCard({
-                      label: "덮어쓸 클라우드 최신본",
-                      dataModifiedAt: metadata.backup.dataModifiedAt,
-                      subjectCount: metadata.backup.subjectCount,
-                      sessionCount: metadata.backup.sessionCount,
-                      questionCount: metadata.backup.questionCount,
-                    })
-                    : (
-                      <article className="app-neutral-box flex items-center justify-center rounded-xl border p-3 text-xs text-stone-500">
-                        저장된 백업 없음
-                      </article>
-                    )
-                  : restoredData
-                  ? comparisonCard({
-                    label: "내려받은 클라우드 데이터",
-                    ...getDashboardBackupStats(restoredData),
-                  })
-                  : metadata?.backup
-                  ? comparisonCard({
-                    label: "내려받을 클라우드 최신본",
-                    dataModifiedAt: metadata.backup.dataModifiedAt,
-                    subjectCount: metadata.backup.subjectCount,
-                    sessionCount: metadata.backup.sessionCount,
-                    questionCount: metadata.backup.questionCount,
-                  })
-                  : null}
-              </div>
-
-              <CloudBackupComparisonWarnings warnings={comparisonWarnings} />
-
-              {restoredData ? (
-                <>
-                  <p className="mt-4 text-sm leading-6 text-stone-600 dark:text-stone-400">
-                    복호화와 구조 검증이 완료되었습니다. 적용하면 현재 브라우저의 과목, 문제, 풀이 내역과 오답노트가 위 클라우드 데이터로 한 번에 교체됩니다.
-                  </p>
-                  <div className="mt-5 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-                    <button type="button" onClick={closeModal} disabled={Boolean(operation)} className="app-button-secondary rounded-xl px-4 py-2.5 text-sm font-semibold disabled:opacity-50">취소</button>
-                    <button type="button" onClick={() => void applyRestore()} disabled={Boolean(operation)} className="app-button-primary min-w-[150px] rounded-xl px-4 py-2.5 text-sm font-semibold disabled:opacity-60">
-                      {operation === "applying"
-                        ? <ButtonLoadingContent label="이 브라우저에 저장하는 중" />
-                        : "이 데이터로 교체"}
-                    </button>
-                  </div>
-                  {modalError ? (
-                    <p role="alert" className="mt-3 text-sm font-medium text-red-600 dark:text-red-400">{modalError}</p>
-                  ) : null}
-                </>
-              ) : (
-                <form onSubmit={modalMode === "upload" ? upload : decryptRestore} className="mt-5">
-                  <p className="text-sm leading-6 text-stone-600 dark:text-stone-400">
-                    {modalMode === "upload"
-                      ? "이 비밀번호로 브라우저에서 암호화합니다. Law Solver는 비밀번호를 저장하지 않으며, 비밀번호를 잊으면 절대로 복구할 수 없습니다."
-                      : cachedRestore
-                      ? "암호문은 이 대화상자의 메모리에 보관 중입니다. 비밀번호를 다시 입력해도 내려받기 횟수가 추가로 차감되지 않습니다."
-                      : "내려받기를 시작하면 암호문을 한 번 내려받아 이 대화상자 메모리에만 보관합니다. 올바른 비밀번호가 있어야 내용을 확인할 수 있습니다."}
-                  </p>
-                  {modalError ? (
-                    <p role="alert" className="app-radius-inset mt-3 rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700 dark:border-red-900/60 dark:bg-red-950/30 dark:text-red-300">
-                      {modalError}
-                    </p>
-                  ) : null}
-                  <label className="mt-4 block text-sm font-semibold text-stone-800 dark:text-stone-200">
-                    백업 비밀번호
-                    <input
-                      type="password"
-                      autoComplete="new-password"
-                      minLength={8}
-                      required
-                      value={password}
-                      onChange={(event) => setPassword(event.target.value)}
-                      className="app-control mt-2 w-full rounded-xl border px-3 py-3 text-sm"
-                      placeholder="8자 이상 입력"
-                    />
-                  </label>
-                  {modalMode === "upload" ? (
-                    <label className="mt-3 block text-sm font-semibold text-stone-800 dark:text-stone-200">
-                      백업 비밀번호 확인
-                      <input
-                        type="password"
-                        autoComplete="new-password"
-                        minLength={8}
-                        required
-                        value={passwordConfirm}
-                        onChange={(event) => setPasswordConfirm(event.target.value)}
-                        className="app-control mt-2 w-full rounded-xl border px-3 py-3 text-sm"
-                        placeholder="같은 비밀번호 다시 입력"
-                      />
-                    </label>
-                  ) : null}
-                  <div className="mt-5 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-                    <button type="button" onClick={closeModal} disabled={Boolean(operation)} className="app-button-secondary rounded-xl px-4 py-2.5 text-sm font-semibold disabled:opacity-50">취소</button>
-                    <button type="submit" disabled={Boolean(operation)} className="app-button-primary min-w-[150px] rounded-xl px-4 py-2.5 text-sm font-semibold disabled:opacity-60">
-                      {operation
-                        ? <ButtonLoadingContent label={operationLabel[operation] ?? "처리 중"} />
-                        : modalMode === "upload" ? "암호화하고 백업하기" : cachedRestore ? "비밀번호 다시 확인" : "내려받고 확인하기"}
-                    </button>
-                  </div>
-                </form>
-              )}
-            </section>
+                  ? metadata?.backup ? "클라우드에 다시 백업하기" : "클라우드에 백업하기"
+                  : restoredData ? "내려받은 데이터 최종 확인" : "클라우드에서 내려받기"}
+              </h2>
+            </div>
+            <IconCloseButton onClick={closeModal} label="클라우드 백업 닫기" disabled={Boolean(operation)} />
           </div>
-        </div>
+
+          <div className="mt-5 grid gap-2 sm:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] sm:items-center">
+            {comparisonCard({ label: "현재 브라우저", ...localStats })}
+            <span
+              aria-hidden="true"
+              className="flex h-5 items-center justify-center text-sm font-bold text-stone-400 dark:text-stone-500 sm:h-auto sm:w-4"
+            >
+              <span className="sm:hidden">{modalMode === "upload" ? "↓" : "↑"}</span>
+              <span className="hidden sm:inline">{modalMode === "upload" ? "→" : "←"}</span>
+            </span>
+            {modalMode === "upload"
+              ? metadata?.backup
+                ? comparisonCard({
+                  label: "덮어쓸 클라우드 최신본",
+                  dataModifiedAt: metadata.backup.dataModifiedAt,
+                  subjectCount: metadata.backup.subjectCount,
+                  sessionCount: metadata.backup.sessionCount,
+                  questionCount: metadata.backup.questionCount,
+                })
+                : (
+                  <article className="app-neutral-box flex items-center justify-center rounded-xl border p-3 text-xs text-stone-500">
+                    저장된 백업 없음
+                  </article>
+                )
+              : restoredData
+              ? comparisonCard({
+                label: "내려받은 클라우드 데이터",
+                ...getDashboardBackupStats(restoredData),
+              })
+              : metadata?.backup
+              ? comparisonCard({
+                label: "내려받을 클라우드 최신본",
+                dataModifiedAt: metadata.backup.dataModifiedAt,
+                subjectCount: metadata.backup.subjectCount,
+                sessionCount: metadata.backup.sessionCount,
+                questionCount: metadata.backup.questionCount,
+              })
+              : null}
+          </div>
+
+          <CloudBackupComparisonWarnings warnings={comparisonWarnings} />
+
+          {restoredData ? (
+            <>
+              <p className="mt-4 text-sm leading-6 text-stone-600 dark:text-stone-400">
+                복호화와 구조 검증이 완료되었습니다. 적용하면 현재 브라우저의 과목, 문제, 풀이 내역과 오답노트가 위 클라우드 데이터로 한 번에 교체됩니다.
+              </p>
+              <div className="mt-5 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+                <button type="button" onClick={closeModal} disabled={Boolean(operation)} className="app-button-secondary rounded-xl px-4 py-2.5 text-sm font-semibold disabled:opacity-50">취소</button>
+                <button type="button" onClick={() => void applyRestore()} disabled={Boolean(operation)} className="app-button-primary min-w-[150px] rounded-xl px-4 py-2.5 text-sm font-semibold disabled:opacity-60">
+                  {operation === "applying"
+                    ? <ButtonLoadingContent label="이 브라우저에 저장하는 중" />
+                    : "이 데이터로 교체"}
+                </button>
+              </div>
+              {modalError ? (
+                <p role="alert" className="mt-3 text-sm font-medium text-red-600 dark:text-red-400">{modalError}</p>
+              ) : null}
+            </>
+          ) : (
+            <form onSubmit={modalMode === "upload" ? upload : decryptRestore} className="mt-5">
+              <p className="text-sm leading-6 text-stone-600 dark:text-stone-400">
+                {modalMode === "upload"
+                  ? "이 비밀번호로 브라우저에서 암호화합니다. Law Solver는 비밀번호를 저장하지 않으며, 비밀번호를 잊으면 절대로 복구할 수 없습니다."
+                  : cachedRestore
+                  ? "암호문은 이 대화상자의 메모리에 보관 중입니다. 비밀번호를 다시 입력해도 내려받기 횟수가 추가로 차감되지 않습니다."
+                  : "내려받기를 시작하면 암호문을 한 번 내려받아 이 대화상자 메모리에만 보관합니다. 올바른 비밀번호가 있어야 내용을 확인할 수 있습니다."}
+              </p>
+              {modalError ? (
+                <p role="alert" className="app-radius-inset mt-3 rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700 dark:border-red-900/60 dark:bg-red-950/30 dark:text-red-300">
+                  {modalError}
+                </p>
+              ) : null}
+              <label className="mt-4 block text-sm font-semibold text-stone-800 dark:text-stone-200">
+                백업 비밀번호
+                <input
+                  type="password"
+                  autoComplete="new-password"
+                  minLength={8}
+                  required
+                  value={password}
+                  onChange={(event) => setPassword(event.target.value)}
+                  className="app-control mt-2 w-full rounded-xl border px-3 py-3 text-sm"
+                  placeholder="8자 이상 입력"
+                />
+              </label>
+              {modalMode === "upload" ? (
+                <label className="mt-3 block text-sm font-semibold text-stone-800 dark:text-stone-200">
+                  백업 비밀번호 확인
+                  <input
+                    type="password"
+                    autoComplete="new-password"
+                    minLength={8}
+                    required
+                    value={passwordConfirm}
+                    onChange={(event) => setPasswordConfirm(event.target.value)}
+                    className="app-control mt-2 w-full rounded-xl border px-3 py-3 text-sm"
+                    placeholder="같은 비밀번호 다시 입력"
+                  />
+                </label>
+              ) : null}
+              <div className="mt-5 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+                <button type="button" onClick={closeModal} disabled={Boolean(operation)} className="app-button-secondary rounded-xl px-4 py-2.5 text-sm font-semibold disabled:opacity-50">취소</button>
+                <button type="submit" disabled={Boolean(operation)} className="app-button-primary min-w-[150px] rounded-xl px-4 py-2.5 text-sm font-semibold disabled:opacity-60">
+                  {operation
+                    ? <ButtonLoadingContent label={operationLabel[operation] ?? "처리 중"} />
+                    : modalMode === "upload" ? "암호화하고 백업하기" : cachedRestore ? "비밀번호 다시 확인" : "내려받고 확인하기"}
+                </button>
+              </div>
+            </form>
+          )}
+        </Dialog>
       ) : null}
 
       {deleteConfirm ? (

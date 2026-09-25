@@ -36,3 +36,41 @@ describe("problem sorting preferences", () => {
     expect(useSettingsStore.getState()).toMatchObject({ problemSortKey: "created_at", problemSortDirection: "desc" });
   });
 });
+
+describe("precedent link preferences", () => {
+  it("uses the National Law Information Center for new and legacy settings", async () => {
+    expect(useSettingsStore.getState().precedentLinkProvider).toBe("law-go-kr");
+    useSettingsStore.getState().setPrecedentLinkProvider("casenote");
+    localStorage.setItem("law-solver-settings", JSON.stringify({
+      state: { darkMode: true, fontFamily: "nanum-myeongjo" }, version: 0,
+    }));
+
+    await useSettingsStore.persist.rehydrate();
+
+    expect(useSettingsStore.getState()).toMatchObject({
+      darkMode: true, fontFamily: "nanum-myeongjo", precedentLinkProvider: "law-go-kr",
+    });
+  });
+
+  it.each(["off", "law-go-kr", "casenote"] as const)("persists and restores %s", async (provider) => {
+    useSettingsStore.getState().setPrecedentLinkProvider(provider);
+    const saved = localStorage.getItem("law-solver-settings")!;
+    expect(JSON.parse(saved).state.precedentLinkProvider).toBe(provider);
+    useSettingsStore.setState(useSettingsStore.getInitialState());
+    localStorage.setItem("law-solver-settings", saved);
+
+    await useSettingsStore.persist.rehydrate();
+
+    expect(useSettingsStore.getState().precedentLinkProvider).toBe(provider);
+  });
+
+  it.each([null, "unknown", false, 1, {}])("defaults invalid saved values (%j)", async (provider) => {
+    localStorage.setItem("law-solver-settings", JSON.stringify({
+      state: { precedentLinkProvider: provider }, version: 0,
+    }));
+
+    await useSettingsStore.persist.rehydrate();
+
+    expect(useSettingsStore.getState().precedentLinkProvider).toBe("law-go-kr");
+  });
+});

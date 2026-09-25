@@ -15,6 +15,7 @@ import {
 } from "../lib/dashboardBackup";
 import { CLOUD_BACKUP_MAX_PLAINTEXT_BYTES } from "../lib/cloudBackupCrypto";
 import { getOfflineDataStorageMessage } from "../lib/offlineDataStorage";
+import { normalizePrecedentLinkProvider, PRECEDENT_LINK_OPTIONS } from "../lib/precedentLinks";
 
 type SettingsTab = "appearance" | "data";
 
@@ -42,6 +43,7 @@ export function SettingsPage() {
   const {
     darkMode, toggleDarkMode, fontFamily, setFontFamily,
     problemSortKey, problemSortDirection, setProblemSortKey, setProblemSortDirection,
+    precedentLinkProvider, setPrecedentLinkProvider,
   } = useSettingsStore();
   const sessions = useTestStore((state) => state.sessions);
   const subjects = useTestStore((state) => state.subjects);
@@ -275,6 +277,21 @@ export function SettingsPage() {
                       options={[{ value: "asc", label: "오름차순" }, { value: "desc", label: "내림차순" }]}
                       onChange={(value) => setProblemSortDirection(value === "asc" ? "asc" : "desc")} />
                   </div>
+                </div>
+              </article>
+              <article className="app-card rounded-2xl border p-5 sm:p-6">
+                <p className="text-xs font-bold tracking-[0.14em] text-red-600 dark:text-red-400">PRECEDENT LINKS</p>
+                <h2 className="mt-2 text-xl font-bold text-stone-950 dark:text-stone-100">자동 하이퍼링크</h2>
+                <p className="mt-1 text-xs leading-5 text-stone-500 dark:text-stone-400">
+                  해설과 출처의 판례번호를 누르면 선택한 사이트를 새 탭으로 엽니다. 설정은 이 브라우저에 자동으로 저장됩니다.
+                </p>
+                <div className="mt-5">
+                  <ThemeSelect
+                    ariaLabel="자동 하이퍼링크"
+                    value={precedentLinkProvider}
+                    options={PRECEDENT_LINK_OPTIONS}
+                    onChange={(value) => setPrecedentLinkProvider(normalizePrecedentLinkProvider(value))}
+                  />
                 </div>
               </article>
             </section>
