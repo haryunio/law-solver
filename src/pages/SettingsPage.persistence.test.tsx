@@ -36,7 +36,7 @@ beforeEach(() => {
 
 afterEach(() => {
   cleanup();
-  useSettingsStore.setState({ problemSortKey: "created_at", problemSortDirection: "desc" });
+  useSettingsStore.setState({ problemSortKey: "created_at", problemSortDirection: "desc", precedentLinkProvider: "law-go-kr" });
   useTestStore.setState({ importDashboardData: originalImport });
   vi.restoreAllMocks();
 });
@@ -70,6 +70,22 @@ describe("SettingsPage durable file restore", () => {
     expect(useSettingsStore.getState()).toMatchObject({ problemSortKey: "title", problemSortDirection: "asc" });
     expect(JSON.parse(localStorage.getItem("law-solver-settings")!).state)
       .toMatchObject({ problemSortKey: "title", problemSortDirection: "asc" });
+  });
+
+  it("saves each precedent link choice immediately and retains it when returning to settings", () => {
+    const view = render(<MemoryRouter><SettingsPage /></MemoryRouter>);
+    expect(screen.getByRole("button", { name: "자동 하이퍼링크" }).textContent).toContain("국가법령정보센터");
+
+    for (const [label, provider] of [["케이스노트", "casenote"], ["국가법령정보센터", "law-go-kr"], ["끔", "off"]]) {
+      fireEvent.click(screen.getByRole("button", { name: "자동 하이퍼링크" }));
+      fireEvent.click(screen.getByRole("option", { name: label }));
+      expect(useSettingsStore.getState().precedentLinkProvider).toBe(provider);
+      expect(JSON.parse(localStorage.getItem("law-solver-settings")!).state.precedentLinkProvider).toBe(provider);
+    }
+
+    view.unmount();
+    render(<MemoryRouter><SettingsPage /></MemoryRouter>);
+    expect(screen.getByRole("button", { name: "자동 하이퍼링크" }).textContent).toContain("끔");
   });
 
   it("keeps the confirmation open until IndexedDB persistence finishes", async () => {

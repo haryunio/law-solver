@@ -16,22 +16,22 @@ interface ProblemSetCardMetadataProps {
 
 export function ProblemSetCardMetadata({ type, questionCount, sessionCount, inProgressCount }: ProblemSetCardMetadataProps) {
   return (
-    <dl className="grid grid-cols-[minmax(max-content,1fr)_minmax(max-content,0.7fr)_minmax(0,1.7fr)] gap-2 text-xs">
-      <div className="app-neutral-box app-radius-inset flex h-11 min-w-0 items-center justify-between gap-1 rounded-lg px-2">
+    <dl className="grid grid-cols-3 gap-2 text-xs">
+      <div className="app-neutral-box app-radius-inset flex h-11 min-w-0 flex-wrap content-center items-center justify-between gap-x-1 rounded-lg px-2">
         <dt className="shrink-0 text-[11px] text-stone-500 dark:text-stone-400">유형</dt>
-        <dd className={`app-radius-tag inline-flex h-6 items-center whitespace-nowrap rounded-full border px-2 text-[11px] font-semibold leading-none ${typeStyle[type]}`}>
+        <dd className={`app-radius-tag ml-auto inline-flex h-6 items-center whitespace-nowrap rounded-full border px-2 text-[11px] font-semibold leading-none ${typeStyle[type]}`}>
           {typeLabel[type]}
         </dd>
       </div>
-      <div className="app-neutral-box app-radius-inset flex h-11 min-w-0 items-center justify-between gap-1 rounded-lg px-2">
+      <div className="app-neutral-box app-radius-inset flex h-11 min-w-0 flex-wrap content-center items-center justify-between gap-x-1 rounded-lg px-2">
         <dt className="shrink-0 text-[11px] text-stone-500 dark:text-stone-400">문항</dt>
-        <dd className="whitespace-nowrap font-semibold tabular-nums text-stone-900 dark:text-stone-100">{questionCount}</dd>
+        <dd className="ml-auto whitespace-nowrap font-semibold tabular-nums text-stone-900 dark:text-stone-100">{questionCount}</dd>
       </div>
-      <div className="app-neutral-box app-radius-inset flex h-11 min-w-0 items-center justify-between gap-1 rounded-lg px-2">
+      <div className="app-neutral-box app-radius-inset flex h-11 min-w-0 flex-wrap content-center items-center justify-between gap-x-1 rounded-lg px-2 leading-4 tabular-nums">
         <dt className="shrink-0 text-[11px] text-stone-500 dark:text-stone-400">세션</dt>
-        <dd className="flex min-w-0 flex-wrap items-center justify-end gap-x-1 text-right leading-4 tabular-nums">
-          <span className="font-semibold text-stone-900 dark:text-stone-100">{sessionCount}</span>
-          <span className="whitespace-nowrap text-[11px] font-normal text-stone-500 dark:text-stone-400">({inProgressCount} 풀이 중)</span>
+        <dd className="ml-auto flex min-w-0 flex-wrap items-center justify-end gap-x-1 text-right max-sm:contents">
+          <span className="font-semibold text-stone-900 max-sm:ml-auto dark:text-stone-100">{sessionCount}</span>
+          <span className="whitespace-nowrap text-[11px] font-normal text-stone-500 max-sm:basis-full dark:text-stone-400">({inProgressCount} 풀이 중)</span>
         </dd>
       </div>
     </dl>

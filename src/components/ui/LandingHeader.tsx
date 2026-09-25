@@ -11,7 +11,6 @@ interface LandingHeaderProps {
 
 export function LandingHeader({ activePage = "home", onOpenCsvGuide }: LandingHeaderProps) {
   const { darkMode, toggleDarkMode } = useSettingsStore();
-  const sectionPrefix = activePage === "home" ? "" : "/";
   const [floating, setFloating] = useState(false);
 
   useEffect(() => {
@@ -22,10 +21,21 @@ export function LandingHeader({ activePage = "home", onOpenCsvGuide }: LandingHe
     return () => window.removeEventListener("scroll", update);
   }, []);
 
+  return <LandingHeaderView activePage={activePage} onOpenCsvGuide={onOpenCsvGuide} darkMode={darkMode} onToggleTheme={toggleDarkMode} floating={floating} />;
+}
+
+/** The gallery controls appearance locally without changing saved settings. */
+export function LandingHeaderView({ activePage = "home", onOpenCsvGuide, darkMode, onToggleTheme, floating = false, preview = false }: LandingHeaderProps & {
+  darkMode: boolean;
+  onToggleTheme: () => void;
+  floating?: boolean;
+  preview?: boolean;
+}) {
+  const sectionPrefix = activePage === "home" ? "" : "/";
   return (
     <>
-    <div className="landing-nav-placeholder" aria-hidden="true" />
-    <header className="landing-nav-wrap" data-floating={floating}>
+    {!preview ? <div className="landing-nav-placeholder" aria-hidden="true" /> : null}
+    <header className="landing-nav-wrap" data-floating={floating} style={preview ? { position: "relative", zIndex: "auto", paddingTop: 0 } : undefined}>
       <div className="landing-nav-surface">
       <nav className="landing-container landing-nav-inner flex items-center justify-between gap-3" aria-label="주요 메뉴">
         <Link to="/" className="landing-nav-brand group flex shrink-0 items-center gap-2.5" aria-label="Law Solver 홈">
@@ -51,7 +61,7 @@ export function LandingHeader({ activePage = "home", onOpenCsvGuide }: LandingHe
         </div>
 
         <div className="flex shrink-0 items-center gap-2">
-          <ThemeToggleButton darkMode={darkMode} onToggle={toggleDarkMode} />
+          <ThemeToggleButton darkMode={darkMode} onToggle={onToggleTheme} />
           <Link to="/home" className="landing-nav-cta">
             시작하기 <span aria-hidden="true">→</span>
           </Link>

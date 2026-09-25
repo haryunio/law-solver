@@ -1,8 +1,9 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ConfirmDialog } from "../ui/ConfirmDialog";
 import { OverflowTooltipTitle } from "../ui/OverflowTooltipTitle";
 import { RichTextContent } from "../ui/RichTextContent";
+import { LegalReferenceContent } from "../ui/LegalReferenceContent";
 import { getAnswerToken, getQuestionAnswerToken, hasNoCorrectChoice, isCorrectAnswer } from "../../lib/answer";
 import {
   QuestionNavigationMethod,
@@ -12,9 +13,14 @@ import {
 } from "../../lib/analytics";
 import { downloadSessionCsv } from "../../lib/csv";
 import { useOfflineSession } from "../../hooks/useOfflineSession";
+import { useSolveViewport } from "../../hooks/useSolveViewport";
 import { formatElapsedTime } from "../../lib/time";
 import { useTestStore } from "../../store/useTestStore";
 import { AnswerValue, TestSession } from "../../types/test";
+import { OmrShortcutButton } from "./OmrShortcutButton";
+import { MobileOmrSheet } from "./MobileOmrSheet";
+import { QuestionContentMotion } from "./QuestionContentMotion";
+import { useQuestionPanelHeightMotion } from "./useQuestionPanelHeightMotion";
 
 interface CbtSolveScreenProps {
   sessionId: string;
@@ -66,6 +72,14 @@ export function CbtSolveScreen({
   const [isPauseDialogOpen, setIsPauseDialogOpen] = useState(false);
   const [isSubmitDialogOpen, setIsSubmitDialogOpen] = useState(false);
   const contentRef = useRef<HTMLDivElement | null>(null);
+  const questionPanelRef = useRef<HTMLElement | null>(null);
+  const viewportRef = useRef<HTMLDivElement | null>(null);
+  useSolveViewport(viewportRef, Boolean(session?.questions[index]));
+  useQuestionPanelHeightMotion(
+    questionPanelRef,
+    session?.questions[index] ? `${session.id}:${session.questions[index]?.id}` : undefined,
+    showAnswer,
+  );
   const trackedSolveSessionRef = useRef<string | null>(null);
   const trackedQuestionIdsRef = useRef(new Set<string>());
   const activeQuestionIdRef = useRef<string | null>(null);
@@ -90,7 +104,7 @@ export function CbtSolveScreen({
     });
   }, [session, solveEntry]);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     setShowAnswer(false);
     setIsAnswerRevealLoading(false);
     contentRef.current?.scrollTo({ top: 0 });
@@ -163,14 +177,14 @@ export function CbtSolveScreen({
   const subjectDashboardPath = sessionsPath;
   const questionPanelMinHeight =
     session.type === "OX"
-      ? "md:min-h-[min(420px,calc(100vh-112px))]"
+      ? "md:min-h-[min(420px,100%)]"
       : session.type === "short"
-        ? "md:min-h-[min(360px,calc(100vh-112px))]"
-        : "md:min-h-[min(560px,calc(100vh-112px))]";
+        ? "md:min-h-[min(360px,100%)]"
+        : "md:min-h-[min(560px,100%)]";
   const omrPanelHeightClass =
     session.type === "5-choice"
-      ? "md:h-auto md:max-h-[calc(100vh-112px)] md:self-start"
-      : "md:h-[calc(100vh-112px)] md:max-h-[calc(100vh-112px)]";
+      ? "md:h-auto md:max-h-full md:self-start"
+      : "md:h-full md:max-h-full";
 
   const handleAnswer = (answer: string) => {
     if (sessionOverride) {
@@ -244,9 +258,9 @@ export function CbtSolveScreen({
   };
 
   return (
-    <div className="app-focus-page app-page text-stone-900 dark:text-stone-100">
-      <header className="app-topbar sticky top-0 z-20 border-b">
-        <div className="mx-auto flex max-w-6xl items-center justify-between gap-2 px-4 py-2 md:px-6">
+    <div ref={viewportRef} className="cbt-solve-page app-focus-page app-page text-stone-900 dark:text-stone-100">
+      <header className="cbt-header app-topbar sticky top-0 z-20 border-b">
+        <div className="cbt-header-content mx-auto flex max-w-6xl items-center justify-between gap-2 px-4 py-2 md:px-6">
           <div className="min-w-0">
             <p className="text-[10px] font-medium leading-none text-stone-500 dark:text-stone-500">타이머</p>
             <p className="mt-0.5 text-base font-semibold leading-tight tabular-nums text-red-600 dark:text-red-500">{formatElapsedTime(session.elapsed_time)}</p>
@@ -275,14 +289,15 @@ export function CbtSolveScreen({
         </div>
       </header>
 
-      <div className="mx-auto grid max-w-6xl grid-cols-1 gap-4 px-4 py-3 md:grid-cols-[1fr_220px] md:items-start md:px-6">
+      <div className="cbt-workspace mx-auto grid max-w-6xl grid-cols-1 gap-4 px-4 py-3 md:grid-cols-[1fr_220px] md:items-start md:px-6">
         <main
+          ref={questionPanelRef}
           className={[
-            "app-card flex w-full max-h-[calc(100vh-112px)] flex-col overflow-hidden rounded-2xl border",
+            "cbt-question-card app-card flex w-full max-h-full flex-col overflow-hidden rounded-2xl border",
             questionPanelMinHeight,
           ].join(" ")}
         >
-          <div className="shrink-0 p-5 pb-4 md:px-8 md:pt-8">
+          <div className="cbt-question-toolbar shrink-0 p-5 pb-4 md:px-8 md:pt-8">
           <div className="flex items-start justify-between gap-3">
             <div className="flex min-w-0 flex-wrap items-center gap-2">
               <span className="inline-flex rounded-full border border-stone-200 bg-stone-100 px-3 py-1 text-xs font-semibold text-stone-600 dark:border-stone-800 dark:bg-stone-800 dark:text-stone-400">
@@ -294,7 +309,8 @@ export function CbtSolveScreen({
                 </span>
               ) : null}
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex shrink-0 items-center gap-2">
+              <OmrShortcutButton onClick={() => setIsOmrOpen(true)} expanded={isOmrOpen} className="md:hidden" />
               <button
                 onClick={() => {
                   if (showAnswer) {
@@ -355,135 +371,139 @@ export function CbtSolveScreen({
             </div>
           </div>
           </div>
-          <div ref={contentRef} className="min-h-0 flex-auto overflow-y-auto px-5 pb-6 md:px-8">
-          <RichTextContent
-            content={current.question}
-            className={[
-              "font-semibold dark:text-stone-100",
-              session.type === "5-choice"
-                ? "text-sm leading-6 md:text-base md:leading-7"
-                : "text-base leading-7 md:text-lg md:leading-8",
-            ].join(" ")}
-          />
+          <div ref={contentRef} className="cbt-question-content min-h-0 flex-auto overflow-y-auto px-5 pb-6 md:px-8">
+            <QuestionContentMotion questionKey={`${session.id}:${current.id}`} questionIndex={index}>
+              <RichTextContent
+                content={current.question}
+                className={[
+                  "font-semibold dark:text-stone-100",
+                  session.type === "5-choice"
+                    ? "text-sm leading-6 md:text-base md:leading-7"
+                    : "text-base leading-7 md:text-lg md:leading-8",
+                ].join(" ")}
+              />
 
-          {current.boxes && current.boxes.length > 0 && (
-            <div className="mt-4 rounded-xl border-2 border-stone-200 bg-stone-50/50 p-4 dark:border-stone-800 dark:bg-stone-900/50">
-              <div className="space-y-2">
-                {current.boxes.map((box, idx) => {
-                  const symbols = ["ㄱ", "ㄴ", "ㄷ", "ㄹ", "ㅁ", "ㅂ", "ㅅ", "ㅇ", "ㅈ", "ㅊ", "ㅋ", "ㅌ", "ㅍ", "ㅎ"];
-                  // 기존에 포함된 "ㄱ.", "ㄴ. " 등의 접두어 제거
-                  const cleanBox = box.replace(/^[ㄱ-ㅎ]\.\s*/, "");
-                  return (
-                    <div
-                      key={idx}
-                      className={[
-                        "flex gap-2 leading-relaxed",
-                        session.type === "5-choice" ? "text-xs md:text-sm" : "text-sm md:text-base",
-                      ].join(" ")}
-                    >
-                      <span className="font-bold shrink-0">{symbols[idx] ?? idx + 1}.</span>
-                      <RichTextContent
-                        content={cleanBox}
-                        className="min-w-0 flex-1 text-stone-800 dark:text-stone-200"
-                      />
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          )}
-
-          <div className="mt-6 space-y-3">
-            {session.type === "short" ? (
-              <div className="space-y-2">
-                <p className="text-xs font-medium text-stone-500 dark:text-stone-500">답안 입력</p>
-                <input
-                  key={`short-input-${index}`}
-                  type="text"
-                  value={current.my_answer}
-                  onChange={(e) => handleAnswer(e.target.value)}
-                  onKeyDown={handleShortSubmit}
-                  placeholder="정답을 입력하세요. (Enter를 누르면 다음 문항으로)"
-                  className="app-control w-full rounded-xl px-4 py-3 text-base"
-                  autoFocus
-                />
-              </div>
-            ) : (
-              options.map((option) => {
-                const selected = current.my_answer === option.key;
-                const isCorrect = showAnswer && !hasNoCorrectChoice(current) && isCorrectAnswer(current, option.key);
-                const isAcceptedSelection = showAnswer && selected && isCorrectAnswer(current, option.key);
-                const showInlineNext =
-                  session.type === "OX" && selected && !showAnswer && index < session.total_questions - 1;
-
-                return (
-                  <div key={option.key} className="relative">
-                    <button
-                      onClick={() => handleAnswer(option.key)}
-                      className={[
-                        "flex w-full items-start gap-2 rounded-xl border px-4 py-3 text-left",
-                        showInlineNext ? "pr-32 md:pr-36" : "",
-                        session.type === "5-choice" ? "text-sm md:text-sm" : "text-base",
-                        isAcceptedSelection
-                          ? "border-emerald-600 bg-emerald-50 text-emerald-700 dark:border-emerald-600 dark:bg-emerald-950/30 dark:text-emerald-400"
-                          : isCorrect
-                            ? "border-blue-600 bg-blue-50 text-blue-700 dark:border-blue-600 dark:bg-blue-950/30 dark:text-blue-400"
-                            : selected
-                              ? "border-red-600 bg-red-50 text-red-700 dark:border-red-600 dark:bg-red-950/30 dark:text-red-400"
-                              : "border-stone-300 bg-white text-stone-800 hover:border-red-300 hover:bg-red-50/40 dark:border-stone-700 dark:bg-stone-800 dark:text-stone-300 dark:hover:border-red-900/70 dark:hover:bg-red-950/15",
-                      ].join(" ")}
-                    >
-                      {option.circle && (
-                        <span className="shrink-0 font-bold">{option.circle}</span>
-                      )}
-                      <RichTextContent
-                        as="span"
-                        content={option.text}
-                        className="min-w-0 flex-1 font-medium"
-                      />
-                      {isCorrect && !showInlineNext && (
-                        <span className="ml-auto shrink-0 text-xs font-bold text-blue-600 dark:text-blue-400">정답</span>
-                      )}
-                    </button>
-                    {showInlineNext ? (
-                      <button
-                        type="button"
-                        onClick={() => goToNext("inline_next")}
-                        className="app-button-primary app-inline-next absolute bottom-2 right-2 top-2 inline-flex items-center rounded-lg px-3 text-xs font-bold"
-                      >
-                        다음 문제로
-                        <span className="ml-1 text-red-200">›</span>
-                      </button>
-                    ) : null}
+              {current.boxes && current.boxes.length > 0 && (
+                <div className="mt-4 rounded-xl border-2 border-stone-200 bg-stone-50/50 p-4 dark:border-stone-800 dark:bg-stone-900/50">
+                  <div className="space-y-2">
+                    {current.boxes.map((box, idx) => {
+                      const symbols = ["ㄱ", "ㄴ", "ㄷ", "ㄹ", "ㅁ", "ㅂ", "ㅅ", "ㅇ", "ㅈ", "ㅊ", "ㅋ", "ㅌ", "ㅍ", "ㅎ"];
+                      // 기존에 포함된 "ㄱ.", "ㄴ. " 등의 접두어 제거
+                      const cleanBox = box.replace(/^[ㄱ-ㅎ]\.\s*/, "");
+                      return (
+                        <div
+                          key={idx}
+                          className={[
+                            "flex gap-2 leading-relaxed",
+                            session.type === "5-choice" ? "text-xs md:text-sm" : "text-sm md:text-base",
+                          ].join(" ")}
+                        >
+                          <span className="font-bold shrink-0">{symbols[idx] ?? idx + 1}.</span>
+                          <RichTextContent
+                            content={cleanBox}
+                            className="min-w-0 flex-1 text-stone-800 dark:text-stone-200"
+                          />
+                        </div>
+                      );
+                    })}
                   </div>
-                );
-              })
-            )}
-          </div>
-
-          {showAnswer && (
-            <div className="mt-6 rounded-xl border border-blue-200 bg-blue-50/50 p-4 dark:border-blue-900/50 dark:bg-blue-950/20">
-              <div className="mb-2 flex items-center gap-2">
-                <span className="rounded bg-blue-600 px-1.5 py-0.5 text-[10px] font-bold text-white uppercase">
-                  정답
-                </span>
-                <span className="text-sm font-bold text-blue-700 dark:text-blue-400">{getQuestionAnswerToken(current)}</span>
-              </div>
-              {hasNoCorrectChoice(current) ? <p className="mb-2 text-sm leading-6 text-blue-700 dark:text-blue-400">이 문항은 답을 고르지 않아도 정답으로 처리됩니다.</p> : null}
-              {current.explanation && (
-                <div className="text-sm leading-relaxed text-stone-700 dark:text-stone-300">
-                  <p className="mb-1 font-semibold text-stone-900 dark:text-stone-100">해설</p>
-                  <RichTextContent content={current.explanation} />
                 </div>
               )}
-              {current.source && (
-                <p className="mt-3 text-xs text-stone-500 italic dark:text-stone-500">출처: {current.source}</p>
+
+              <div className="mt-6 space-y-3">
+                {session.type === "short" ? (
+                  <div className="space-y-2">
+                    <p className="text-xs font-medium text-stone-500 dark:text-stone-500">답안 입력</p>
+                    <input
+                      key={`short-input-${index}`}
+                      type="text"
+                      value={current.my_answer}
+                      onChange={(e) => handleAnswer(e.target.value)}
+                      onKeyDown={handleShortSubmit}
+                      placeholder="정답을 입력하세요. (Enter를 누르면 다음 문항으로)"
+                      className="app-control w-full rounded-xl px-4 py-3 text-base"
+                      autoFocus
+                    />
+                  </div>
+                ) : (
+                  options.map((option) => {
+                    const selected = current.my_answer === option.key;
+                    const isCorrect = showAnswer && !hasNoCorrectChoice(current) && isCorrectAnswer(current, option.key);
+                    const isAcceptedSelection = showAnswer && selected && isCorrectAnswer(current, option.key);
+                    const showInlineNext =
+                      session.type === "OX" && selected && !showAnswer && index < session.total_questions - 1;
+
+                    return (
+                      <div key={option.key} className="relative">
+                        <button
+                          onClick={() => handleAnswer(option.key)}
+                          className={[
+                            "flex w-full items-start gap-2 rounded-xl border px-4 py-3 text-left",
+                            showInlineNext ? "pr-32 md:pr-36" : "",
+                            session.type === "5-choice" ? "text-sm md:text-sm" : "text-base",
+                            isAcceptedSelection
+                              ? "border-emerald-600 bg-emerald-50 text-emerald-700 dark:border-emerald-600 dark:bg-emerald-950/30 dark:text-emerald-400"
+                              : isCorrect
+                                ? "border-blue-600 bg-blue-50 text-blue-700 dark:border-blue-600 dark:bg-blue-950/30 dark:text-blue-400"
+                                : selected
+                                  ? "border-red-600 bg-red-50 text-red-700 dark:border-red-600 dark:bg-red-950/30 dark:text-red-400"
+                                  : "border-stone-300 bg-white text-stone-800 hover:border-red-300 hover:bg-red-50/40 dark:border-stone-700 dark:bg-stone-800 dark:text-stone-300 dark:hover:border-red-900/70 dark:hover:bg-red-950/15",
+                          ].join(" ")}
+                        >
+                          {option.circle && (
+                            <span className="shrink-0 font-bold">{option.circle}</span>
+                          )}
+                          <RichTextContent
+                            as="span"
+                            content={option.text}
+                            className="min-w-0 flex-1 font-medium"
+                          />
+                          {isCorrect && !showInlineNext && (
+                            <span className="ml-auto shrink-0 text-xs font-bold text-blue-600 dark:text-blue-400">정답</span>
+                          )}
+                        </button>
+                        {showInlineNext ? (
+                          <button
+                            type="button"
+                            onClick={() => goToNext("inline_next")}
+                            className="app-button-primary app-inline-next absolute bottom-2 right-2 top-2 inline-flex items-center rounded-lg px-3 text-xs font-bold"
+                          >
+                            다음 문제로
+                            <span className="ml-1 text-red-200">›</span>
+                          </button>
+                        ) : null}
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+
+              {showAnswer && (
+                <div className="mt-6 rounded-xl border border-blue-200 bg-blue-50/50 p-4 dark:border-blue-900/50 dark:bg-blue-950/20">
+                  <div className="mb-2 flex items-center gap-2">
+                    <span className="rounded bg-blue-600 px-1.5 py-0.5 text-[10px] font-bold text-white uppercase">
+                      정답
+                    </span>
+                    <span className="text-sm font-bold text-blue-700 dark:text-blue-400">{getQuestionAnswerToken(current)}</span>
+                  </div>
+                  {hasNoCorrectChoice(current) ? <p className="mb-2 text-sm leading-6 text-blue-700 dark:text-blue-400">이 문항은 답을 고르지 않아도 정답으로 처리됩니다.</p> : null}
+                  {current.explanation && (
+                    <div className="text-sm leading-relaxed text-stone-700 dark:text-stone-300">
+                      <p className="mb-1 font-semibold text-stone-900 dark:text-stone-100">해설</p>
+                      <LegalReferenceContent content={current.explanation} />
+                    </div>
+                  )}
+                  {current.source && (
+                    <p className="mt-3 text-xs text-stone-500 italic dark:text-stone-500">
+                      출처: <LegalReferenceContent content={current.source} as="span" plainText />
+                    </p>
+                  )}
+                </div>
               )}
-            </div>
-          )}
+            </QuestionContentMotion>
           </div>
 
-          <div className="grid shrink-0 grid-cols-[2fr_1fr_2fr] overflow-hidden border-t border-stone-200 md:grid-cols-2 dark:border-stone-800">
+          <div className="cbt-navigation grid shrink-0 grid-cols-2 overflow-hidden border-t border-stone-200 dark:border-stone-800">
             <button
               onClick={() => goToQuestion(index - 1, "previous_button")}
               disabled={index === 0}
@@ -491,13 +511,6 @@ export function CbtSolveScreen({
             >
               <span className="mr-1 text-stone-400 dark:text-stone-500">‹</span>
               이전 문제
-            </button>
-            <button
-              type="button"
-              onClick={() => setIsOmrOpen(true)}
-              className="border-r border-stone-200 bg-white px-2 py-3 text-xs font-bold text-stone-600 shadow-[0_-1px_0_rgba(0,0,0,0.02)] hover:bg-stone-50 dark:border-stone-800 dark:bg-stone-900 dark:text-stone-300 dark:hover:bg-stone-800 md:hidden"
-            >
-              OMR
             </button>
             <button
               onClick={() => goToNext("next_button")}
@@ -512,17 +525,17 @@ export function CbtSolveScreen({
 
         <aside
           className={[
-            "app-card hidden flex-col rounded-2xl border p-4 md:flex",
+            "cbt-omr-card app-card hidden min-h-0 flex-col rounded-2xl border p-4 md:flex",
             omrPanelHeightClass,
           ].join(" ")}
         >
-          <div className="mb-3 flex items-center justify-between">
+          <div className="mb-3 flex shrink-0 items-center justify-between">
             <h3 className="text-sm font-semibold dark:text-stone-100">OMR</h3>
             <p className="text-xs text-stone-500 dark:text-stone-500">
               {answeredCount}/{session.total_questions}
             </p>
           </div>
-          <div className="min-h-0 flex-1 overflow-y-auto rounded-lg border border-stone-200 dark:border-stone-800">
+          <div className="cbt-omr-content min-h-0 flex-1 overflow-y-auto rounded-lg border border-stone-200 dark:border-stone-800">
             <div className="sticky top-0 z-10 grid grid-cols-[32px_1fr_1fr_16px] border-b border-stone-200 bg-stone-50 px-2 py-1.5 text-[11px] font-semibold text-stone-600 dark:border-stone-800 dark:bg-stone-950 dark:text-stone-400">
               <span>번호</span>
               <span>내 답</span>
@@ -557,7 +570,7 @@ export function CbtSolveScreen({
           {allowCsvDownload ? (
             <button
               onClick={() => downloadSessionCsv(session)}
-              className="app-button-secondary mt-4 w-full rounded-lg px-3 py-2 text-xs font-semibold"
+              className="app-button-secondary mt-4 w-full shrink-0 rounded-lg px-3 py-2 text-xs font-semibold"
             >
               CSV 다운로드
             </button>
@@ -565,53 +578,42 @@ export function CbtSolveScreen({
         </aside>
       </div>
 
-      {isOmrOpen ? (
-        <div className="fixed inset-0 z-30 md:hidden">
-          <button onClick={() => setIsOmrOpen(false)} className="app-modal-backdrop absolute inset-0" />
-          <div className="app-modal-surface absolute bottom-0 left-0 right-0 rounded-t-2xl border-t p-4 shadow-2xl">
-            <div className="mb-3 flex items-center justify-between">
-              <h3 className="text-sm font-semibold dark:text-stone-100">OMR 빠른 이동</h3>
-              <button onClick={() => setIsOmrOpen(false)} className="text-sm text-stone-500 dark:text-stone-400">
-                닫기
-              </button>
-            </div>
-            <div className="max-h-[48vh] overflow-y-auto rounded-lg border border-stone-200 dark:border-stone-800">
-              <div className="grid grid-cols-[32px_1fr_1fr_16px] border-b border-stone-200 bg-stone-50 px-2 py-1.5 text-[11px] font-semibold text-stone-600 dark:border-stone-800 dark:bg-stone-950 dark:text-stone-400">
-                <span>번호</span>
-                <span>내 답</span>
-                <span></span>
-              </div>
-              {session.questions.map((question, qIndex) => {
-                const isCurrent = qIndex === index;
-                const isAnswered = question.my_answer !== "";
-                return (
-                  <button
-                    key={question.id}
-                    onClick={() => {
-                      goToQuestion(qIndex, "omr");
-                      setIsOmrOpen(false);
-                    }}
-                    className={[
-                      "grid w-full grid-cols-[32px_1fr_1fr_16px] border-b border-stone-200 px-2 py-2 text-left text-xs font-semibold last:border-b-0 dark:border-stone-800",
-                      isCurrent
-                        ? "bg-red-600 text-white"
-                        : isAnswered
-                          ? "bg-red-50 text-red-700 dark:bg-red-950/30 dark:text-red-400"
-                          : "bg-white text-stone-700 dark:bg-stone-900 dark:text-stone-400",
-                    ].join(" ")}
-                  >
-                    <span>{qIndex + 1}</span>
-                    <span className="truncate">{getAnswerToken(question.my_answer)}</span>
-                    <span className="flex items-center justify-center text-[10px] text-amber-500 dark:text-amber-500/80">
-                      {question.bookmark ? "★" : ""}
-                    </span>
-                  </button>
-                );
-              })}
-            </div>
+      <MobileOmrSheet open={isOmrOpen} onClose={() => setIsOmrOpen(false)}>
+        <div className="max-h-[48vh] overflow-y-auto rounded-lg border border-stone-200 dark:border-stone-800">
+          <div className="grid grid-cols-[32px_1fr_1fr_16px] border-b border-stone-200 bg-stone-50 px-2 py-1.5 text-[11px] font-semibold text-stone-600 dark:border-stone-800 dark:bg-stone-950 dark:text-stone-400">
+            <span>번호</span>
+            <span>내 답</span>
+            <span></span>
           </div>
+          {session.questions.map((question, qIndex) => {
+            const isCurrent = qIndex === index;
+            const isAnswered = question.my_answer !== "";
+            return (
+              <button
+                key={question.id}
+                onClick={() => {
+                  goToQuestion(qIndex, "omr");
+                  setIsOmrOpen(false);
+                }}
+                className={[
+                  "grid w-full grid-cols-[32px_1fr_1fr_16px] border-b border-stone-200 px-2 py-2 text-left text-xs font-semibold last:border-b-0 dark:border-stone-800",
+                  isCurrent
+                    ? "bg-red-600 text-white"
+                    : isAnswered
+                      ? "bg-red-50 text-red-700 dark:bg-red-950/30 dark:text-red-400"
+                      : "bg-white text-stone-700 dark:bg-stone-900 dark:text-stone-400",
+                ].join(" ")}
+              >
+                <span>{qIndex + 1}</span>
+                <span className="truncate">{getAnswerToken(question.my_answer)}</span>
+                <span className="flex items-center justify-center text-[10px] text-amber-500 dark:text-amber-500/80">
+                  {question.bookmark ? "★" : ""}
+                </span>
+              </button>
+            );
+          })}
         </div>
-      ) : null}
+      </MobileOmrSheet>
 
       {isPauseDialogOpen ? (
         <ConfirmDialog

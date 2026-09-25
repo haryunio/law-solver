@@ -13,11 +13,16 @@ import { Button } from "../components/ui/Button";
 import { ConfirmDialog } from "../components/ui/ConfirmDialog";
 import { DashboardHeaderTitle } from "../components/ui/DashboardHeaderTitle";
 import { MiniAppHeaderView } from "../components/ui/MiniAppHeader";
+import { LandingHeaderView } from "../components/ui/LandingHeader";
+import { ThemeToggleButton } from "../components/ui/ThemeToggleButton";
+import { OmrShortcutButton } from "../components/cbt/OmrShortcutButton";
+import { CbtMotionDemo } from "../components/cbt/CbtMotionDemo";
 import { Dialog } from "../components/ui/Dialog";
 import { IconCloseButton } from "../components/ui/IconCloseButton";
 import { PremiumBadge } from "../components/ui/PremiumBadge";
 import { ProfileAvatar } from "../components/ui/ProfileAvatar";
 import { ReturnLinkLabel } from "../components/ui/ReturnLinkLabel";
+import { RichTextContent } from "../components/ui/RichTextContent";
 import { ThemeSelect } from "../components/ui/ThemeSelect";
 import { TabContentMotion } from "../components/ui/TabContentMotion";
 import { TimestampTag } from "../components/ui/TimestampTag";
@@ -31,6 +36,7 @@ import {
 } from "../lib/subjectCover";
 import type { TestType } from "../types/test";
 import type { MarketplaceProduct } from "../lib/premiumApi";
+import { DEFAULT_PRECEDENT_LINK_PROVIDER, normalizePrecedentLinkProvider, PRECEDENT_LINK_OPTIONS, type PrecedentLinkProvider } from "../lib/precedentLinks";
 
 const sections = [
   ["navigation", "상단 내비게이션"], ["tokens", "색상과 표면"], ["type", "글자와 곡률"], ["controls", "버튼과 입력"],
@@ -119,6 +125,7 @@ function ProblemCardPreview({ title, type, premium, onEdit }: {
 export function DesignSystemPage() {
   const [headerTitle, setHeaderTitle] = useState("민법 채권총론 중간고사 대비 사례형 연습 문제");
   const [miniHeaderDark, setMiniHeaderDark] = useState(false);
+  const [landingFloating, setLandingFloating] = useState(true);
   const [problemTitle, setProblemTitle] = useState("민법 기초 확인 문제");
   const [questionType, setQuestionType] = useState<TestType>("5-choice");
   const [memo, setMemo] = useState("");
@@ -127,11 +134,13 @@ export function DesignSystemPage() {
   const [sessionTitle, setSessionTitle] = useState("중간고사 대비 첫 연습");
   const [draftTitle, setDraftTitle] = useState(sessionTitle);
   const [sessionVisible, setSessionVisible] = useState(true);
-  const [dialog, setDialog] = useState<"edit" | "confirm" | null>(null);
+  const [dialog, setDialog] = useState<"edit" | "confirm" | "backup" | null>(null);
+  const [toastPersistent, setToastPersistent] = useState(false);
   const [toast, setToast] = useState<{ tone: ToastTone; message: string; sequence: number } | null>(null);
   const [motion, setMotion] = useState("subjects");
   const [motionSequence, setMotionSequence] = useState(0);
   const [motionTab, setMotionTab] = useState(0);
+  const [precedentProvider, setPrecedentProvider] = useState<PrecedentLinkProvider>(DEFAULT_PRECEDENT_LINK_PROVIDER);
   const titleId = useId();
   const formTitleId = useId();
   const typeId = useId();
@@ -146,7 +155,10 @@ export function DesignSystemPage() {
     <div className="app-page px-4 py-8 md:px-6">
       <div className="mx-auto max-w-6xl">
         <DashboardHeaderTitle title="디자인 시스템" sectionTitle="미리보기" logoTo="/home" logoLabel="홈으로 이동">
-          <Link to="/home" className="app-button-secondary app-radius-control rounded-xl px-3 py-2 text-center text-sm font-semibold sm:px-4"><ReturnLinkLabel>홈으로</ReturnLinkLabel></Link>
+          <div className="flex items-center gap-2">
+            <ThemeToggleButton darkMode={miniHeaderDark} onToggle={() => { setMiniHeaderDark((value) => !value); notify("테마 버튼의 예시 상태를 바꿨습니다.", "info"); }} />
+            <Link to="/home" className="app-button-secondary app-radius-control rounded-xl px-3 py-2 text-center text-sm font-semibold sm:px-4"><ReturnLinkLabel>홈으로</ReturnLinkLabel></Link>
+          </div>
         </DashboardHeaderTitle>
 
         <div className="mb-7 space-y-4">
@@ -172,15 +184,11 @@ export function DesignSystemPage() {
             <div>
               <MiniAppHeaderView title="미니 앱 예시" label="미니 앱 헤더 예시" darkMode={miniHeaderDark} onToggleTheme={() => setMiniHeaderDark((value) => !value)} />
             </div>
-            <p className="text-sm text-stone-500">랜딩은 스크롤하면 아래와 같은 플로팅 표면으로 전환됩니다.</p>
-            <div className="landing-nav-wrap" data-floating="true" style={{ position: "relative", zIndex: "auto", paddingTop: 0 }}>
-              <div className="landing-nav-surface">
-                <div className="landing-container landing-nav-inner flex items-center justify-between gap-3">
-                  <span className="landing-nav-brand flex items-center gap-2.5"><BrandMark className="landing-logo-mark" /><span className="text-[17px] font-semibold">Law Solver</span></span>
-                  <button className="landing-nav-cta" onClick={() => notify("시작하기 버튼을 눌렀습니다.")}>시작하기 →</button>
-                </div>
-              </div>
+            <div className="flex flex-wrap items-center gap-3">
+              <p className="text-sm text-stone-500">랜딩의 실제 메뉴와 플로팅 전환을 확인합니다. 테마 버튼은 예시 상태만 바꿉니다.</p>
+              <Button size="sm" onClick={() => setLandingFloating((value) => !value)}>{landingFloating ? "최상단 형태 보기" : "플로팅 형태 보기"}</Button>
             </div>
+            <LandingHeaderView preview floating={landingFloating} activePage="mini-apps" darkMode={miniHeaderDark} onToggleTheme={() => setMiniHeaderDark((value) => !value)} onOpenCsvGuide={() => notify("CSV 가이드 버튼을 눌렀습니다.", "info")} />
           </DemoSection>
 
           <DemoSection id="tokens" title="색상과 표면" description="페이지 배경, 콘텐츠 표면, 정보 박스를 구분합니다. 아래 색상은 실제 CSS 토큰을 사용합니다.">
@@ -216,6 +224,15 @@ export function DesignSystemPage() {
               <div><p className="text-xs text-stone-500">카드 제목</p><p className="mt-1 text-base font-semibold">민법 사례 연습</p></div>
               <div><p className="text-xs text-stone-500">본문</p><p className="mt-1 max-w-2xl break-keep text-sm leading-6 text-stone-700 dark:text-stone-300">등록한 문제에서 새로운 풀이를 시작할 수 있습니다. 이전 답안과 오답 노트는 세션마다 따로 보관됩니다.</p></div>
               <div><p className="text-xs text-stone-500">보조 설명과 숫자</p><p className="mt-1 text-xs leading-5 text-stone-500">마지막 풀이 <span className="tabular-nums">2026.09.20 14:25</span></p></div>
+              <div className="space-y-3 border-t border-stone-200 pt-4 dark:border-stone-700">
+                <h3 className="text-sm font-semibold">해설과 출처의 판례 링크</h3>
+                <div className="max-w-xs">
+                  <ThemeSelect ariaLabel="판례 링크 예시" value={precedentProvider} options={PRECEDENT_LINK_OPTIONS} onChange={(value) => setPrecedentProvider(normalizePrecedentLinkProvider(value))} />
+                </div>
+                <RichTextContent content={"<p>판례번호를 눌러 원문을 확인할 수 있습니다. <strong>2005다73105</strong>, 2001므1250 참조.</p>"} precedentLinkProvider={precedentProvider} className="text-sm leading-6" />
+                <RichTextContent as="span" plainText content="출처: 대법원 2006. 6. 29. 선고 2005다73105 판결" precedentLinkProvider={precedentProvider} className="text-xs italic text-stone-500 dark:text-stone-400" />
+                <p className="text-xs leading-5 text-stone-500">선택은 이 예시에만 적용됩니다. 링크는 외부 사이트를 새 탭으로 엽니다.</p>
+              </div>
             </div>
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
               {[
@@ -278,7 +295,7 @@ export function DesignSystemPage() {
               <div className="flex items-center gap-2"><BrandMark /><span className="text-sm font-semibold">Law Solver</span></div>
               <PremiumBadge />
               <TimestampTag label="등록" value={sampleDate} />
-              <TimestampTag label="마지막 풀이" value={sampleLastPlay} hideYearOnSmallScreens />
+              <TimestampTag label="마지막 풀이" value={sampleLastPlay} compactOnSmallScreens />
               <div className="flex items-center gap-2">{["김하늘", "이서연", "박도윤"].map((name) => <ProfileAvatar key={name} displayName={name} />)}</div>
               <div className="ml-auto flex items-center gap-2"><span className="text-xs text-stone-500">관리 메뉴</span><ActionMenu label="디자인 예시 관리 메뉴" items={[{ id: "rename", label: "이름 변경", onSelect: openEditor }, { id: "delete", label: "삭제", danger: true, onSelect: () => setDialog("confirm") }]} /></div>
             </div>
@@ -319,7 +336,7 @@ export function DesignSystemPage() {
             </div>
           </DemoSection>
 
-          <DemoSection id="problems" title="문제 카드" description="제목 아래 한 줄에 유형, 문항 수, 세션 수를 담습니다. 등록 시각과 목록 이동은 하단에 배치합니다.">
+          <DemoSection id="problems" title="문제 카드" description="제목 아래에 유형, 문항 수, 세션 수를 같은 너비의 세 박스로 표시합니다. 등록 시각과 목록 이동은 하단에 배치합니다.">
             <div className="grid gap-3 lg:grid-cols-2">
               {[false, true].map((premium) => (
                 <ProblemCardPreview
@@ -330,7 +347,7 @@ export function DesignSystemPage() {
             </div>
           </DemoSection>
 
-          <DemoSection id="sessions" title="세션 목록" description="회차와 상태 태그, 세 개의 정보 박스, 우측 행동 버튼을 같은 구조로 표시합니다. 관리 메뉴에서 예시 이름을 바꾸거나 예시 행을 삭제해 보세요.">
+          <DemoSection id="sessions" title="세션 목록" description="회차 박스와 태그 줄은 화면 폭이 바뀌어도 하단을 맞춥니다. 모바일 날짜는 달력 아이콘과 월일만 표시합니다. 관리 메뉴에서 예시 이름을 바꾸거나 예시 행을 삭제해 보세요.">
             <div className="space-y-2.5">
               {sessionVisible ? (
                 <SessionListItem
@@ -355,12 +372,18 @@ export function DesignSystemPage() {
 
           <DemoSection id="feedback" title="모달과 알림" description="모달은 키보드 포커스를 안에 유지하고 닫힌 뒤 원래 버튼으로 돌려줍니다. 토스트는 문서 흐름 바깥에 표시되어 카드 위치를 바꾸지 않습니다.">
             <div className="app-card app-radius-card space-y-4 rounded-2xl border p-4 sm:p-5">
-              <div className="flex flex-wrap gap-2"><Button variant="primary" onClick={openEditor}>입력 모달 열기</Button><Button variant="danger" onClick={() => setDialog("confirm")}>삭제 확인 열기</Button></div>
+              <div className="flex flex-wrap gap-2"><Button variant="primary" onClick={openEditor}>입력 모달 열기</Button><Button variant="danger" onClick={() => setDialog("confirm")}>삭제 확인 열기</Button><Button onClick={() => setDialog("backup")}>클라우드 모달 표면 보기</Button></div>
+              <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={toastPersistent} onChange={(event) => setToastPersistent(event.target.checked)} className="accent-red-600" />알림을 직접 닫을 때까지 유지</label>
               <div className="flex flex-wrap gap-2 border-t border-stone-200 pt-4 dark:border-stone-700">
                 <Button size="sm" onClick={() => notify("예시 설정을 저장했습니다.", "success")}>성공 알림</Button>
                 <Button size="sm" onClick={() => notify("예시 작업을 처리하지 못했습니다. 다시 시도해 주세요.", "error")}>오류 알림</Button>
                 <Button size="sm" onClick={() => notify("이것은 경고 알림의 예시입니다.", "warning")}>경고 알림</Button>
                 <Button size="sm" onClick={() => notify("이 화면의 모든 값은 미리보기용입니다.", "info")}>안내 알림</Button>
+                <Button size="sm" onClick={() => notify("백업을 내려받지 못했습니다. 인터넷 연결을 확인한 뒤 다시 시도해 주세요. 현재 브라우저에 저장된 학습 기록은 그대로 유지됩니다.", "error")}>여러 줄 알림</Button>
+              </div>
+              <div className="app-focus-page flex items-center gap-3 border-t border-stone-200 pt-4 dark:border-stone-700">
+                <OmrShortcutButton expanded={false} onClick={() => notify("OMR 빠른 이동 버튼을 눌렀습니다.", "info")} />
+                <p className="text-xs leading-5 text-stone-500">모바일에서는 GNB 아래를 문제로 채우고 본문만 스크롤합니다. OMR은 ? 왼쪽에, 이전과 다음 버튼은 52px 높이로 하단에 띄웁니다. 본문 끝에는 버튼에 가려지지 않을 여백을 둡니다. 태블릿과 PC에서도 문제와 OMR 높이를 화면에 맞추고 내용만 내부에서 스크롤합니다.</p>
               </div>
             </div>
           </DemoSection>
@@ -378,7 +401,7 @@ export function DesignSystemPage() {
                 <Button variant="primary" pending pendingLabel="문제를 불러오는 중">문제 불러오기</Button>
                 <p className="text-xs leading-5 text-stone-500">이 로딩 표시는 예시입니다. 실제 요청은 실행하지 않습니다.</p>
                 <div className="app-focus-page app-subtle-surface app-radius-inset w-full rounded-xl border p-3">
-                  <p className="mb-3 text-xs font-medium">풀이 화면에서는 움직임 없이 상태만 표시합니다.</p>
+                  <p className="mb-3 text-xs font-medium">풀이 화면의 로딩 표시는 움직임 없이 상태만 표시합니다.</p>
                   <Button variant="primary" pending pendingLabel="답안 저장 중">답안 저장</Button>
                 </div>
               </div>
@@ -386,6 +409,7 @@ export function DesignSystemPage() {
           </DemoSection>
 
           <DemoSection id="motion" title="모션" description="카드는 20ms 간격으로 등장하며 대기 시간은 최대 100ms입니다. GNB와 푸터는 움직이지 않고, 기기에서 동작 줄이기를 켜면 효과가 생략됩니다.">
+            <CbtMotionDemo />
             <div className="space-y-3">
               <div role="tablist" aria-label="탭 모션 예시" className="flex gap-2">
                 {["첫 번째", "두 번째", "세 번째"].map((label, index) => <button key={label} id={`motion-tab-${index}`} role="tab" aria-selected={motionTab === index} aria-controls="motion-tab-panel" onClick={() => setMotionTab(index)} className={`${motionTab === index ? "app-button-primary" : "app-button-secondary"} rounded-xl px-4 py-2 text-sm`}>{label}</button>)}
@@ -443,7 +467,17 @@ export function DesignSystemPage() {
           onConfirm={() => { setSessionVisible(false); setDialog(null); notify("예시 세션을 삭제했습니다."); }}
         />
       ) : null}
-      <Toast key={toast?.sequence} message={toast?.message ?? null} tone={toast?.tone} onDismiss={() => setToast(null)} />
+      {dialog === "backup" ? (
+        <Dialog labelledBy={titleId} onClose={() => setDialog(null)} surfaceClassName="max-h-[min(88dvh,calc(100dvh-2rem))] max-w-xl overflow-y-auto rounded-2xl border p-5 sm:p-6">
+          <div className="flex items-start justify-between gap-4">
+            <div><PremiumBadge /><h2 id={titleId} className="mt-3 text-lg font-bold">클라우드 모달 예시</h2></div>
+            <IconCloseButton onClick={() => setDialog(null)} />
+          </div>
+          <p className="mt-5 text-sm leading-6">실제 백업 창과 같은 공통 모달입니다. 화면 전체의 배경 처리와 스크롤 잠금, 키보드 이동을 확인할 수 있습니다. 백업 API나 학습 데이터에는 접근하지 않습니다.</p>
+          <div className="mt-5 flex justify-end"><Button onClick={() => setDialog(null)}>닫기</Button></div>
+        </Dialog>
+      ) : null}
+      <Toast key={toast?.sequence} message={toast?.message ?? null} tone={toast?.tone} durationMs={toastPersistent ? 0 : undefined} onDismiss={() => setToast(null)} />
     </div>
   );
 }

@@ -5,6 +5,7 @@ import { useSessionPageAdapter } from "../components/session/SessionPageContext"
 import { AsyncTransitionOverlay } from "../components/ui/AsyncLoading";
 import { OverflowTooltipTitle } from "../components/ui/OverflowTooltipTitle";
 import { RichTextContent } from "../components/ui/RichTextContent";
+import { LegalReferenceContent } from "../components/ui/LegalReferenceContent";
 import { ReturnLinkLabel } from "../components/ui/ReturnLinkLabel";
 import { getAnswerParts, getAnswerToken, getQuestionAnswerToken } from "../lib/answer";
 import {
@@ -300,7 +301,7 @@ export function WrongAnswersPage() {
             {current.explanation ? (
               <article className="rounded-xl border border-stone-200 bg-stone-50 p-4 dark:border-stone-800 dark:bg-stone-950/30">
                 <p className="text-xs font-semibold text-stone-600 dark:text-stone-500">해설</p>
-                <RichTextContent
+                <LegalReferenceContent
                   content={current.explanation}
                   className="mt-1 text-sm text-stone-700 dark:text-stone-300"
                 />
@@ -309,7 +310,9 @@ export function WrongAnswersPage() {
             {current.source ? (
               <article className="rounded-xl border border-stone-200 bg-white p-4 dark:border-stone-800 dark:bg-stone-800/50">
                 <p className="text-xs font-semibold text-stone-600 dark:text-stone-500">출처</p>
-                <p className="mt-1 text-sm text-stone-700 dark:text-stone-300">{current.source}</p>
+                <p className="mt-1 text-sm text-stone-700 dark:text-stone-300">
+                  <LegalReferenceContent content={current.source} as="span" plainText />
+                </p>
               </article>
             ) : null}
 

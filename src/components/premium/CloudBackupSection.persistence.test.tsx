@@ -112,6 +112,23 @@ async function reachFinalConfirmation() {
 }
 
 describe("CloudBackupSection durable restore", () => {
+  it("opens restore outside the animated content and restores focus without downloading", async () => {
+    const { container } = render(<div className="app-content-stagger"><CloudBackupSection /></div>);
+    const open = await screen.findByRole("button", { name: "클라우드에서 내려받기" });
+    open.focus();
+    fireEvent.click(open);
+
+    const dialog = screen.getByRole("dialog", { name: "클라우드에서 내려받기" });
+    expect(container.contains(dialog)).toBe(false);
+    expect(dialog.parentElement).toBe(document.body);
+    expect(document.body.style.overflow).toBe("hidden");
+    expect(apiMocks.createTicket).not.toHaveBeenCalled();
+    fireEvent.keyDown(document, { key: "Escape" });
+    expect(screen.queryByRole("dialog")).toBeNull();
+    expect(document.activeElement).toBe(open);
+    expect(document.body.style.overflow).not.toBe("hidden");
+  });
+
   it("closes only after the restored snapshot is durably stored", async () => {
     let resolveImport: (() => void) | undefined;
     const importData = vi.fn(() => new Promise<void>((resolve) => {
@@ -131,6 +148,8 @@ describe("CloudBackupSection durable restore", () => {
       })],
     }));
     expect(screen.getByText("이 브라우저에 저장하는 중")).toBeTruthy();
+    expect((screen.getByRole("button", { name: "클라우드 백업 닫기" }) as HTMLButtonElement).disabled).toBe(true);
+    fireEvent.keyDown(document, { key: "Escape" });
     expect(screen.getByRole("heading", { name: "내려받은 데이터 최종 확인" })).toBeTruthy();
 
     resolveImport?.();
