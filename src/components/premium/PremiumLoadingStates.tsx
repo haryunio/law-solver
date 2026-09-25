@@ -1,7 +1,7 @@
 import { useRef } from "react";
 import { LoadingRegion, SkeletonBlock } from "../ui/AsyncLoading";
 import { BookGrid } from "../ui/BookGrid";
-import { useMobileSolveViewport } from "../../hooks/useMobileSolveViewport";
+import { useSolveViewport } from "../../hooks/useSolveViewport";
 
 const items = (count: number) => Array.from({ length: count }, (_, index) => index);
 
@@ -141,15 +141,15 @@ export function PremiumPackageGridSkeleton() {
 
 export function PremiumSolveSkeleton({
   label = "온라인 문제를 불러오는 중입니다",
-  mobileFullScreen = true,
+  fitViewport = true,
 }: {
   label?: string;
-  mobileFullScreen?: boolean;
+  fitViewport?: boolean;
 } = {}) {
   const viewportRef = useRef<HTMLDivElement | null>(null);
-  useMobileSolveViewport(viewportRef, mobileFullScreen);
+  useSolveViewport(viewportRef, fitViewport);
   return (
-    <div ref={viewportRef} className={`${mobileFullScreen ? "cbt-solve-page " : ""}app-focus-page app-page min-h-screen`}>
+    <div ref={viewportRef} className={`${fitViewport ? "cbt-solve-page " : ""}app-focus-page app-page min-h-screen`}>
       <LoadingRegion label={label} className="contents">
         <header className="cbt-header app-topbar border-b">
           <div className="cbt-header-content mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-2 md:px-6">
@@ -159,7 +159,7 @@ export function PremiumSolveSkeleton({
           </div>
         </header>
         <div className="cbt-workspace mx-auto grid max-w-6xl grid-cols-1 gap-4 px-4 py-3 md:grid-cols-[1fr_220px] md:px-6">
-          <main className="cbt-question-card app-card min-h-[560px] overflow-hidden rounded-2xl border p-5 md:p-8">
+          <main className={`cbt-question-card app-card ${fitViewport ? "min-h-[min(560px,100%)] max-h-full" : "min-h-[560px]"} overflow-hidden rounded-2xl border p-5 md:p-8`}>
             <div className="flex gap-2">
               <SkeletonBlock className="h-6 w-24 rounded-full" />
               <SkeletonBlock className="h-6 w-28 rounded-full" />
@@ -170,9 +170,9 @@ export function PremiumSolveSkeleton({
             <div className="mt-6 space-y-3">
               {items(5).map((index) => <SkeletonBlock key={index} className="h-12 rounded-xl" />)}
             </div>
-            {mobileFullScreen ? <div className="cbt-navigation overflow-hidden md:hidden"><SkeletonBlock className="h-full w-full" /></div> : null}
+            {fitViewport ? <div className="cbt-navigation overflow-hidden md:hidden"><SkeletonBlock className="h-full w-full" /></div> : null}
           </main>
-          <aside className="app-card hidden h-[560px] rounded-2xl border p-4 md:block">
+          <aside className={`cbt-omr-card app-card hidden h-[560px] ${fitViewport ? "max-h-full overflow-hidden" : ""} rounded-2xl border p-4 md:block`}>
             <SkeletonBlock className="h-5 w-16 rounded-full" />
             <div className="mt-4 space-y-2">
               {items(9).map((index) => <SkeletonBlock key={index} className="h-8 rounded-lg" />)}
@@ -185,7 +185,7 @@ export function PremiumSolveSkeleton({
 }
 
 export function PremiumResultSkeleton({ review = false }: { review?: boolean }) {
-  if (review) return <PremiumSolveSkeleton label="문제 확인 화면을 불러오는 중입니다" mobileFullScreen={false} />;
+  if (review) return <PremiumSolveSkeleton label="문제 확인 화면을 불러오는 중입니다" fitViewport={false} />;
 
   return (
     <LoadingRegion label="채점 결과를 불러오는 중입니다" className="app-page min-h-screen px-4 py-8 md:px-6">

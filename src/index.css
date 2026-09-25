@@ -844,37 +844,58 @@ body {
 
 .app-focus-page .app-control:focus { transition: border-color 90ms ease, box-shadow 90ms ease !important; }
 
-/* Mobile solving owns one viewport; only the question body scrolls. */
-@media (max-width: 767px) {
-  html.cbt-mobile-viewport,
-  html.cbt-mobile-viewport body {
-    background: var(--app-surface-problem) !important;
-    overflow: hidden;
-    overscroll-behavior: none;
-  }
+/* Active solving owns one visible viewport at every screen width. */
+html.cbt-viewport,
+html.cbt-viewport body {
+  overflow: hidden;
+  overscroll-behavior: none;
+}
 
-  html.cbt-mobile-viewport { scrollbar-gutter: auto; }
+html.cbt-viewport { scrollbar-gutter: auto; }
+
+.cbt-solve-page {
+  position: fixed;
+  top: var(--cbt-viewport-top, 0px);
+  right: 0;
+  left: 0;
+  display: flex;
+  flex-direction: column;
+  height: var(--cbt-viewport-height, 100vh);
+  height: var(--cbt-viewport-height, 100dvh);
+  min-height: 0;
+  overflow: hidden;
+}
+
+.cbt-solve-page .cbt-header {
+  flex: 0 0 auto;
+  padding-top: env(safe-area-inset-top, 0px);
+}
+
+.cbt-solve-page .cbt-workspace {
+  flex: 1;
+  width: 100%;
+  min-height: 0;
+  grid-template-rows: minmax(0, 1fr);
+  padding-bottom: max(12px, env(safe-area-inset-bottom, 0px));
+}
+
+.cbt-solve-page .cbt-question-content,
+.cbt-solve-page .cbt-omr-content {
+  overscroll-behavior-y: contain;
+}
+
+/* On phones the problem surface fills the space below the header. */
+@media (max-width: 767px) {
+  html.cbt-viewport,
+  html.cbt-viewport body {
+    background: var(--app-surface-problem) !important;
+  }
 
   .cbt-solve-page {
     --cbt-navigation-height: 52px;
     --cbt-navigation-bottom: max(12px, env(safe-area-inset-bottom, 0px));
     --cbt-content-bottom: calc(var(--cbt-navigation-height) + var(--cbt-navigation-bottom) + 16px);
-    position: fixed;
-    top: var(--cbt-viewport-top, 0px);
-    right: 0;
-    left: 0;
-    display: flex;
-    flex-direction: column;
-    height: var(--cbt-viewport-height, 100vh);
-    height: var(--cbt-viewport-height, 100dvh);
-    min-height: 0;
-    overflow: hidden;
     background: var(--app-surface-problem) !important;
-  }
-
-  .cbt-solve-page .cbt-header {
-    flex: 0 0 auto;
-    padding-top: env(safe-area-inset-top, 0px);
   }
 
   .cbt-solve-page .cbt-header-content {
@@ -884,9 +905,6 @@ body {
 
   .cbt-solve-page .cbt-workspace {
     display: flex;
-    flex: 1;
-    width: 100%;
-    min-height: 0;
     padding: 0;
     gap: 0;
   }
@@ -912,7 +930,6 @@ body {
     padding-bottom: var(--cbt-content-bottom);
     padding-left: max(16px, env(safe-area-inset-left, 0px));
     scroll-padding-bottom: var(--cbt-content-bottom);
-    overscroll-behavior-y: contain;
     -webkit-overflow-scrolling: touch;
   }
 

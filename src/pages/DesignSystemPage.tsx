@@ -370,7 +370,7 @@ export function DesignSystemPage() {
               </div>
               <div className="app-focus-page flex items-center gap-3 border-t border-stone-200 pt-4 dark:border-stone-700">
                 <OmrShortcutButton expanded={false} onClick={() => notify("OMR 빠른 이동 버튼을 눌렀습니다.", "info")} />
-                <p className="text-xs leading-5 text-stone-500">모바일에서는 GNB 아래를 문제로 채우고 본문만 스크롤합니다. OMR은 ? 왼쪽에, 이전과 다음 버튼은 52px 높이로 하단에 띄웁니다. 본문 끝에는 버튼에 가려지지 않을 여백을 둡니다.</p>
+                <p className="text-xs leading-5 text-stone-500">모바일에서는 GNB 아래를 문제로 채우고 본문만 스크롤합니다. OMR은 ? 왼쪽에, 이전과 다음 버튼은 52px 높이로 하단에 띄웁니다. 본문 끝에는 버튼에 가려지지 않을 여백을 둡니다. 태블릿과 PC에서도 문제와 OMR 높이를 화면에 맞추고 내용만 내부에서 스크롤합니다.</p>
               </div>
             </div>
           </DemoSection>

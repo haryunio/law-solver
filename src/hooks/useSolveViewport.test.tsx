@@ -2,11 +2,11 @@
 import { useRef } from "react";
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { useMobileSolveViewport } from "./useMobileSolveViewport";
+import { useSolveViewport } from "./useSolveViewport";
 
 function SolveSurface({ enabled = true }: { enabled?: boolean }) {
   const ref = useRef<HTMLDivElement>(null);
-  useMobileSolveViewport(ref, enabled);
+  useSolveViewport(ref, enabled);
   return <div ref={ref} data-testid="solve-surface" />;
 }
 
@@ -29,7 +29,7 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
-describe("useMobileSolveViewport", () => {
+describe("useSolveViewport", () => {
   it("follows keyboard height and visible viewport offset without a React render", () => {
     const viewport = createViewport();
     vi.stubGlobal("visualViewport", viewport);
@@ -76,20 +76,44 @@ describe("useMobileSolveViewport", () => {
     expect(surface.style.getPropertyValue("--cbt-viewport-top")).toBe("12px");
   });
 
-  it("removes mobile dimensions at the desktop breakpoint and restores them on return", () => {
+  it("follows the visible height through tablet browser chrome, rotation, split view, and desktop changes", () => {
     const viewport = createViewport();
+    vi.stubGlobal("innerWidth", 820);
+    vi.stubGlobal("innerHeight", 1180);
+    viewport.height = 1080;
     vi.stubGlobal("visualViewport", viewport);
     render(<SolveSurface />);
     const surface = screen.getByTestId("solve-surface");
+    expect(surface.style.getPropertyValue("--cbt-viewport-height")).toBe("1080px");
 
-    vi.stubGlobal("innerWidth", 768);
-    fireEvent.resize(window);
-    expect(surface.style.getPropertyValue("--cbt-viewport-height")).toBe("");
-    expect(surface.style.getPropertyValue("--cbt-viewport-top")).toBe("");
+    // Safari's browser bars can change the visible height without a layout resize.
+    viewport.height = 1120;
+    viewport.dispatchEvent(new Event("resize"));
+    expect(surface.style.getPropertyValue("--cbt-viewport-height")).toBe("1120px");
+    viewport.height = 1040;
+    viewport.dispatchEvent(new Event("resize"));
+    expect(surface.style.getPropertyValue("--cbt-viewport-height")).toBe("1040px");
 
-    vi.stubGlobal("innerWidth", 767);
+    vi.stubGlobal("innerWidth", 1024);
+    vi.stubGlobal("innerHeight", 768);
+    viewport.height = 680;
     fireEvent.resize(window);
-    expect(surface.style.getPropertyValue("--cbt-viewport-height")).toBe("780px");
+    expect(surface.style.getPropertyValue("--cbt-viewport-height")).toBe("680px");
+    expect(surface.style.getPropertyValue("--cbt-viewport-top")).toBe("0px");
+
+    vi.stubGlobal("innerWidth", 390);
+    vi.stubGlobal("innerHeight", 1180);
+    viewport.height = 1080;
+    fireEvent.resize(window);
+    expect(surface.style.getPropertyValue("--cbt-viewport-height")).toBe("1080px");
+
+    vi.stubGlobal("innerWidth", 1440);
+    vi.stubGlobal("innerHeight", 900);
+    viewport.height = 900;
+    fireEvent.resize(window);
+    expect(surface.style.getPropertyValue("--cbt-viewport-height")).toBe("900px");
+    expect(surface.style.getPropertyValue("--cbt-viewport-top")).toBe("0px");
+    expect(document.documentElement.classList.contains("cbt-viewport")).toBe(true);
   });
 
   it("falls back to the window height without VisualViewport", () => {
@@ -114,10 +138,10 @@ describe("useMobileSolveViewport", () => {
     const bodyStyles = document.body.style.cssText;
     const { unmount } = render(<SolveSurface />);
     const surface = screen.getByTestId("solve-surface");
-    expect(document.documentElement.classList.contains("cbt-mobile-viewport")).toBe(true);
+    expect(document.documentElement.classList.contains("cbt-viewport")).toBe(true);
 
     unmount();
-    expect(document.documentElement.classList.contains("cbt-mobile-viewport")).toBe(false);
+    expect(document.documentElement.classList.contains("cbt-viewport")).toBe(false);
     expect(surface.style.getPropertyValue("--cbt-viewport-height")).toBe("");
     expect(surface.style.getPropertyValue("--cbt-viewport-top")).toBe("");
     expect(document.body.style.cssText).toBe(bodyStyles);
@@ -135,13 +159,13 @@ describe("useMobileSolveViewport", () => {
     vi.stubGlobal("visualViewport", createViewport());
     const { rerender } = render(<SolveSurface enabled={false} />);
     const surface = screen.getByTestId("solve-surface");
-    expect(document.documentElement.classList.contains("cbt-mobile-viewport")).toBe(false);
+    expect(document.documentElement.classList.contains("cbt-viewport")).toBe(false);
     expect(surface.style.getPropertyValue("--cbt-viewport-height")).toBe("");
 
     rerender(<SolveSurface enabled />);
-    expect(document.documentElement.classList.contains("cbt-mobile-viewport")).toBe(true);
+    expect(document.documentElement.classList.contains("cbt-viewport")).toBe(true);
     rerender(<SolveSurface enabled={false} />);
-    expect(document.documentElement.classList.contains("cbt-mobile-viewport")).toBe(false);
+    expect(document.documentElement.classList.contains("cbt-viewport")).toBe(false);
     expect(surface.style.getPropertyValue("--cbt-viewport-height")).toBe("");
   });
 });

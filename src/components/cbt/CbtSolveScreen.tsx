@@ -12,7 +12,7 @@ import {
 } from "../../lib/analytics";
 import { downloadSessionCsv } from "../../lib/csv";
 import { useOfflineSession } from "../../hooks/useOfflineSession";
-import { useMobileSolveViewport } from "../../hooks/useMobileSolveViewport";
+import { useSolveViewport } from "../../hooks/useSolveViewport";
 import { formatElapsedTime } from "../../lib/time";
 import { useTestStore } from "../../store/useTestStore";
 import { AnswerValue, TestSession } from "../../types/test";
@@ -69,7 +69,7 @@ export function CbtSolveScreen({
   const [isSubmitDialogOpen, setIsSubmitDialogOpen] = useState(false);
   const contentRef = useRef<HTMLDivElement | null>(null);
   const viewportRef = useRef<HTMLDivElement | null>(null);
-  useMobileSolveViewport(viewportRef, Boolean(session?.questions[index]));
+  useSolveViewport(viewportRef, Boolean(session?.questions[index]));
   const trackedSolveSessionRef = useRef<string | null>(null);
   const trackedQuestionIdsRef = useRef(new Set<string>());
   const activeQuestionIdRef = useRef<string | null>(null);
@@ -167,14 +167,14 @@ export function CbtSolveScreen({
   const subjectDashboardPath = sessionsPath;
   const questionPanelMinHeight =
     session.type === "OX"
-      ? "md:min-h-[min(420px,calc(100vh-112px))]"
+      ? "md:min-h-[min(420px,100%)]"
       : session.type === "short"
-        ? "md:min-h-[min(360px,calc(100vh-112px))]"
-        : "md:min-h-[min(560px,calc(100vh-112px))]";
+        ? "md:min-h-[min(360px,100%)]"
+        : "md:min-h-[min(560px,100%)]";
   const omrPanelHeightClass =
     session.type === "5-choice"
-      ? "md:h-auto md:max-h-[calc(100vh-112px)] md:self-start"
-      : "md:h-[calc(100vh-112px)] md:max-h-[calc(100vh-112px)]";
+      ? "md:h-auto md:max-h-full md:self-start"
+      : "md:h-full md:max-h-full";
 
   const handleAnswer = (answer: string) => {
     if (sessionOverride) {
@@ -282,7 +282,7 @@ export function CbtSolveScreen({
       <div className="cbt-workspace mx-auto grid max-w-6xl grid-cols-1 gap-4 px-4 py-3 md:grid-cols-[1fr_220px] md:items-start md:px-6">
         <main
           className={[
-            "cbt-question-card app-card flex w-full max-h-[calc(100vh-112px)] flex-col overflow-hidden rounded-2xl border",
+            "cbt-question-card app-card flex w-full max-h-full flex-col overflow-hidden rounded-2xl border",
             questionPanelMinHeight,
           ].join(" ")}
         >
@@ -510,17 +510,17 @@ export function CbtSolveScreen({
 
         <aside
           className={[
-            "app-card hidden flex-col rounded-2xl border p-4 md:flex",
+            "cbt-omr-card app-card hidden min-h-0 flex-col rounded-2xl border p-4 md:flex",
             omrPanelHeightClass,
           ].join(" ")}
         >
-          <div className="mb-3 flex items-center justify-between">
+          <div className="mb-3 flex shrink-0 items-center justify-between">
             <h3 className="text-sm font-semibold dark:text-stone-100">OMR</h3>
             <p className="text-xs text-stone-500 dark:text-stone-500">
               {answeredCount}/{session.total_questions}
             </p>
           </div>
-          <div className="min-h-0 flex-1 overflow-y-auto rounded-lg border border-stone-200 dark:border-stone-800">
+          <div className="cbt-omr-content min-h-0 flex-1 overflow-y-auto rounded-lg border border-stone-200 dark:border-stone-800">
             <div className="sticky top-0 z-10 grid grid-cols-[32px_1fr_1fr_16px] border-b border-stone-200 bg-stone-50 px-2 py-1.5 text-[11px] font-semibold text-stone-600 dark:border-stone-800 dark:bg-stone-950 dark:text-stone-400">
               <span>번호</span>
               <span>내 답</span>
@@ -555,7 +555,7 @@ export function CbtSolveScreen({
           {allowCsvDownload ? (
             <button
               onClick={() => downloadSessionCsv(session)}
-              className="app-button-secondary mt-4 w-full rounded-lg px-3 py-2 text-xs font-semibold"
+              className="app-button-secondary mt-4 w-full shrink-0 rounded-lg px-3 py-2 text-xs font-semibold"
             >
               CSV 다운로드
             </button>
@@ -567,7 +567,7 @@ export function CbtSolveScreen({
         <div className="cbt-omr-layer fixed inset-0 z-30 md:hidden">
           <button onClick={() => setIsOmrOpen(false)} className="app-modal-backdrop absolute inset-0" />
           <div className="cbt-omr-sheet app-modal-surface absolute bottom-0 left-0 right-0 rounded-t-2xl border-t p-4 shadow-2xl">
-            <div className="mb-3 flex items-center justify-between">
+            <div className="mb-3 flex shrink-0 items-center justify-between">
               <h3 className="text-sm font-semibold dark:text-stone-100">OMR 빠른 이동</h3>
               <button onClick={() => setIsOmrOpen(false)} className="text-sm text-stone-500 dark:text-stone-400">
                 닫기

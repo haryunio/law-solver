@@ -168,7 +168,7 @@ const titleId = useId();
 | `ThemeSelect` | 앱의 모든 드롭다운. 네이티브 select로 교체하지 않음 |
 | `ThemeToggleButton` | 랜딩, `/home`, 미니 앱의 테마 전환 아이콘 버튼. 상태와 콜백을 받아 공통 접근성 이름을 표시 |
 | `OmrShortcutButton` | 풀이 화면과 갤러리가 공유하는 32px 원형 OMR 버튼 |
-| `CbtSolveScreen`, `PremiumSolveSkeleton` | 활성 풀이와 온라인 로딩이 공유하는 모바일 전체 화면 구조 |
+| `CbtSolveScreen`, `PremiumSolveSkeleton` | 활성 풀이와 온라인 로딩이 공유하는 viewport 높이 및 내부 스크롤 구조 |
 | `ProfileAvatar` | 이름 이니셜과 이름 해시 기반의 안정적인 팔레트 |
 | `PremiumBadge` | Premium의 공통 금색 체크 표시 |
 | `IconCloseButton` | 접근 가능한 이름과 동일한 모양의 닫기 버튼 |
@@ -205,15 +205,19 @@ const titleId = useId();
 
 결과 화면은 지표, 문제 확인, 다시 풀기의 세 카드를 2:1:1 비율로 사용합니다. 결과 통계는 작은 표로, 상세 분석은 아래 전체 폭으로 표시합니다. 모바일에서도 문제 확인과 다시 풀기 버튼의 크기를 축소하지 않습니다.
 
-풀이와 복기 화면은 장식보다 문제의 가독성을 우선합니다. 768px 이상에서는 기존 헤더 높이와 바깥 여백을 유지하고 문제 카드와 OMR 높이를 독립시킵니다. OMR 문항 수가 적다고 문제 카드와 같은 높이로 강제 확장하지 않습니다. 활성 풀이에서는 그라디언트, smooth scroll, 위치/크기 transition과 animation을 추가하지 않습니다. 상태 색상은 90ms 전환만 허용합니다.
+풀이와 복기 화면은 장식보다 문제의 가독성을 우선합니다. 활성 풀이에서는 그라디언트, smooth scroll, 위치/크기 transition과 animation을 추가하지 않습니다. 상태 색상은 90ms 전환만 허용합니다.
 
-768px 미만의 활성 풀이에서 `CbtSolveScreen`의 `cbt-solve-page`는 화면에 고정됩니다. GNB 아래 남은 공간은 `--app-surface-problem`으로 채우고 카드의 외부 여백, 테두리, 곡률, 그림자와 배경 블러를 제거합니다. `cbt-workspace`와 `cbt-question-card`는 `min-height: 0`으로 남은 높이를 사용합니다. GNB와 문항 번호, OMR, 정답, 책갈피 도구는 자리를 유지하고 `cbt-question-content`만 내부 스크롤합니다. 본문의 좌우 여백은 16px과 기기 안전 영역 중 큰 값입니다.
+`CbtSolveScreen`의 `cbt-solve-page`는 모든 화면 너비에서 실제 보이는 높이에 고정되는 flex column입니다. GNB의 실제 높이를 제외한 나머지를 `cbt-workspace`가 `flex: 1`, `min-height: 0`, `grid-template-rows: minmax(0, 1fr)`로 사용합니다. 문제 본문과 OMR 목록만 내부 스크롤하며 문서 전체 스크롤은 생기지 않아야 합니다.
+
+768px 이상에서는 기존 카드 여백을 유지하고 바깥 하단에 `max(12px, safe-area-inset-bottom)`을 확보합니다. 문제와 OMR 높이는 독립적이며 `max-height: 100%`로 이 여백을 제외한 workspace 높이 이하로 제한합니다. 문제 카드의 최소 높이는 OX 420px, 단답형 360px, 5지선다 560px과 가용 높이 중 작은 값인 `min(기준 높이, 100%)`입니다. 5지선다 OMR은 `height: auto`로 적은 문항을 내용 높이만큼 표시하며, OX와 단답형 OMR은 `height: 100%`를 사용합니다. OMR 제목과 다운로드 버튼은 자리를 유지하고 목록만 스크롤합니다.
+
+768px 미만에서는 GNB 아래 공간을 `--app-surface-problem`으로 채우고 카드의 외부 여백, 테두리, 곡률, 그림자와 배경 블러를 제거합니다. GNB와 문항 번호, OMR, 정답, 책갈피 도구는 자리를 유지하고 `cbt-question-content`만 내부 스크롤합니다. 본문의 좌우 여백은 16px과 기기 안전 영역 중 큰 값입니다.
 
 모바일의 이전과 다음 문제는 같은 너비로 나눈 높이 52px의 `cbt-navigation`에 배치합니다. 문제 카드 기준 하단에 고정되는 이 플로팅 영역은 곡률 16px, 좌우 `max(16px, safe-area)`, 하단 `max(12px, safe-area-inset-bottom)`을 사용합니다. 본문의 `padding-bottom`과 `scroll-padding-bottom`은 52px, 하단 간격, 추가 16px를 합친 `--cbt-content-bottom`을 공유합니다. 끝까지 스크롤하면 마지막 선택지와 해설이 버튼 위로 올라와야 합니다. OMR 빠른 이동은 문제 우상단 `?` 왼쪽의 32px 원형 버튼으로 열며 작은 `OMR` 글자를 표시합니다. OMR 레이어는 이동 버튼 위에 표시하고 시트 하단에도 안전 영역 여백을 둡니다. 768px 이상에서는 기존 우측 OMR 패널과 카드 하단 이동 버튼을 사용합니다.
 
-`src/hooks/useMobileSolveViewport.ts`는 모바일에서 `visualViewport.height`와 `offsetTop`을 `--cbt-viewport-height`, `--cbt-viewport-top`으로 직접 반영합니다. 주소창이나 단답형 키보드로 보이는 공간이 달라져도 React 렌더를 기다리지 않고 화면 크기를 맞춥니다. VisualViewport가 없으면 `innerHeight`와 0을 사용하며 CSS의 초기 높이는 `100dvh`, 구형 브라우저 fallback은 `100vh`입니다. 핀치 확대 중 `scale !== 1`이면 마지막 치수를 유지하고, 768px 이상에서는 변수를 제거합니다. 활성 기간에만 `html.cbt-mobile-viewport`를 붙이며 모바일 html/body 배경을 문제 표면색으로 통일하고 문서 스크롤을 잠급니다. 이 범위의 `scrollbar-gutter`는 `auto`입니다. 종료 시 클래스, 변수와 이벤트를 정리하고 body 인라인 overflow는 변경하지 않습니다. 전역 viewport 메타데이터는 그대로 유지합니다.
+`src/hooks/useSolveViewport.ts`는 모든 화면 너비에서 `visualViewport.height`와 `offsetTop`을 `--cbt-viewport-height`, `--cbt-viewport-top`으로 직접 반영합니다. 주소창, 화면 회전, 분할 화면이나 단답형 키보드로 보이는 공간이 달라져도 React 렌더를 기다리지 않고 크기를 맞춥니다. VisualViewport가 없으면 `innerHeight`와 0을 사용하며 CSS의 초기 높이는 `100dvh`, 구형 브라우저 fallback은 `100vh`입니다. 핀치 확대 중 `scale !== 1`이면 마지막 치수를 유지합니다. 활성 기간의 `html.cbt-viewport`는 html/body 문서 스크롤을 잠그고 `scrollbar-gutter: auto`를 사용합니다. 768px 미만에서만 html/body 배경을 문제 표면색으로 통일합니다. 종료 시 클래스, 변수와 이벤트를 정리하며 body 인라인 overflow와 전역 viewport 메타데이터는 변경하지 않습니다.
 
-`PremiumSolveSkeleton`도 같은 전체 화면 클래스와 viewport hook을 사용해 온라인 로딩에서 실제 풀이로 전환할 때 구조가 바뀌지 않도록 합니다. 복기용 로딩은 `mobileFullScreen={false}`로 제외합니다. 결과, 오답 확인, 전체 확인과 책갈피 확인 화면은 기존 배치를 유지합니다. 검증할 때는 긴 문제와 해설의 마지막 부분, OMR 이동, 단답형 키보드 열기와 닫기, 화면 회전, 다크 모드와 데스크톱 복원을 확인합니다. 실제 Safari 하단 영역과 키보드 검증은 화면 너비만 줄인 데스크톱 미리보기와 구분해 기록합니다.
+`PremiumSolveSkeleton`도 같은 viewport 구조와 hook으로 문제 카드와 OMR을 가용 높이 이하로 제한합니다. 복기용 로딩은 `fitViewport={false}`로 제외하며 결과, 오답 확인, 전체 확인과 책갈피 확인 화면은 기존 배치를 유지합니다. 검증에는 긴 문제와 해설의 끝까지 스크롤, OMR 마지막 문항 이동, 단답형 키보드 열기와 닫기, 태블릿 가로와 세로 전환, 분할 화면, 다크 모드와 PC 전환을 포함합니다. 실제 Safari 주소창과 키보드 검증은 데스크톱 미리보기와 구분해 기록합니다.
 
 내부 페이지 진입 효과는 `src/app/RouteEntrance.tsx`의 허용 경로에서만 사용합니다. `/home`, 오프라인과 온라인의 과목 목록, 문제 목록, 세션 목록, 결과 조회가 대상입니다. `/solve`, `/wrong`, `/review`와 온라인의 `/premium/attempts`, `/premium/wrong`, `/premium/review`에는 적용하지 않습니다. 계정, 설정, 미니 앱도 이 효과의 대상이 아닙니다. 랜딩은 기존 `landing-fade-up`의 700ms, 22px 이동과 미리보기의 120ms 지연을 그대로 유지합니다.
 
@@ -225,7 +229,7 @@ const titleId = useId();
 
 환경설정(`/settings`)과 계정(`/account`)은 240ms/6px의 콘텐츠 진입 효과를 사용합니다. 탭 바와 콘텐츠만 표시 효과를 적용하며 GNB와 푸터는 정적으로 유지합니다. `TabContentMotion`은 탭 순서에 따라 오른쪽 또는 왼쪽 8px에서 160ms 동안 이동합니다. 최초 진입에는 가로 효과를 적용하지 않고, 탭 전환 뒤에는 세로 진입 효과를 중복 재생하지 않습니다. 계정 URL의 탭 변경과 뒤로 가기, 로그인/회원가입 전환에도 같은 규칙을 적용합니다. 패널을 강제로 다시 마운트하거나 대기 시간을 두지 않으며 기존 입력값을 유지합니다. 빠른 전환은 이전 애니메이션을 취소하고, 애니메이션 API가 없거나 동작 줄이기를 사용하면 즉시 전환합니다.
 
-`prefers-reduced-motion`에서는 페이지 진입, 로딩과 랜딩 진입 애니메이션을 멈추고 hover의 이동도 없앱니다. 중앙 정렬 레이아웃이 탭 전환마다 흔들리지 않도록 `html`의 `scrollbar-gutter: stable`을 유지합니다. 문서 스크롤이 없는 모바일 활성 풀이에서만 `auto`를 사용합니다.
+`prefers-reduced-motion`에서는 페이지 진입, 로딩과 랜딩 진입 애니메이션을 멈추고 hover의 이동도 없앱니다. 중앙 정렬 레이아웃이 탭 전환마다 흔들리지 않도록 `html`의 `scrollbar-gutter: stable`을 유지합니다. 문서 스크롤이 없는 활성 풀이의 `html.cbt-viewport`에서만 `auto`를 사용합니다.
 
 ## 8. 랜딩과 문구
 
