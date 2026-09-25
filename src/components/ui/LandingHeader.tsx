@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { useSettingsStore } from "../../store/useSettingsStore";
 import { BrandMark } from "./BrandMark";
+import { ThemeToggleButton } from "./ThemeToggleButton";
 
 interface LandingHeaderProps {
   activePage?: "home" | "mini-apps";
@@ -50,14 +51,7 @@ export function LandingHeader({ activePage = "home", onOpenCsvGuide }: LandingHe
         </div>
 
         <div className="flex shrink-0 items-center gap-2">
-          <button
-            type="button"
-            onClick={toggleDarkMode}
-            className="landing-theme-button"
-            aria-label={darkMode ? "라이트 모드로 전환" : "다크 모드로 전환"}
-          >
-            <span aria-hidden="true">{darkMode ? "☀" : "☾"}</span>
-          </button>
+          <ThemeToggleButton darkMode={darkMode} onToggle={toggleDarkMode} />
           <Link to="/home" className="landing-nav-cta">
             시작하기 <span aria-hidden="true">→</span>
           </Link>

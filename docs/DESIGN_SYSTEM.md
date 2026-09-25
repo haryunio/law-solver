@@ -161,6 +161,7 @@ const titleId = useId();
 | `MiniAppHeader`, `MiniAppHeaderView` | 개별 미니 앱의 sticky GNB와 설정을 변경하지 않는 갤러리 예시 |
 | `AppFooter` | 앱 내부 화면 푸터 |
 | `ThemeSelect` | 앱의 모든 드롭다운. 네이티브 select로 교체하지 않음 |
+| `ThemeToggleButton` | 랜딩, `/home`, 미니 앱의 테마 전환 아이콘 버튼. 상태와 콜백을 받아 공통 접근성 이름을 표시 |
 | `ProfileAvatar` | 이름 이니셜과 이름 해시 기반의 안정적인 팔레트 |
 | `PremiumBadge` | Premium의 공통 금색 체크 표시 |
 | `IconCloseButton` | 접근 가능한 이름과 동일한 모양의 닫기 버튼 |

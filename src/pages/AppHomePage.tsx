@@ -4,6 +4,8 @@ import { DashboardHeaderTitle } from "../components/ui/DashboardHeaderTitle";
 import { PremiumBadge } from "../components/ui/PremiumBadge";
 import { ReturnLinkLabel } from "../components/ui/ReturnLinkLabel";
 import { useAccountStore } from "../store/useAccountStore";
+import { useSettingsStore } from "../store/useSettingsStore";
+import { ThemeToggleButton } from "../components/ui/ThemeToggleButton";
 
 type HomeMenuKind = "online" | "offline" | "settings" | "account";
 
@@ -87,6 +89,8 @@ function HomeMenuGraphic({ kind }: { kind: HomeMenuKind }) {
 }
 
 export function AppHomePage() {
+  const darkMode = useSettingsStore((state) => state.darkMode);
+  const toggleDarkMode = useSettingsStore((state) => state.toggleDarkMode);
   const isSignedIn = useAccountStore((state) => state.isSignedIn);
   const displayName = useAccountStore((state) => state.displayName);
 
@@ -94,12 +98,15 @@ export function AppHomePage() {
     <div className="app-page px-4 py-8 transition-colors duration-300 md:px-6">
       <div className="mx-auto max-w-6xl">
         <DashboardHeaderTitle logoTo="/" logoLabel="메인으로 이동">
-          <Link
-            to="/"
-            className="app-button-secondary rounded-xl px-3 py-2 text-center text-sm font-semibold sm:px-4"
-          >
-            <ReturnLinkLabel>메인으로</ReturnLinkLabel>
-          </Link>
+          <div className="flex items-center gap-2">
+            <ThemeToggleButton darkMode={darkMode} onToggle={toggleDarkMode} />
+            <Link
+              to="/"
+              className="app-button-secondary rounded-xl px-3 py-2 text-center text-sm font-semibold sm:px-4"
+            >
+              <ReturnLinkLabel>메인으로</ReturnLinkLabel>
+            </Link>
+          </div>
         </DashboardHeaderTitle>
 
         <main className="app-content-stagger grid gap-4 sm:grid-cols-2 lg:grid-cols-4">

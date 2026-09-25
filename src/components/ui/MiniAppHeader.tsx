@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { useSettingsStore } from "../../store/useSettingsStore";
 import { BrandMark } from "./BrandMark";
 import { ReturnLinkLabel } from "./ReturnLinkLabel";
+import { ThemeToggleButton } from "./ThemeToggleButton";
 
 interface MiniAppHeaderProps {
   title: string;
@@ -35,9 +36,7 @@ export function MiniAppHeaderView({ title, titleTo, label, children, darkMode, o
         </div>
         <div className="flex shrink-0 items-center justify-end gap-2">
           {children}
-          <button type="button" onClick={onToggleTheme} className="app-button-secondary flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-lg" aria-label={darkMode ? "라이트 모드로 전환" : "다크 모드로 전환"}>
-            <span aria-hidden="true">{darkMode ? "☀" : "☾"}</span>
-          </button>
+          <ThemeToggleButton darkMode={darkMode} onToggle={onToggleTheme} className="app-button-secondary flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-lg" />
           <Link to="/apps" className="app-button-secondary flex h-9 shrink-0 items-center rounded-xl px-3 text-xs font-bold sm:text-sm"><ReturnLinkLabel>나가기</ReturnLinkLabel></Link>
         </div>
       </nav>
