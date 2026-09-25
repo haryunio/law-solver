@@ -282,7 +282,7 @@ export function DesignSystemPage() {
               <div className="flex items-center gap-2"><BrandMark /><span className="text-sm font-semibold">Law Solver</span></div>
               <PremiumBadge />
               <TimestampTag label="등록" value={sampleDate} />
-              <TimestampTag label="마지막 풀이" value={sampleLastPlay} hideYearOnSmallScreens />
+              <TimestampTag label="마지막 풀이" value={sampleLastPlay} compactOnSmallScreens />
               <div className="flex items-center gap-2">{["김하늘", "이서연", "박도윤"].map((name) => <ProfileAvatar key={name} displayName={name} />)}</div>
               <div className="ml-auto flex items-center gap-2"><span className="text-xs text-stone-500">관리 메뉴</span><ActionMenu label="디자인 예시 관리 메뉴" items={[{ id: "rename", label: "이름 변경", onSelect: openEditor }, { id: "delete", label: "삭제", danger: true, onSelect: () => setDialog("confirm") }]} /></div>
             </div>
@@ -334,7 +334,7 @@ export function DesignSystemPage() {
             </div>
           </DemoSection>
 
-          <DemoSection id="sessions" title="세션 목록" description="회차와 상태 태그, 세 개의 정보 박스, 우측 행동 버튼을 같은 구조로 표시합니다. 관리 메뉴에서 예시 이름을 바꾸거나 예시 행을 삭제해 보세요.">
+          <DemoSection id="sessions" title="세션 목록" description="회차 박스와 태그 줄은 화면 폭이 바뀌어도 하단을 맞춥니다. 모바일 날짜는 달력 아이콘과 월일만 표시합니다. 관리 메뉴에서 예시 이름을 바꾸거나 예시 행을 삭제해 보세요.">
             <div className="space-y-2.5">
               {sessionVisible ? (
                 <SessionListItem
