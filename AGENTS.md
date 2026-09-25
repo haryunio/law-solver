@@ -207,8 +207,9 @@ GitHub Pages용 정적 파일입니다. `404.html`은 SPA 새로고침 대응용
 - Premium 비동기 화면은 단일 텍스트 로딩 카드나 빈 화면 대신 `AsyncLoading.tsx`, `PremiumLoadingStates.tsx`의 공통 스피너·스켈레톤을 사용합니다. 스켈레톤은 도착 화면의 카드 수와 대략적인 높이를 유지해 레이아웃 이동을 줄이고 `role=status`의 한국어 진행 안내를 제공하세요. 버튼 작업은 기존 너비 안에서 인라인 스피너를 표시하고, 풀이 제출·중단처럼 화면 전체를 잠가야 하는 작업만 고정 오버레이를 사용합니다. `prefers-reduced-motion`과 `app-focus-page`에서는 로딩 애니메이션을 정지합니다.
 - 탭 전환처럼 문서 높이가 달라지는 화면에서도 중앙 정렬 UI가 흔들리지 않도록 최상위 `html`의 `scrollbar-gutter: stable`을 유지합니다. 문서 스크롤을 잠그는 활성 풀이에서는 화면 너비와 관계없이 `html.cbt-viewport` 범위에만 `auto`를 적용합니다.
 - 디자인 전용 작업에서 Zustand store, IndexedDB/localStorage 스키마, CSV 파서, 채점 로직을 함께 수정하지 않습니다.
-- 풀이와 복습의 중복 표시 코드는 `QuestionPassages`, `StudyOmrTable`, `SolveChoiceList`를 재사용합니다. `CbtSolveScreen`, `ReviewAllPage`, `WrongAnswersPage`는 각각 기존 상태 전이, 답안/오답 노트 저장 시점과 화면 이동을 소유합니다. 표시 코드 정리를 이유로 controller를 합치거나 adapter와 저장 스키마를 바꾸지 마세요. `StudyOmrTable`은 풀이에서 번호/내 답/책갈피 3열, 복습에서 번호/내 답/정답/노트 4열을 사용하고 머리글과 행 너비를 맞춥니다. 긴 단답형은 셀 안에서 말줄임하되 `title`로 전체 답을 제공하고 현재 행에는 `aria-current="step"`을 지정합니다. 최대 높이와 스크롤, 이동 콜백은 호출자가 관리합니다.
-- 5지선다 번호는 `StudyChoiceNumber`의 16px 원형 테두리 안에 일반 숫자로 표시합니다. 풀이와 복습 모두 번호 열은 16px, 본문과 간격은 8px로 고정하고 원문자 글리프를 다시 사용하지 마세요. 풀이의 정답 배지는 본문 아래에 두어 번호 열이나 본문 너비를 넓히거나 줄이지 않습니다.
+- 풀이와 복습의 중복 표시 코드는 `QuestionPassages`, `StudyOmrTable`, `SolveChoiceList`를 재사용합니다. `CbtSolveScreen`, `ReviewAllPage`, `WrongAnswersPage`는 각각 기존 상태 전이, 답안/오답 노트 저장 시점과 화면 이동을 소유합니다. 표시 코드 정리를 이유로 controller를 합치거나 adapter와 저장 스키마를 바꾸지 마세요. OMR 내부 표의 곡률은 태그와 같은 8px이며 바깥 패널은 16px을 유지합니다. `StudyOmrTable`은 풀이에서 번호/내 답/책갈피 3열, 복습에서 번호/내 답/정답/노트 4열을 사용하고 머리글과 행 너비를 맞춥니다. 긴 단답형은 셀 안에서 말줄임하되 `title`로 전체 답을 제공하고 현재 행에는 `aria-current="step"`을 지정합니다. 최대 높이와 스크롤, 이동 콜백은 호출자가 관리합니다.
+- 온라인 오답 노트 저장 adapter는 실패 안내 후 오류를 다시 전달해야 합니다. `WrongAnswersPage`는 저장 완료 전 이동하지 않고 실패하면 현재 문항과 초안을 유지해 재시도를 허용합니다.
+- 5지선다 번호는 `StudyChoiceNumber`의 16px 원형 테두리 안에 10px 일반 숫자로 표시합니다. 풀이와 복습 모두 번호 열은 16px, 본문과 간격은 8px로 고정하고 원문자 글리프를 다시 사용하지 마세요. 풀이의 정답 배지는 본문 아래에 두어 번호 열이나 본문 너비를 넓히거나 줄이지 않습니다.
 - 복습의 `ChoiceReviewList`는 640px 미만에서 내 답/정답 태그를 선지 본문 아래 같은 열에 두고, 그 이상에서만 오른쪽에 둡니다. 본문 읽기 공간을 위해 태그가 선지를 옆으로 밀지 않게 하며 번호, 선지 순서와 정오 표시를 유지합니다. 디자인 시스템의 `StudyUiDemo`는 이 컴포넌트들과 실제 풀이 선지/보기/OMR을 사용하되 예시 상태를 메모리에만 두고 학습 store, 계정, 설정이나 API에 접근하지 않습니다.
 - 공통 스타일을 추가할 때 기존 `app-*` 클래스나 UI 컴포넌트를 먼저 확장하고 페이지마다 긴 스타일 문자열을 복제하지 않습니다.
 - 테마형 드롭다운은 `src/components/ui/ThemeSelect.tsx`를 사용합니다. 문제 편집, 새 문제 등록, 재풀이 설정 등 앱의 모든 드롭다운은 네이티브 `<select>` 대신 이 컴포넌트를 사용하며, 바깥 클릭, Escape, 방향키, Home/End, Enter/Space 조작을 유지합니다. 화살표는 고정 크기 박스의 중심축에서만 회전하도록 유지합니다.
@@ -409,7 +410,7 @@ GitHub Actions 워크플로우는 `.github/workflows/deploy-pages.yml`입니다.
 
 - 트리거: `main` 브랜치 push, 수동 실행
 - 설치: `npm ci`
-- 빌드: `npm run build`
+- 검증과 빌드: `npm run verify`
 - 산출물: `dist`
 - 배포 대상: GitHub Pages
 
