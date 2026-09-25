@@ -475,6 +475,18 @@ body {
 .app-rich-text blockquote { padding-left: 0.9em; border-left: 3px solid var(--app-border-strong); }
 .app-rich-text pre { overflow-x: auto; font-size: 0.9em; }
 
+.app-precedent-link {
+  color: #1d4ed8;
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+  overflow-wrap: anywhere;
+}
+.app-precedent-link:hover { color: #1e40af; }
+.app-precedent-link:focus-visible { outline: 2px solid currentColor; outline-offset: 3px; border-radius: 2px; }
+.dark .app-precedent-link { color: #93c5fd; }
+.dark .app-precedent-link:hover { color: #bfdbfe; }
+
 .app-rich-table-wrap {
   max-width: 100%;
   margin-block: 0.9rem;

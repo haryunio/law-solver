@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { ConfirmDialog } from "../ui/ConfirmDialog";
 import { OverflowTooltipTitle } from "../ui/OverflowTooltipTitle";
 import { RichTextContent } from "../ui/RichTextContent";
+import { LegalReferenceContent } from "../ui/LegalReferenceContent";
 import { getAnswerToken, getQuestionAnswerToken, hasNoCorrectChoice, isCorrectAnswer } from "../../lib/answer";
 import {
   QuestionNavigationMethod,
@@ -489,11 +490,13 @@ export function CbtSolveScreen({
                   {current.explanation && (
                     <div className="text-sm leading-relaxed text-stone-700 dark:text-stone-300">
                       <p className="mb-1 font-semibold text-stone-900 dark:text-stone-100">해설</p>
-                      <RichTextContent content={current.explanation} />
+                      <LegalReferenceContent content={current.explanation} />
                     </div>
                   )}
                   {current.source && (
-                    <p className="mt-3 text-xs text-stone-500 italic dark:text-stone-500">출처: {current.source}</p>
+                    <p className="mt-3 text-xs text-stone-500 italic dark:text-stone-500">
+                      출처: <LegalReferenceContent content={current.source} as="span" plainText />
+                    </p>
                   )}
                 </div>
               )}

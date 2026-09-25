@@ -173,7 +173,8 @@ const titleId = useId();
 | `ProfileAvatar` | 이름 이니셜과 이름 해시 기반의 안정적인 팔레트 |
 | `PremiumBadge` | Premium의 공통 금색 체크 표시 |
 | `IconCloseButton` | 접근 가능한 이름과 동일한 모양의 닫기 버튼 |
-| `RichTextContent` | 문제와 해설의 제한적 HTML 및 일반 텍스트 줄바꿈 |
+| `RichTextContent` | 제한적 HTML, 일반 텍스트 줄바꿈과 명시적으로 활성화한 판례 링크 |
+| `LegalReferenceContent` | 환경설정의 판례 링크 선택을 반영하는 해설과 출처 |
 | `Toast` | 일시적인 성공, 오류, 경고, 안내 |
 | `AsyncLoading`의 컴포넌트 | 스피너, 버튼 진행 상태, 화면 작업 오버레이 |
 | `BookCover`, `BookGrid` | 오프라인 과목, 온라인 과목, 구매 상품의 책 표지와 반응형 책장 |
@@ -185,6 +186,10 @@ const titleId = useId();
 | `ActionMenu` | 문제와 세션의 편집, 이름 변경, 삭제 메뉴 및 키보드 이동 |
 
 `ThemeSelect`를 사용할 때 바깥 클릭, Escape, 방향키, Home/End, Enter/Space 동작을 유지합니다. `RichTextContent`를 통하지 않고 문제 문자열을 HTML로 주입하지 않습니다. HTML 표는 카드 폭에 맞추고 셀 안의 글자는 모바일 12px, 데스크톱 13px을 기준으로 유지합니다.
+
+해설과 출처의 `LegalReferenceContent`는 `precedentLinkProvider` 설정을 구독합니다. 기본은 국가법령정보센터이며 화면 설정에서 끔과 케이스노트로 바꿀 수 있습니다. `app-precedent-link`는 본문 크기를 유지하는 파란색 밑줄과 키보드 포커스 테두리를 사용하고 다크 모드에서는 밝은 파란색으로 표시합니다. 판례번호와 새 탭 안내를 접근성 이름에 포함합니다. 외부 조회는 클릭할 때만 시작하며 문제, 선지, 보기에는 링크를 붙이지 않습니다. 갤러리의 글자와 곡률 영역은 같은 `RichTextContent`와 선택지를 페이지 메모리에서만 사용합니다.
+
+`src/lib/precedentLinks.ts`가 사건부호 허용 목록과 링크 형식을 소유합니다. 텍스트 노드 안의 2자리/4자리 연도, 사건부호, 일련번호를 찾고 번호 사이 공백은 화면에 보존하되 URL에서는 제거합니다. 날짜와 일반 숫자, 일련번호만 축약한 병합사건 인용은 추측해서 연결하지 않습니다. HTML 태그로 나뉜 사건번호는 합치지 않습니다. 법원 판례의 외부 URL은 국가법령정보센터의 `https://www.law.go.kr/LSW/precInfoP.do?mode=0&evtNo=…`와 케이스노트의 `https://casenote.kr/search/?q=…`만 생성합니다. 국가법령정보센터의 헌법재판 사건은 별도 결정례 검색인 `https://www.law.go.kr/detcSc.do?query=…`로 연결합니다. 케이스노트는 법원을 추측하지 않고 공식 검색 경로를 사용합니다. 해설의 원본 HTML 링크는 주소와 속성을 제거하고 안전한 텍스트만 다시 처리합니다. 출처는 `plainText`를 지정하여 기존 일반 텍스트를 유지하고 HTML로 해석하지 않습니다. 자동 생성 링크에는 `target="_blank"`, `rel="noopener noreferrer"`, `referrerPolicy="no-referrer"`를 유지합니다.
 
 ## 7. 레이아웃과 모션
 

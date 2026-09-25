@@ -1,9 +1,10 @@
 // @vitest-environment jsdom
 
-import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
+import { act, cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { MemoryRouter } from "react-router-dom";
 import type { TestSession } from "../../types/test";
+import { useSettingsStore } from "../../store/useSettingsStore";
 import { CbtSolveScreen } from "./CbtSolveScreen";
 
 beforeAll(() => {
@@ -16,7 +17,11 @@ beforeAll(() => {
   HTMLElement.prototype.scrollIntoView = vi.fn();
 });
 
-afterEach(cleanup);
+beforeEach(() => useSettingsStore.setState(useSettingsStore.getInitialState()));
+afterEach(() => {
+  cleanup();
+  useSettingsStore.setState(useSettingsStore.getInitialState());
+});
 
 const session: TestSession = {
   id: "online-attempt",
@@ -106,6 +111,41 @@ describe("CbtSolveScreen online adapter", () => {
     fireEvent.click(screen.getByRole("button", { name: "?" }));
     await waitFor(() => expect(screen.getByText("첫 번째 해설")).toBeTruthy());
     expect(onAnswerRevealRequest).toHaveBeenCalledWith("question-1");
+  });
+
+  it("links case numbers in revealed explanations and sources and follows the saved setting", () => {
+    const example: TestSession = {
+      ...session,
+      questions: [{
+        ...session.questions[0]!,
+        question: "99다1234를 검토한 문제",
+        choices: ["2001므1250의 판단", "나", "다", "라", "마"],
+        explanation: "99다1234 및 2001므1250 판결을 참조한다.",
+        source: "대법원 2005다73105 판결 <strong>참고 자료</strong>",
+      }, session.questions[1]!],
+    };
+    render(<MemoryRouter><CbtSolveScreen sessionId={session.id} sessionOverride={example} /></MemoryRouter>);
+    const main = within(screen.getByRole("main"));
+    expect(main.queryAllByRole("link")).toHaveLength(0);
+
+    fireEvent.click(screen.getByRole("button", { name: "?" }));
+    expect(main.getAllByRole("link")).toHaveLength(3);
+    for (const caseNumber of ["99다1234", "2001므1250", "2005다73105"]) {
+      const link = main.getByRole("link", { name: `${caseNumber}, 국가법령정보센터에서 새 탭으로 열기` });
+      expect(link.getAttribute("href")).toBe(`https://www.law.go.kr/LSW/precInfoP.do?mode=0&evtNo=${encodeURIComponent(caseNumber)}`);
+      expect(link.getAttribute("target")).toBe("_blank");
+      expect(link.getAttribute("rel")).toContain("noopener");
+    }
+    expect(main.getByText("99다1234를 검토한 문제").closest("a")).toBeNull();
+    expect(main.getByText("2001므1250의 판단").closest("a")).toBeNull();
+    const source = main.getByRole("link", { name: "2005다73105, 국가법령정보센터에서 새 탭으로 열기" }).closest("p")!;
+    expect(source.textContent).toBe("출처: 대법원 2005다73105 판결 <strong>참고 자료</strong>");
+    expect(source.querySelector("strong")).toBeNull();
+
+    act(() => useSettingsStore.getState().setPrecedentLinkProvider("off"));
+    expect(main.queryAllByRole("link")).toHaveLength(0);
+    expect(main.getByText("99다1234 및 2001므1250 판결을 참조한다.")).toBeTruthy();
+    expect(main.getByText("대법원 2005다73105 판결 <strong>참고 자료</strong>")).toBeTruthy();
   });
 
   it("reveals every accepted choice while continuing to submit one selected answer", () => {

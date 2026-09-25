@@ -1,4 +1,5 @@
 import { RichTextContent } from "../ui/RichTextContent";
+import { LegalReferenceContent } from "../ui/LegalReferenceContent";
 import type { PremiumQuestion } from "../../lib/premiumApi";
 
 interface PremiumQuestionContentProps {
@@ -25,7 +26,9 @@ export function PremiumQuestionContent({ question }: PremiumQuestionContentProps
         </div>
       ) : null}
       {question.source ? (
-        <p className="mt-4 text-xs italic text-stone-500 dark:text-stone-400">출처: {question.source}</p>
+        <p className="mt-4 text-xs italic text-stone-500 dark:text-stone-400">
+          출처: <LegalReferenceContent content={question.source} as="span" plainText />
+        </p>
       ) : null}
     </>
   );

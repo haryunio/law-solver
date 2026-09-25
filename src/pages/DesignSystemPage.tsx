@@ -22,6 +22,7 @@ import { IconCloseButton } from "../components/ui/IconCloseButton";
 import { PremiumBadge } from "../components/ui/PremiumBadge";
 import { ProfileAvatar } from "../components/ui/ProfileAvatar";
 import { ReturnLinkLabel } from "../components/ui/ReturnLinkLabel";
+import { RichTextContent } from "../components/ui/RichTextContent";
 import { ThemeSelect } from "../components/ui/ThemeSelect";
 import { TabContentMotion } from "../components/ui/TabContentMotion";
 import { TimestampTag } from "../components/ui/TimestampTag";
@@ -35,6 +36,7 @@ import {
 } from "../lib/subjectCover";
 import type { TestType } from "../types/test";
 import type { MarketplaceProduct } from "../lib/premiumApi";
+import { DEFAULT_PRECEDENT_LINK_PROVIDER, normalizePrecedentLinkProvider, PRECEDENT_LINK_OPTIONS, type PrecedentLinkProvider } from "../lib/precedentLinks";
 
 const sections = [
   ["navigation", "상단 내비게이션"], ["tokens", "색상과 표면"], ["type", "글자와 곡률"], ["controls", "버튼과 입력"],
@@ -138,6 +140,7 @@ export function DesignSystemPage() {
   const [motion, setMotion] = useState("subjects");
   const [motionSequence, setMotionSequence] = useState(0);
   const [motionTab, setMotionTab] = useState(0);
+  const [precedentProvider, setPrecedentProvider] = useState<PrecedentLinkProvider>(DEFAULT_PRECEDENT_LINK_PROVIDER);
   const titleId = useId();
   const formTitleId = useId();
   const typeId = useId();
@@ -221,6 +224,15 @@ export function DesignSystemPage() {
               <div><p className="text-xs text-stone-500">카드 제목</p><p className="mt-1 text-base font-semibold">민법 사례 연습</p></div>
               <div><p className="text-xs text-stone-500">본문</p><p className="mt-1 max-w-2xl break-keep text-sm leading-6 text-stone-700 dark:text-stone-300">등록한 문제에서 새로운 풀이를 시작할 수 있습니다. 이전 답안과 오답 노트는 세션마다 따로 보관됩니다.</p></div>
               <div><p className="text-xs text-stone-500">보조 설명과 숫자</p><p className="mt-1 text-xs leading-5 text-stone-500">마지막 풀이 <span className="tabular-nums">2026.09.20 14:25</span></p></div>
+              <div className="space-y-3 border-t border-stone-200 pt-4 dark:border-stone-700">
+                <h3 className="text-sm font-semibold">해설과 출처의 판례 링크</h3>
+                <div className="max-w-xs">
+                  <ThemeSelect ariaLabel="판례 링크 예시" value={precedentProvider} options={PRECEDENT_LINK_OPTIONS} onChange={(value) => setPrecedentProvider(normalizePrecedentLinkProvider(value))} />
+                </div>
+                <RichTextContent content={"<p>판례번호를 눌러 원문을 확인할 수 있습니다. <strong>2005다73105</strong>, 2001므1250 참조.</p>"} precedentLinkProvider={precedentProvider} className="text-sm leading-6" />
+                <RichTextContent as="span" plainText content="출처: 대법원 2006. 6. 29. 선고 2005다73105 판결" precedentLinkProvider={precedentProvider} className="text-xs italic text-stone-500 dark:text-stone-400" />
+                <p className="text-xs leading-5 text-stone-500">선택은 이 예시에만 적용됩니다. 링크는 외부 사이트를 새 탭으로 엽니다.</p>
+              </div>
             </div>
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
               {[
