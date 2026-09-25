@@ -147,9 +147,13 @@ const titleId = useId();
 
 `labelledBy`는 필수입니다. 같은 화면에 여러 인스턴스가 생길 수 있으면 `useId()`를 사용하세요. `describedBy`는 짧은 설명 문단의 ID를 연결할 때 사용합니다. `surfaceClassName`을 지정하면 패널의 최대 폭, 최대 높이와 내부 스크롤도 함께 정합니다. 바깥 레이어의 기본 우선순위는 `z-[100]`이며 `className`으로 조정할 수 있습니다.
 
-현재 `ConfirmDialog`, `LegalDocumentModal`, `CsvGuideDialog`가 이 기반을 사용합니다. 단순 확인은 `ConfirmDialog`를 먼저 선택하고, 약관 문서는 `LegalDocumentModal`을 사용합니다. `ConfirmDialog`에서 취소가 있는 작업은 `onCancel`을 반드시 전달하세요. 취소가 없는 단순 안내는 기존 계약대로 닫기와 확인이 같은 `onConfirm`을 호출합니다. 저장 중에는 `pending`을 전달해 확인과 닫기를 모두 잠급니다.
+현재 `ConfirmDialog`, `LegalDocumentModal`, `CsvGuideDialog`와 클라우드 백업/내려받기 창이 이 기반을 사용합니다. 단순 확인은 `ConfirmDialog`를 먼저 선택하고, 약관 문서는 `LegalDocumentModal`을 사용합니다. `ConfirmDialog`에서 취소가 있는 작업은 `onCancel`을 반드시 전달하세요. 취소가 없는 단순 안내는 기존 계약대로 닫기와 확인이 같은 `onConfirm`을 호출합니다. 저장 중에는 `pending`을 전달해 확인과 닫기를 모두 잠급니다.
+
+클라우드 작업 창은 콘텐츠의 등장 효과나 탭 전환 영역 안에 직접 렌더링하지 않습니다. `Dialog`의 body 포털로 화면 전체를 덮어 GNB 위쪽까지 동일하게 어둡게 하고 2px 블러를 적용합니다. 암호화, 전송, 복호화, 로컬 저장 중에는 `onClose`를 생략하고 닫기 버튼도 비활성화합니다. 닫을 때 비밀번호와 복구 캐시를 비우는 책임은 `CloudBackupSection`에 남습니다.
 
 기존 bottom sheet와 복합 입력 모달에는 화면 전용 구조도 남아 있습니다. 수정할 때 공통 `Dialog`로 옮길 수 있지만, 파일 업로드나 암호화 백업처럼 작업 중 닫기를 막거나 메모리를 지워야 하는 동작까지 자동으로 대체하지 않습니다. 각 화면의 완료, 실패, 취소 경로를 먼저 확인하세요.
+
+토스트는 16px 곡률의 표면과 옅은 상태별 테두리를 사용합니다. 28px 상태 아이콘은 SVG로 표시하고, 24px 행간의 본문과 32px 닫기 버튼을 세로 중앙에 맞춥니다. 닫기 버튼은 기본 테두리와 그림자를 제거하고 hover 때만 중립 배경을 표시합니다. 한 줄과 여러 줄 모두 같은 구조를 사용하며, 상태 아이콘을 글꼴 문자로 대체하거나 위치 보정용 위쪽 여백을 추가하지 않습니다.
 
 ## 6. 기존 공통 컴포넌트
 
@@ -158,10 +162,12 @@ const titleId = useId();
 | `BrandMark` | 브랜드 이미지. 화면마다 로고를 다시 만들지 않음 |
 | `DashboardHeaderTitle` | 과목, 문제 대시보드와 결과 화면 GNB |
 | `LandingHeader`, `LandingFooter` | 랜딩과 `/apps`의 공통 내비게이션 |
+| `LandingHeaderView` | 실제 랜딩 메뉴의 표시 컴포넌트. 갤러리의 `preview`는 고정 위치만 해제하고 플로팅 상태와 버튼 상태를 메모리에서 제어 |
 | `MiniAppHeader`, `MiniAppHeaderView` | 개별 미니 앱의 sticky GNB와 설정을 변경하지 않는 갤러리 예시 |
 | `AppFooter` | 앱 내부 화면 푸터 |
 | `ThemeSelect` | 앱의 모든 드롭다운. 네이티브 select로 교체하지 않음 |
 | `ThemeToggleButton` | 랜딩, `/home`, 미니 앱의 테마 전환 아이콘 버튼. 상태와 콜백을 받아 공통 접근성 이름을 표시 |
+| `OmrShortcutButton` | 풀이 화면과 갤러리가 공유하는 32px 원형 OMR 버튼 |
 | `ProfileAvatar` | 이름 이니셜과 이름 해시 기반의 안정적인 팔레트 |
 | `PremiumBadge` | Premium의 공통 금색 체크 표시 |
 | `IconCloseButton` | 접근 가능한 이름과 동일한 모양의 닫기 버튼 |
@@ -241,6 +247,8 @@ const titleId = useId();
 ## 9. 검증 방법
 
 `/debug/designsystem`을 직접 열면 토큰과 실제 버튼, 폼, 카드, 세션 목록, 메뉴, 대화상자, 토스트와 등장 효과를 확인할 수 있습니다. 이 페이지로 가는 서비스 메뉴는 만들지 않습니다. 검색 색인과 사이트맵, GA4 페이지뷰에서도 제외하고 직접 접속용 정적 앱 셸만 생성합니다. 데모 상호작용은 페이지 메모리만 바꾸며 실제 학습 데이터, 계정, 결제와 백업을 사용하지 않습니다. 공통 UI를 변경할 때 갤러리와 이 문서를 함께 갱신하세요.
+
+랜딩 메뉴는 복사한 마크업 대신 `LandingHeaderView`를 사용해 최상단과 플로팅 형태를 전환합니다. 홈의 테마 버튼, 미니 앱 헤더, 풀이의 `OmrShortcutButton`도 실제 컴포넌트를 재사용합니다. 모달과 알림 영역에서는 클라우드 창과 같은 `Dialog` 표면, 상태별 토스트, 여러 줄 메시지를 확인합니다. 알림 유지 옵션은 갤러리 안에서만 자동 닫힘을 해제합니다.
 
 공통 컴포넌트에 동작을 추가하면 해당 동작을 직접 검증합니다. `Dialog.test.tsx`는 포커스 순환, Escape, 원래 요소 복원, 중첩 대화상자, 저장 중 닫기 제한과 스크롤 복원을 확인합니다. UI 표현만 바꾸는 경우 구현을 그대로 복사한 테스트를 만들지 않습니다.
 

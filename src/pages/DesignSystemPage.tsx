@@ -13,6 +13,9 @@ import { Button } from "../components/ui/Button";
 import { ConfirmDialog } from "../components/ui/ConfirmDialog";
 import { DashboardHeaderTitle } from "../components/ui/DashboardHeaderTitle";
 import { MiniAppHeaderView } from "../components/ui/MiniAppHeader";
+import { LandingHeaderView } from "../components/ui/LandingHeader";
+import { ThemeToggleButton } from "../components/ui/ThemeToggleButton";
+import { OmrShortcutButton } from "../components/cbt/OmrShortcutButton";
 import { Dialog } from "../components/ui/Dialog";
 import { IconCloseButton } from "../components/ui/IconCloseButton";
 import { PremiumBadge } from "../components/ui/PremiumBadge";
@@ -119,6 +122,7 @@ function ProblemCardPreview({ title, type, premium, onEdit }: {
 export function DesignSystemPage() {
   const [headerTitle, setHeaderTitle] = useState("민법 채권총론 중간고사 대비 사례형 연습 문제");
   const [miniHeaderDark, setMiniHeaderDark] = useState(false);
+  const [landingFloating, setLandingFloating] = useState(true);
   const [problemTitle, setProblemTitle] = useState("민법 기초 확인 문제");
   const [questionType, setQuestionType] = useState<TestType>("5-choice");
   const [memo, setMemo] = useState("");
@@ -127,7 +131,8 @@ export function DesignSystemPage() {
   const [sessionTitle, setSessionTitle] = useState("중간고사 대비 첫 연습");
   const [draftTitle, setDraftTitle] = useState(sessionTitle);
   const [sessionVisible, setSessionVisible] = useState(true);
-  const [dialog, setDialog] = useState<"edit" | "confirm" | null>(null);
+  const [dialog, setDialog] = useState<"edit" | "confirm" | "backup" | null>(null);
+  const [toastPersistent, setToastPersistent] = useState(false);
   const [toast, setToast] = useState<{ tone: ToastTone; message: string; sequence: number } | null>(null);
   const [motion, setMotion] = useState("subjects");
   const [motionSequence, setMotionSequence] = useState(0);
@@ -146,7 +151,10 @@ export function DesignSystemPage() {
     <div className="app-page px-4 py-8 md:px-6">
       <div className="mx-auto max-w-6xl">
         <DashboardHeaderTitle title="디자인 시스템" sectionTitle="미리보기" logoTo="/home" logoLabel="홈으로 이동">
-          <Link to="/home" className="app-button-secondary app-radius-control rounded-xl px-3 py-2 text-center text-sm font-semibold sm:px-4"><ReturnLinkLabel>홈으로</ReturnLinkLabel></Link>
+          <div className="flex items-center gap-2">
+            <ThemeToggleButton darkMode={miniHeaderDark} onToggle={() => { setMiniHeaderDark((value) => !value); notify("테마 버튼의 예시 상태를 바꿨습니다.", "info"); }} />
+            <Link to="/home" className="app-button-secondary app-radius-control rounded-xl px-3 py-2 text-center text-sm font-semibold sm:px-4"><ReturnLinkLabel>홈으로</ReturnLinkLabel></Link>
+          </div>
         </DashboardHeaderTitle>
 
         <div className="mb-7 space-y-4">
@@ -172,15 +180,11 @@ export function DesignSystemPage() {
             <div>
               <MiniAppHeaderView title="미니 앱 예시" label="미니 앱 헤더 예시" darkMode={miniHeaderDark} onToggleTheme={() => setMiniHeaderDark((value) => !value)} />
             </div>
-            <p className="text-sm text-stone-500">랜딩은 스크롤하면 아래와 같은 플로팅 표면으로 전환됩니다.</p>
-            <div className="landing-nav-wrap" data-floating="true" style={{ position: "relative", zIndex: "auto", paddingTop: 0 }}>
-              <div className="landing-nav-surface">
-                <div className="landing-container landing-nav-inner flex items-center justify-between gap-3">
-                  <span className="landing-nav-brand flex items-center gap-2.5"><BrandMark className="landing-logo-mark" /><span className="text-[17px] font-semibold">Law Solver</span></span>
-                  <button className="landing-nav-cta" onClick={() => notify("시작하기 버튼을 눌렀습니다.")}>시작하기 →</button>
-                </div>
-              </div>
+            <div className="flex flex-wrap items-center gap-3">
+              <p className="text-sm text-stone-500">랜딩의 실제 메뉴와 플로팅 전환을 확인합니다. 테마 버튼은 예시 상태만 바꿉니다.</p>
+              <Button size="sm" onClick={() => setLandingFloating((value) => !value)}>{landingFloating ? "최상단 형태 보기" : "플로팅 형태 보기"}</Button>
             </div>
+            <LandingHeaderView preview floating={landingFloating} activePage="mini-apps" darkMode={miniHeaderDark} onToggleTheme={() => setMiniHeaderDark((value) => !value)} onOpenCsvGuide={() => notify("CSV 가이드 버튼을 눌렀습니다.", "info")} />
           </DemoSection>
 
           <DemoSection id="tokens" title="색상과 표면" description="페이지 배경, 콘텐츠 표면, 정보 박스를 구분합니다. 아래 색상은 실제 CSS 토큰을 사용합니다.">
@@ -355,12 +359,18 @@ export function DesignSystemPage() {
 
           <DemoSection id="feedback" title="모달과 알림" description="모달은 키보드 포커스를 안에 유지하고 닫힌 뒤 원래 버튼으로 돌려줍니다. 토스트는 문서 흐름 바깥에 표시되어 카드 위치를 바꾸지 않습니다.">
             <div className="app-card app-radius-card space-y-4 rounded-2xl border p-4 sm:p-5">
-              <div className="flex flex-wrap gap-2"><Button variant="primary" onClick={openEditor}>입력 모달 열기</Button><Button variant="danger" onClick={() => setDialog("confirm")}>삭제 확인 열기</Button></div>
+              <div className="flex flex-wrap gap-2"><Button variant="primary" onClick={openEditor}>입력 모달 열기</Button><Button variant="danger" onClick={() => setDialog("confirm")}>삭제 확인 열기</Button><Button onClick={() => setDialog("backup")}>클라우드 모달 표면 보기</Button></div>
+              <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={toastPersistent} onChange={(event) => setToastPersistent(event.target.checked)} className="accent-red-600" />알림을 직접 닫을 때까지 유지</label>
               <div className="flex flex-wrap gap-2 border-t border-stone-200 pt-4 dark:border-stone-700">
                 <Button size="sm" onClick={() => notify("예시 설정을 저장했습니다.", "success")}>성공 알림</Button>
                 <Button size="sm" onClick={() => notify("예시 작업을 처리하지 못했습니다. 다시 시도해 주세요.", "error")}>오류 알림</Button>
                 <Button size="sm" onClick={() => notify("이것은 경고 알림의 예시입니다.", "warning")}>경고 알림</Button>
                 <Button size="sm" onClick={() => notify("이 화면의 모든 값은 미리보기용입니다.", "info")}>안내 알림</Button>
+                <Button size="sm" onClick={() => notify("백업을 내려받지 못했습니다. 인터넷 연결을 확인한 뒤 다시 시도해 주세요. 현재 브라우저에 저장된 학습 기록은 그대로 유지됩니다.", "error")}>여러 줄 알림</Button>
+              </div>
+              <div className="app-focus-page flex items-center gap-3 border-t border-stone-200 pt-4 dark:border-stone-700">
+                <OmrShortcutButton expanded={false} onClick={() => notify("OMR 빠른 이동 버튼을 눌렀습니다.", "info")} />
+                <p className="text-xs leading-5 text-stone-500">모바일 풀이에서는 문제 박스의 ? 왼쪽에 표시합니다. 하단에는 이전과 다음 버튼만 둡니다.</p>
               </div>
             </div>
           </DemoSection>
@@ -443,7 +453,17 @@ export function DesignSystemPage() {
           onConfirm={() => { setSessionVisible(false); setDialog(null); notify("예시 세션을 삭제했습니다."); }}
         />
       ) : null}
-      <Toast key={toast?.sequence} message={toast?.message ?? null} tone={toast?.tone} onDismiss={() => setToast(null)} />
+      {dialog === "backup" ? (
+        <Dialog labelledBy={titleId} onClose={() => setDialog(null)} surfaceClassName="max-h-[min(88dvh,calc(100dvh-2rem))] max-w-xl overflow-y-auto rounded-2xl border p-5 sm:p-6">
+          <div className="flex items-start justify-between gap-4">
+            <div><PremiumBadge /><h2 id={titleId} className="mt-3 text-lg font-bold">클라우드 모달 예시</h2></div>
+            <IconCloseButton onClick={() => setDialog(null)} />
+          </div>
+          <p className="mt-5 text-sm leading-6">실제 백업 창과 같은 공통 모달입니다. 화면 전체의 배경 처리와 스크롤 잠금, 키보드 이동을 확인할 수 있습니다. 백업 API나 학습 데이터에는 접근하지 않습니다.</p>
+          <div className="mt-5 flex justify-end"><Button onClick={() => setDialog(null)}>닫기</Button></div>
+        </Dialog>
+      ) : null}
+      <Toast key={toast?.sequence} message={toast?.message ?? null} tone={toast?.tone} durationMs={toastPersistent ? 0 : undefined} onDismiss={() => setToast(null)} />
     </div>
   );
 }

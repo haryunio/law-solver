@@ -15,6 +15,7 @@ import { useOfflineSession } from "../../hooks/useOfflineSession";
 import { formatElapsedTime } from "../../lib/time";
 import { useTestStore } from "../../store/useTestStore";
 import { AnswerValue, TestSession } from "../../types/test";
+import { OmrShortcutButton } from "./OmrShortcutButton";
 
 interface CbtSolveScreenProps {
   sessionId: string;
@@ -295,16 +296,7 @@ export function CbtSolveScreen({
               ) : null}
             </div>
             <div className="flex shrink-0 items-center gap-2">
-              <button
-                type="button"
-                onClick={() => setIsOmrOpen(true)}
-                aria-label="OMR 빠른 이동 열기"
-                aria-expanded={isOmrOpen}
-                title="OMR 빠른 이동"
-                className="flex h-8 w-8 items-center justify-center rounded-full border border-stone-300 bg-white text-[9px] font-bold leading-none text-stone-500 hover:border-red-500 hover:text-red-500 dark:border-stone-700 dark:bg-stone-800 dark:text-stone-400 dark:hover:border-red-500 dark:hover:text-red-500 md:hidden"
-              >
-                OMR
-              </button>
+              <OmrShortcutButton onClick={() => setIsOmrOpen(true)} expanded={isOmrOpen} className="md:hidden" />
               <button
                 onClick={() => {
                   if (showAnswer) {
