@@ -16,6 +16,7 @@ import { MiniAppHeaderView } from "../components/ui/MiniAppHeader";
 import { LandingHeaderView } from "../components/ui/LandingHeader";
 import { ThemeToggleButton } from "../components/ui/ThemeToggleButton";
 import { OmrShortcutButton } from "../components/cbt/OmrShortcutButton";
+import { CbtMotionDemo } from "../components/cbt/CbtMotionDemo";
 import { Dialog } from "../components/ui/Dialog";
 import { IconCloseButton } from "../components/ui/IconCloseButton";
 import { PremiumBadge } from "../components/ui/PremiumBadge";
@@ -388,7 +389,7 @@ export function DesignSystemPage() {
                 <Button variant="primary" pending pendingLabel="문제를 불러오는 중">문제 불러오기</Button>
                 <p className="text-xs leading-5 text-stone-500">이 로딩 표시는 예시입니다. 실제 요청은 실행하지 않습니다.</p>
                 <div className="app-focus-page app-subtle-surface app-radius-inset w-full rounded-xl border p-3">
-                  <p className="mb-3 text-xs font-medium">풀이 화면에서는 움직임 없이 상태만 표시합니다.</p>
+                  <p className="mb-3 text-xs font-medium">풀이 화면의 로딩 표시는 움직임 없이 상태만 표시합니다.</p>
                   <Button variant="primary" pending pendingLabel="답안 저장 중">답안 저장</Button>
                 </div>
               </div>
@@ -396,6 +397,7 @@ export function DesignSystemPage() {
           </DemoSection>
 
           <DemoSection id="motion" title="모션" description="카드는 20ms 간격으로 등장하며 대기 시간은 최대 100ms입니다. GNB와 푸터는 움직이지 않고, 기기에서 동작 줄이기를 켜면 효과가 생략됩니다.">
+            <CbtMotionDemo />
             <div className="space-y-3">
               <div role="tablist" aria-label="탭 모션 예시" className="flex gap-2">
                 {["첫 번째", "두 번째", "세 번째"].map((label, index) => <button key={label} id={`motion-tab-${index}`} role="tab" aria-selected={motionTab === index} aria-controls="motion-tab-panel" onClick={() => setMotionTab(index)} className={`${motionTab === index ? "app-button-primary" : "app-button-secondary"} rounded-xl px-4 py-2 text-sm`}>{label}</button>)}

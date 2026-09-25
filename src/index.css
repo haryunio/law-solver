@@ -796,7 +796,7 @@ body {
   color: #f5f5f4 !important;
 }
 
-/* The active solve screen only uses very short color feedback: no motion transitions. */
+/* Solve controls stay still; dedicated question and OMR wrappers own brief motion. */
 .app-focus-page button,
 .app-focus-page a {
   animation: none !important;
