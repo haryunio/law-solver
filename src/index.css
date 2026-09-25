@@ -892,7 +892,7 @@ body {
 .app-study-control { border-radius: var(--app-radius-control); }
 .app-study-divider { border-color: var(--study-border-muted, var(--app-border-neutral)); }
 .app-study-omr {
-  border-radius: var(--app-radius-inset);
+  border-radius: var(--app-radius-tag);
   border-color: var(--study-border, var(--app-border-neutral));
 }
 .app-study-omr-heading {

@@ -82,7 +82,7 @@
 | `app-study-panel`, `app-study-inset` | 16px 문제/OMR 패널과 12px 보기/보조 박스 |
 | `app-study-option`, `app-study-option-neutral` | 12px 선지 곡률과 미선택 선지의 중립 표면. 정오/선택 색상은 호출자가 지정 |
 | `app-study-control`, `app-study-tag` | 12px 입력/독립 버튼과 8px 학습 태그 |
-| `app-study-omr`, `app-study-omr-heading`, `app-study-omr-row` | 공통 OMR의 외곽과 머리글, 행 경계 |
+| `app-study-omr`, `app-study-omr-heading`, `app-study-omr-row` | 공통 OMR 내부 표의 8px 곡률과 머리글, 행 경계. 표 바깥 패널은 16px 유지 |
 | `app-study-answer-panel`, `app-study-divider`, `app-study-navigation-secondary`, `app-study-sheet` | 해설 영역 곡률, 구분선, 하단 보조 이동 버튼과 모바일 시트 표면 |
 
 기존 화면과의 호환을 위해 `src/index.css`에 `.app-page .bg-white` 등 Tailwind 표면을 토큰으로 맞추는 규칙이 남아 있습니다. 새 화면에서 이 암묵적 보정에 의존하지 말고 표의 클래스 중 용도가 맞는 것을 직접 지정하세요. 이 호환 규칙을 제거할 때는 영향을 받는 기존 화면을 먼저 명시적 클래스로 옮긴 후 라이트와 다크 화면을 확인해야 합니다.
