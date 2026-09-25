@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { useSettingsStore } from "../../store/useSettingsStore";
 import { BrandMark } from "./BrandMark";
@@ -10,11 +11,23 @@ interface LandingHeaderProps {
 export function LandingHeader({ activePage = "home", onOpenCsvGuide }: LandingHeaderProps) {
   const { darkMode, toggleDarkMode } = useSettingsStore();
   const sectionPrefix = activePage === "home" ? "" : "/";
+  const [floating, setFloating] = useState(false);
+
+  useEffect(() => {
+    // Separate thresholds avoid flickering when scrolling near the boundary.
+    const update = () => setFloating((current) => current ? window.scrollY > 16 : window.scrollY > 48);
+    update();
+    window.addEventListener("scroll", update, { passive: true });
+    return () => window.removeEventListener("scroll", update);
+  }, []);
 
   return (
-    <header className="landing-nav-wrap">
-      <nav className="landing-container flex h-[72px] items-center justify-between" aria-label="주요 메뉴">
-        <Link to="/" className="group flex items-center gap-2.5" aria-label="Law Solver 홈">
+    <>
+    <div className="landing-nav-placeholder" aria-hidden="true" />
+    <header className="landing-nav-wrap" data-floating={floating}>
+      <div className="landing-nav-surface">
+      <nav className="landing-container landing-nav-inner flex items-center justify-between gap-3" aria-label="주요 메뉴">
+        <Link to="/" className="landing-nav-brand group flex shrink-0 items-center gap-2.5" aria-label="Law Solver 홈">
           <BrandMark className="landing-logo-mark" />
           <span className="text-[17px] font-semibold tracking-[-0.015em]">Law Solver</span>
         </Link>
@@ -36,7 +49,7 @@ export function LandingHeader({ activePage = "home", onOpenCsvGuide }: LandingHe
           )}
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex shrink-0 items-center gap-2">
           <button
             type="button"
             onClick={toggleDarkMode}
@@ -50,6 +63,8 @@ export function LandingHeader({ activePage = "home", onOpenCsvGuide }: LandingHe
           </Link>
         </div>
       </nav>
+      </div>
     </header>
+    </>
   );
 }

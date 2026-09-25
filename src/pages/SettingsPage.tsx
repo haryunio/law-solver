@@ -5,6 +5,7 @@ import { CloudBackupSection } from "../components/premium/CloudBackupSection";
 import { ConfirmDialog } from "../components/ui/ConfirmDialog";
 import { DashboardHeaderTitle } from "../components/ui/DashboardHeaderTitle";
 import { ReturnLinkLabel } from "../components/ui/ReturnLinkLabel";
+import { TabContentMotion } from "../components/ui/TabContentMotion";
 import { ThemeSelect } from "../components/ui/ThemeSelect";
 import { FontFamily, useSettingsStore } from "../store/useSettingsStore";
 import { useTestStore } from "../store/useTestStore";
@@ -29,6 +30,7 @@ type DialogState = {
 
 const fontOptions: Array<{ id: FontFamily; label: string; className: string }> = [
   { id: "pretendard", label: "기본 (Pretendard)", className: "font-pretendard" },
+  { id: "noto-sans-kr", label: "Noto Sans KR", className: "font-noto-sans-kr" },
   { id: "nanum-gothic", label: "나눔고딕", className: "font-nanum-gothic" },
   { id: "nanum-myeongjo", label: "나눔명조", className: "font-nanum-myeongjo" },
 ];
@@ -164,7 +166,7 @@ export function SettingsPage() {
           </Link>
         </DashboardHeaderTitle>
 
-        <div className="app-card rounded-2xl border p-2">
+        <div className="app-content-enter app-card rounded-2xl border p-2">
           <div className="grid grid-cols-2 gap-2" role="tablist" aria-label="환경설정 분류">
             {[
               ["appearance", "화면 설정"],
@@ -189,9 +191,9 @@ export function SettingsPage() {
           </div>
         </div>
 
-        <div className="mt-4">
+        <TabContentMotion activeIndex={activeTab === "appearance" ? 0 : 1} className="mt-4">
           {activeTab === "appearance" ? (
-            <section role="tabpanel" className="grid gap-4 lg:grid-cols-2">
+            <section role="tabpanel" className="app-content-stagger grid gap-4 lg:grid-cols-2">
               <article className="app-card rounded-2xl border p-5 sm:p-6">
                 <p className="text-xs font-bold tracking-[0.14em] text-red-600 dark:text-red-400">THEME</p>
                 <h2 className="mt-2 text-xl font-bold text-stone-950 dark:text-stone-100">테마</h2>
@@ -277,7 +279,7 @@ export function SettingsPage() {
               </article>
             </section>
           ) : (
-            <section role="tabpanel" className="space-y-4">
+            <section role="tabpanel" className="app-content-stagger space-y-4">
               <article className="app-card rounded-2xl border p-5 sm:p-6">
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                   <div>
@@ -339,7 +341,7 @@ export function SettingsPage() {
               <CloudBackupSection />
             </section>
           )}
-        </div>
+        </TabContentMotion>
 
         <AppFooter />
       </div>

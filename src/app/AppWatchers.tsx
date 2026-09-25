@@ -15,7 +15,7 @@ export function ThemeWatcher() {
   }, [darkMode]);
 
   useEffect(() => {
-    const fonts = ["font-pretendard", "font-nanum-gothic", "font-nanum-myeongjo"];
+    const fonts = ["font-pretendard", "font-noto-sans-kr", "font-nanum-gothic", "font-nanum-myeongjo"];
     document.documentElement.classList.remove(...fonts);
     document.documentElement.classList.add(`font-${fontFamily}`);
   }, [fontFamily]);

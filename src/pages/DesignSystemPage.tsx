@@ -18,6 +18,7 @@ import { PremiumBadge } from "../components/ui/PremiumBadge";
 import { ProfileAvatar } from "../components/ui/ProfileAvatar";
 import { ReturnLinkLabel } from "../components/ui/ReturnLinkLabel";
 import { ThemeSelect } from "../components/ui/ThemeSelect";
+import { TabContentMotion } from "../components/ui/TabContentMotion";
 import { TimestampTag } from "../components/ui/TimestampTag";
 import { Toast, type ToastTone } from "../components/ui/Toast";
 import {
@@ -68,6 +69,7 @@ const motionOptions = [
   { value: "problems", label: "문제: 280ms / 8px" },
   { value: "sessions", label: "세션: 240ms / 6px" },
   { value: "results", label: "결과: 280ms / 8px" },
+  { value: "settings", label: "설정과 계정: 240ms / 6px" },
 ];
 
 function DemoSection({ id, title, description, children }: {
@@ -127,6 +129,7 @@ export function DesignSystemPage() {
   const [toast, setToast] = useState<{ tone: ToastTone; message: string; sequence: number } | null>(null);
   const [motion, setMotion] = useState("subjects");
   const [motionSequence, setMotionSequence] = useState(0);
+  const [motionTab, setMotionTab] = useState(0);
   const titleId = useId();
   const formTitleId = useId();
   const typeId = useId();
@@ -163,6 +166,15 @@ export function DesignSystemPage() {
               <Button variant="primary" onClick={() => notify("새 문제 등록 버튼을 눌렀습니다.")}>새 문제 등록</Button>
               <Button onClick={() => notify("과목 목록 버튼을 눌렀습니다.", "info")}>과목 목록</Button>
             </DashboardHeaderTitle>
+            <p className="text-sm text-stone-500">랜딩은 스크롤하면 아래와 같은 플로팅 표면으로 전환됩니다.</p>
+            <div className="landing-nav-wrap" data-floating="true" style={{ position: "relative", zIndex: "auto", paddingTop: 0 }}>
+              <div className="landing-nav-surface">
+                <div className="landing-container landing-nav-inner flex items-center justify-between gap-3">
+                  <span className="landing-nav-brand flex items-center gap-2.5"><BrandMark className="landing-logo-mark" /><span className="text-[17px] font-semibold">Law Solver</span></span>
+                  <button className="landing-nav-cta" onClick={() => notify("시작하기 버튼을 눌렀습니다.")}>시작하기 →</button>
+                </div>
+              </div>
+            </div>
           </DemoSection>
 
           <DemoSection id="tokens" title="색상과 표면" description="페이지 배경, 콘텐츠 표면, 정보 박스를 구분합니다. 아래 색상은 실제 CSS 토큰을 사용합니다.">
@@ -194,6 +206,7 @@ export function DesignSystemPage() {
           <DemoSection id="type" title="글자와 곡률" description="제목은 짧고 또렷하게, 본문은 편하게 읽히도록 구성합니다. 모서리 크기는 요소의 역할에 따라 정합니다.">
             <div className="app-card app-radius-card space-y-4 rounded-2xl border p-4 sm:p-5">
               <div><p className="text-xs text-stone-500">화면 제목</p><p className="mt-1 text-xl font-semibold tracking-tight">오늘의 공부를 이어가세요</p></div>
+              <div><p className="text-xs text-stone-500">Noto Sans KR</p><p className="font-noto-sans-kr mt-1 text-base leading-7">등록한 문제를 풀고, 해설을 읽으며 복습하세요. 0123456789</p></div>
               <div><p className="text-xs text-stone-500">카드 제목</p><p className="mt-1 text-base font-semibold">민법 사례 연습</p></div>
               <div><p className="text-xs text-stone-500">본문</p><p className="mt-1 max-w-2xl break-keep text-sm leading-6 text-stone-700 dark:text-stone-300">등록한 문제에서 새로운 풀이를 시작할 수 있습니다. 이전 답안과 오답 노트는 세션마다 따로 보관됩니다.</p></div>
               <div><p className="text-xs text-stone-500">보조 설명과 숫자</p><p className="mt-1 text-xs leading-5 text-stone-500">마지막 풀이 <span className="tabular-nums">2026.09.20 14:25</span></p></div>
@@ -367,6 +380,14 @@ export function DesignSystemPage() {
           </DemoSection>
 
           <DemoSection id="motion" title="모션" description="카드는 20ms 간격으로 등장하며 대기 시간은 최대 100ms입니다. GNB와 푸터는 움직이지 않고, 기기에서 동작 줄이기를 켜면 효과가 생략됩니다.">
+            <div className="space-y-3">
+              <div role="tablist" aria-label="탭 모션 예시" className="flex gap-2">
+                {["첫 번째", "두 번째", "세 번째"].map((label, index) => <button key={label} id={`motion-tab-${index}`} role="tab" aria-selected={motionTab === index} aria-controls="motion-tab-panel" onClick={() => setMotionTab(index)} className={`${motionTab === index ? "app-button-primary" : "app-button-secondary"} rounded-xl px-4 py-2 text-sm`}>{label}</button>)}
+              </div>
+              <TabContentMotion activeIndex={motionTab}>
+                <div id="motion-tab-panel" role="tabpanel" aria-labelledby={`motion-tab-${motionTab}`} className="app-neutral-box rounded-xl border p-5 text-sm">{motionTab + 1}번째 탭입니다. 이동 방향에 따라 8px를 160ms 동안 움직입니다.</div>
+              </TabContentMotion>
+            </div>
             <div className="app-card app-radius-card space-y-5 rounded-2xl border p-4 sm:p-5">
               <div className="flex flex-col gap-3 sm:flex-row sm:items-center"><div className="min-w-0 flex-1 sm:max-w-xs"><ThemeSelect value={motion} options={motionOptions} ariaLabel="진입 모션 선택" onChange={(value) => { setMotion(value); setMotionSequence((value) => value + 1); }} /></div><Button onClick={() => setMotionSequence((value) => value + 1)}>다시 재생</Button></div>
               <div className={`app-route-enter app-route-enter-${motion}`}>

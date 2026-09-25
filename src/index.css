@@ -701,6 +701,7 @@ body {
 .app-route-enter-problems { --app-entry-duration: 280ms; --app-entry-distance: 8px; }
 .app-route-enter-sessions { --app-entry-duration: 240ms; --app-entry-distance: 6px; }
 .app-route-enter-results { --app-entry-duration: 280ms; --app-entry-distance: 8px; }
+.app-route-enter-settings { --app-entry-duration: 240ms; --app-entry-distance: 6px; }
 
 .app-route-enter > .app-page:not(.app-focus-page) .app-content-enter,
 .app-route-enter > .app-page:not(.app-focus-page) .app-content-stagger > * {
@@ -714,6 +715,12 @@ body {
 .app-content-stagger > :nth-child(n+4) { --app-entry-delay: 60ms; }
 .app-content-stagger > :nth-child(n+5) { --app-entry-delay: 80ms; }
 .app-content-stagger > :nth-child(n+6) { --app-entry-delay: 100ms; }
+
+/* Once tabs change, only the horizontal panel motion runs. */
+.app-route-enter > .app-page:not(.app-focus-page) [data-tab-switched="true"] .app-content-enter,
+.app-route-enter > .app-page:not(.app-focus-page) [data-tab-switched="true"] .app-content-stagger > * {
+  animation: none;
+}
 
 @keyframes app-route-enter {
   from { opacity: 0; transform: translateY(var(--app-entry-distance)); }
@@ -882,19 +889,48 @@ html {
   margin-inline: auto;
 }
 
+.landing-nav-placeholder { height: calc(72px + env(safe-area-inset-top, 0px)); }
+
 .landing-nav-wrap {
-  position: sticky;
+  position: fixed;
   top: 0;
+  inset-inline: 0;
   z-index: 50;
-  border-bottom: 1px solid rgba(231, 229, 228, 0.75);
-  background: rgba(253, 251, 247, 0.78);
-  backdrop-filter: blur(18px);
+  padding-top: env(safe-area-inset-top, 0px);
+  pointer-events: none;
+  transition: padding-top 200ms ease;
 }
 
-.dark .landing-nav-wrap {
-  border-color: rgba(68, 64, 60, 0.6);
+.landing-nav-surface {
+  width: 100%;
+  height: 72px;
+  margin-inline: auto;
+  border: 1px solid transparent;
+  border-bottom-color: rgba(231, 229, 228, 0.75);
+  background: rgba(253, 251, 247, 0.78);
+  backdrop-filter: blur(18px);
+  pointer-events: auto;
+  transition: width 200ms ease, height 200ms ease, border-radius 200ms ease, background-color 200ms ease, border-color 200ms ease, box-shadow 200ms ease;
+}
+
+.landing-nav-inner { height: 100%; }
+
+.dark .landing-nav-surface {
+  border-bottom-color: rgba(68, 64, 60, 0.6);
   background: rgba(23, 20, 18, 0.78);
 }
+
+.landing-nav-wrap[data-floating="true"] { padding-top: calc(12px + env(safe-area-inset-top, 0px)); }
+.landing-nav-wrap[data-floating="true"] .landing-nav-surface {
+  width: min(1180px, calc(100% - 2rem));
+  height: 64px;
+  border-radius: var(--app-radius-card);
+  border-color: var(--app-border);
+  background: var(--app-surface);
+  box-shadow: var(--app-shadow);
+}
+
+.landing-page main [id] { scroll-margin-top: calc(100px + env(safe-area-inset-top, 0px)); }
 
 .landing-logo-mark {
   width: 34px;
@@ -1102,6 +1138,14 @@ html {
 @keyframes landing-fade-up { from { opacity: 0; transform: translateY(22px); } to { opacity: 1; transform: translateY(0); } }
 
 @media (max-width: 767px) {
+  .landing-nav-wrap[data-floating="true"] { padding-top: calc(8px + env(safe-area-inset-top, 0px)); }
+  .landing-nav-wrap[data-floating="true"] .landing-nav-surface { width: calc(100% - 1.25rem); }
+  .landing-nav-surface .landing-nav-inner { width: calc(100% - 1.5rem); gap: 8px; }
+  .landing-nav-brand { gap: 6px; }
+  .landing-nav-brand > span { font-size: 15px; white-space: nowrap; }
+  .landing-nav-brand .landing-logo-mark { width: 28px; height: 28px; border-radius: 8px; }
+  .landing-nav-inner .landing-theme-button { width: 34px; height: 34px; }
+  .landing-nav-inner .landing-nav-cta { padding: 9px 10px; font-size: 12px; white-space: nowrap; }
   .landing-container { width: min(100% - 1.25rem, 1180px); }
   .landing-hero > .landing-container { width: min(calc(100% - 2.5rem), 1180px); }
   .landing-hero { min-height: auto; }
