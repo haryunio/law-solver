@@ -323,7 +323,7 @@ export function DesignSystemPage() {
             </div>
           </DemoSection>
 
-          <DemoSection id="problems" title="문제 카드" description="제목 아래 한 줄에 유형, 문항 수, 세션 수를 담습니다. 등록 시각과 목록 이동은 하단에 배치합니다.">
+          <DemoSection id="problems" title="문제 카드" description="제목 아래에 유형, 문항 수, 세션 수를 같은 너비의 세 박스로 표시합니다. 등록 시각과 목록 이동은 하단에 배치합니다.">
             <div className="grid gap-3 lg:grid-cols-2">
               {[false, true].map((premium) => (
                 <ProblemCardPreview
