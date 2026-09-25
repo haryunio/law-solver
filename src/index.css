@@ -856,6 +856,61 @@ body {
 
 .app-focus-page .app-control:focus { transition: border-color 90ms ease, box-shadow 90ms ease !important; }
 
+/* Study surfaces share the design tokens, while each screen still owns layout. */
+.app-study-page {
+  --study-border: #e5e1dc;
+  --study-border-muted: #e9e6e2;
+  --study-surface: var(--app-surface-problem);
+  --study-surface-inset: #f8f8f9;
+  --study-shadow: 0 5px 18px rgba(58, 46, 36, 0.055);
+}
+.dark .app-study-page {
+  --study-border: #47413c;
+  --study-border-muted: #3c3733;
+  --study-surface-inset: #242222;
+  --study-shadow: 0 5px 18px rgba(0, 0, 0, 0.16);
+}
+.app-study-panel {
+  border-radius: var(--app-radius-card);
+  border-color: var(--study-border, var(--app-border)) !important;
+  background: var(--study-surface, var(--app-surface-problem)) !important;
+  box-shadow: var(--study-shadow, var(--app-shadow));
+  backdrop-filter: none;
+}
+.app-study-inset {
+  border-radius: var(--app-radius-inset);
+  border-color: var(--study-border-muted, var(--app-border-neutral));
+  background: var(--study-surface-inset, var(--app-surface-neutral));
+}
+.app-study-option,
+.app-study-answer-panel { border-radius: var(--app-radius-inset); }
+.app-study-option-neutral {
+  border-color: var(--study-border, var(--app-border-neutral));
+  background: var(--study-surface, var(--app-surface-problem));
+}
+.app-study-tag { border-radius: var(--app-radius-tag); }
+.app-study-control { border-radius: var(--app-radius-control); }
+.app-study-divider { border-color: var(--study-border-muted, var(--app-border-neutral)); }
+.app-study-omr {
+  border-radius: var(--app-radius-tag);
+  border-color: var(--study-border, var(--app-border-neutral));
+}
+.app-study-omr-heading {
+  background: var(--study-surface-inset, var(--app-surface-neutral));
+  border-color: var(--study-border-muted, var(--app-border-neutral));
+}
+.app-study-omr-row { border-color: var(--study-border-muted, var(--app-border-neutral)); }
+.app-study-navigation-secondary {
+  border-color: var(--study-border-muted, var(--app-border-neutral));
+  background: var(--study-surface-inset, var(--app-surface-neutral));
+}
+.app-study-navigation-secondary:hover:not(:disabled) { background: var(--app-surface-muted); }
+.app-study-page :is(.app-study-option, .app-study-navigation-secondary, .app-study-control):focus-visible {
+  outline: 2px solid var(--app-focus-color);
+  outline-offset: -2px;
+}
+.app-study-sheet { border-radius: var(--app-radius-card) var(--app-radius-card) 0 0; }
+
 /* Active solving owns one visible viewport at every screen width. */
 html.cbt-viewport,
 html.cbt-viewport body {

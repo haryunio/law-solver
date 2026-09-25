@@ -10,6 +10,8 @@
 | `src/components/ui/` | 도메인과 무관하게 재사용하는 버튼, 대화상자, 헤더, 푸터, 입력과 상태 UI |
 | `src/components/landing/` | 랜딩 기능 카드, CSV 가이드, 장식용 풀이 미리보기 |
 | `src/components/cbt/CbtSolveScreen.tsx` | 오프라인과 온라인이 공유하는 실제 문제 풀이 화면 |
+| `src/components/study/` | 풀이와 복습의 보기, OMR 표시와 디자인 시스템 예시. 학습 상태 저장이나 화면 이동은 호출자가 담당 |
+| `src/components/cbt/SolveChoiceList.tsx`, `src/components/review/ChoiceReviewList.tsx` | 풀이용 선지 선택과 복습용 선지 표시. 채점 유틸과 같은 의미 색상 사용 |
 | `src/components/premium/PremiumLoadingStates.tsx` | 온라인 화면의 실제 배치를 따르는 로딩 스켈레톤 |
 | `src/pages/` | 화면의 폭, 그리드, 카드 배치, 여백과 반응형 구성 |
 | `src/pages/DesignSystemPage.tsx` | `/debug/designsystem`에서 실제 공통 컴포넌트와 상호작용을 확인하는 페이지 |
@@ -55,7 +57,9 @@
 | `--app-radius-tag` | 8px | 유형, 상태, 날짜 태그, 메뉴 항목 |
 | `--app-radius-circle` | 9999px | 원형 메뉴와 아바타의 기준. 기존 원형 유틸 유지 |
 
-`src/app/standardUi.ts`가 지정한 일반 탐색 경로에만 `StandardUiScope`가 적용됩니다. 랜딩, 홈, 과목/문제/세션 목록, 계정, 설정, 미니 앱 목록, 디자인 시스템 페이지가 대상입니다. 실제 풀이, 결과, 모든 복기와 개별 미니 앱에는 적용하지 않습니다. 기존 Tailwind 곡률은 제외 화면의 호환값으로 남기고 일반 화면에서만 공통 CSS가 덮어씁니다. `Dialog`와 `Toast`는 React context로 포털에 같은 범위를 전달합니다.
+`src/app/standardUi.ts`가 지정한 일반 탐색 경로에만 `StandardUiScope`가 적용됩니다. 랜딩, 홈, 과목/문제/세션 목록, 계정, 설정, 미니 앱 목록, 디자인 시스템 페이지가 대상입니다. 실제 풀이, 결과, 모든 복기와 개별 미니 앱에는 이 자동 보정 범위를 적용하지 않습니다. `Dialog`와 `Toast`는 React context로 포털에 같은 범위를 전달합니다.
+
+풀이와 오답/전체/책갈피 복습은 별도의 `app-study-page` 범위에서 같은 16px 카드, 12px 입력과 내부 박스, 8px 태그 토큰을 명시적으로 사용합니다. `app-study-panel`, `app-study-option`, `app-study-inset`, `app-study-control`, `app-study-tag`를 필요한 요소에 붙이는 방식이며, 일반 화면의 곡률 보정을 학습 화면 전체에 확대하지 않습니다. 문제 표면은 흰색에 가깝게 유지하고 보조 영역만 옅은 중립색, 얇은 테두리와 낮은 그림자로 구분합니다. 정답과 오답의 의미 색상은 그대로 유지합니다. 모바일 활성 풀이의 전체 화면 문제 박스는 기존처럼 바깥 곡률과 테두리가 없습니다.
 
 `app-card`, `app-modal-surface`, `app-neutral-box`, `app-subtle-surface`, `app-button-*`, `app-control`, `app-select-*`는 역할에 맞는 곡률을 자동 적용합니다. 개별 표면에는 `app-radius-card`, `app-radius-control`, `app-radius-inset`, `app-radius-tag`를 사용합니다. 하단 CTA는 `app-result-link` 또는 `app-radius-card-bottom`으로 아래쪽 모서리만 16px을 적용합니다. 원형 메뉴와 아바타, 스위치, 작은 상태점은 원형을 유지합니다. 책은 `app-radius-book`으로 왼쪽 6px과 오른쪽 16px을 사용하고, 라벨의 오른쪽 아래만 `app-radius-book-label`로 12px을 적용해 책등 형태를 유지합니다.
 
@@ -74,6 +78,12 @@
 | `app-modal-backdrop`, `app-modal-surface` | 대화상자와 모바일 bottom sheet |
 | `app-progress-gradient` | 작은 진행률 영역 |
 | `app-focus-page` | 학습 화면의 단색 CTA와 정적인 상호작용 범위 |
+| `app-study-page` | 풀이와 복습의 테두리, 보조 표면과 그림자 토큰 범위. 배치나 높이는 지정하지 않음 |
+| `app-study-panel`, `app-study-inset` | 16px 문제/OMR 패널과 12px 보기/보조 박스 |
+| `app-study-option`, `app-study-option-neutral` | 12px 선지 곡률과 미선택 선지의 중립 표면. 정오/선택 색상은 호출자가 지정 |
+| `app-study-control`, `app-study-tag` | 12px 입력/독립 버튼과 8px 학습 태그 |
+| `app-study-omr`, `app-study-omr-heading`, `app-study-omr-row` | 공통 OMR 내부 표의 8px 곡률과 머리글, 행 경계. 표 바깥 패널은 16px 유지 |
+| `app-study-answer-panel`, `app-study-divider`, `app-study-navigation-secondary`, `app-study-sheet` | 해설 영역 곡률, 구분선, 하단 보조 이동 버튼과 모바일 시트 표면 |
 
 기존 화면과의 호환을 위해 `src/index.css`에 `.app-page .bg-white` 등 Tailwind 표면을 토큰으로 맞추는 규칙이 남아 있습니다. 새 화면에서 이 암묵적 보정에 의존하지 말고 표의 클래스 중 용도가 맞는 것을 직접 지정하세요. 이 호환 규칙을 제거할 때는 영향을 받는 기존 화면을 먼저 명시적 클래스로 옮긴 후 라이트와 다크 화면을 확인해야 합니다.
 
@@ -167,9 +177,15 @@ const titleId = useId();
 | `AppFooter` | 앱 내부 화면 푸터 |
 | `ThemeSelect` | 앱의 모든 드롭다운. 네이티브 select로 교체하지 않음 |
 | `ThemeToggleButton` | 랜딩, `/home`, 미니 앱의 테마 전환 아이콘 버튼. 상태와 콜백을 받아 공통 접근성 이름을 표시 |
+| `StudyChoiceNumber` | 5지선다 풀이/복습의 16px 원형 테두리와 10px 일반 숫자. 16px 번호 열과 8px 간격으로 본문 공간 확보 |
 | `OmrShortcutButton` | 풀이 화면과 갤러리가 공유하는 32px 원형 OMR 버튼 |
 | `QuestionContentMotion`, `MobileOmrSheet`, `useQuestionPanelHeightMotion` | 활성 풀이의 문항 변경, 모바일 OMR 열기/닫기와 내용에 따른 문제 박스 높이 변경에만 적용하는 짧은 효과. 갤러리의 `CbtMotionDemo`도 같은 구현을 사용 |
 | `CbtSolveScreen`, `PremiumSolveSkeleton` | 활성 풀이와 온라인 로딩이 공유하는 viewport 높이 및 내부 스크롤 구조 |
+| `SolveChoiceList` | OX와 5지선다의 선택 상태, 정답 공개, OX의 다음 문제 버튼. 입력 저장과 이동은 콜백으로 위임 |
+| `QuestionPassages` | 풀이와 복습의 박스형 보기 순서, 표기와 안전한 HTML 렌더링 |
+| `StudyOmrTable` | 풀이의 번호/내 답/책갈피 3열과 복습의 번호/내 답/정답/노트 4열. 화면별 이동과 스크롤은 호출자가 소유 |
+| `ChoiceReviewList` | 내 답과 정답을 구분하는 복습 선지. 좁은 화면에서는 상태 태그를 선지 본문 아래에 표시 |
+| `ReviewQuestionDetails`, `ReviewNavigation`, `ReviewOmrSheet` | 복습 본문과 해설, 하단 이동 버튼, 모바일 OMR 표면. 문항 선택과 노트 저장은 각 페이지에서 처리 |
 | `ProfileAvatar` | 이름 이니셜과 이름 해시 기반의 안정적인 팔레트 |
 | `PremiumBadge` | Premium의 공통 금색 체크 표시 |
 | `IconCloseButton` | 접근 가능한 이름과 동일한 모양의 닫기 버튼 |
@@ -212,6 +228,14 @@ const titleId = useId();
 결과 화면은 지표, 문제 확인, 다시 풀기의 세 카드를 2:1:1 비율로 사용합니다. 결과 통계는 작은 표로, 상세 분석은 아래 전체 폭으로 표시합니다. 모바일에서도 문제 확인과 다시 풀기 버튼의 크기를 축소하지 않습니다.
 
 풀이와 복기 화면은 장식보다 문제의 가독성을 우선합니다. 활성 풀이에서는 그라디언트, smooth scroll과 일반적인 위치/크기 효과를 사용하지 않으며 상태 색상은 90ms로 전환합니다. 예외는 아래의 문항 변경, 내용에 따른 문제 박스 높이와 모바일 OMR 열기/닫기뿐입니다. 페이지 진입과 복기 화면에는 이 예외를 확대하지 않습니다.
+
+풀이와 복습에서 공통으로 보이는 보기와 OMR은 `QuestionPassages`, `StudyOmrTable`로 재사용합니다. `SolveChoiceList`는 풀이의 OX와 5지선다 표시만 담당합니다. 오프라인/온라인 adapter, 답안 저장 시점, 제출과 중단, 오답 노트 저장, 책갈피 필터와 복습 화면의 controller는 기존 화면에 남깁니다. 비슷한 마크업을 줄이기 위해 풀이와 복습의 서로 다른 상태 전이를 하나로 합치지 않습니다. 라우트, 정보 순서, 선택지 순서, 키보드 단축키와 CTA 위치도 유지합니다.
+
+온라인 오답 노트는 문항이나 결과 화면으로 이동하기 전에 저장 완료를 기다립니다. `PremiumSessionPage`의 저장 adapter는 실패 안내를 표시한 뒤 오류를 호출자에게 전달하고, `WrongAnswersPage`는 현재 문항과 작성 중인 노트를 유지합니다. 저장 실패를 정상 완료로 처리하거나 이동 후 노트를 지우지 않습니다.
+
+`StudyOmrTable`은 풀이에서 `32px minmax(0,1fr) 16px`의 번호, 내 답, 책갈피 세 열을 사용합니다. 복습은 `32px minmax(0,1fr) minmax(0,1fr) 16px`의 번호, 내 답, 정답, 오답 노트 네 열입니다. 머리글과 각 행은 같은 열 너비를 공유하고 머리글은 스크롤 상단에 고정됩니다. `compact` 행은 기존 데스크톱 밀도, `comfortable` 행은 모바일 밀도를 유지합니다. 현재 문항의 `aria-current="step"`, 키보드 포커스, 긴 단답형의 말줄임과 전체 답 툴팁을 제공합니다. 복습 문항 번호는 원래 풀이 순서를 전달받으며 클릭 콜백에는 필터된 목록의 인덱스를 전달합니다. `rowRef`와 최상단 `className`을 통해 화면이 스크롤과 최대 높이를 계속 관리합니다.
+
+복습의 선지는 번호, 본문, 상태 태그를 분리합니다. 640px 미만에서는 `내 답`과 `정답` 태그를 본문 아래 같은 열에 두고, 그 이상에서는 오른쪽에 둡니다. 정답을 고르면 emerald, 정답 안내는 blue, 틀린 선택과 현재 이동 상태는 red, 책갈피는 amber입니다. 색상 외에도 기존 태그와 기호를 함께 유지합니다. 복수정답과 정답 없음 판단은 `isCorrectAnswer`와 `hasNoCorrectChoice`를 사용하고 표시 컴포넌트 안에서 별도 채점 규칙을 만들지 않습니다.
 
 `QuestionContentMotion`은 오프라인과 온라인 활성 풀이에서 문항 식별자가 바뀔 때만 본문과 선택지에 120ms의 opacity 0.88→1 및 가로 이동 효과를 적용합니다. `questionIndex`가 증가하면 `translateX(4px)`→`none`, 감소하면 `translateX(-4px)`→`none`으로 표시하며 OMR에서 여러 문항을 건너뛰어도 같은 방향 규칙을 사용합니다. 최초 진입에는 재생하지 않으며 같은 문항의 답안 선택, 타이머 갱신과 정답 펼침도 재생 조건이 아닙니다. GNB, 문항 도구와 이전/다음 버튼은 애니메이션 바깥에 둡니다. wrapper의 자식 DOM과 입력은 강제로 다시 마운트하지 않고 문제 표시, 답안 저장과 내부 스크롤 초기화는 효과 완료를 기다리지 않습니다.
 
@@ -274,6 +298,8 @@ const titleId = useId();
 `/debug/designsystem`을 직접 열면 토큰과 실제 버튼, 폼, 카드, 세션 목록, 메뉴, 대화상자, 토스트와 등장 효과를 확인할 수 있습니다. 이 페이지로 가는 서비스 메뉴는 만들지 않습니다. 검색 색인과 사이트맵, GA4 페이지뷰에서도 제외하고 직접 접속용 정적 앱 셸만 생성합니다. 데모 상호작용은 페이지 메모리만 바꾸며 실제 학습 데이터, 계정, 결제와 백업을 사용하지 않습니다. 공통 UI를 변경할 때 갤러리와 이 문서를 함께 갱신하세요.
 
 랜딩 메뉴는 복사한 마크업 대신 `LandingHeaderView`를 사용해 최상단과 플로팅 형태를 전환합니다. 홈의 테마 버튼, 미니 앱 헤더, 풀이의 `OmrShortcutButton`도 실제 컴포넌트를 재사용합니다. 모달과 알림 영역에서는 클라우드 창과 같은 `Dialog` 표면, 상태별 토스트, 여러 줄 메시지를 확인합니다. 알림 유지 옵션은 갤러리 안에서만 자동 닫힘을 해제합니다.
+
+풀이와 복습 영역의 `StudyUiDemo`는 실제 `SolveChoiceList`, `QuestionPassages`, `StudyOmrTable`, `ChoiceReviewList`를 사용합니다. OX와 5지선다 전환, 답안 선택, 책갈피, 정답 표시와 OMR 이동을 한 예시 안에서 확인합니다. 복습 선지를 펼치면 현재 선택한 답이 그대로 반영됩니다. `app-study-page app-focus-page` 범위를 적용하되 실제 세션, 계정, 설정 저장소와 API는 사용하지 않으며 예시 문제와 답안은 컴포넌트 메모리에만 둡니다.
 
 모션 영역의 `CbtMotionDemo`는 실제 `QuestionContentMotion`, `MobileOmrSheet`와 `useQuestionPanelHeightMotion`을 사용합니다. 고정 높이 420px의 workspace 안에서 짧은 첫 문항, 긴 두 번째 문항, 짧은 마지막 문항으로 이동하며 박스 높이 변화와 내부 스크롤을 확인합니다. 세 개의 예시 문항을 이전/다음 및 OMR 번호로 전환하고 답안을 선택할 수 있으며 모든 상태는 메모리에만 둡니다. 시트는 예시 박스 안의 absolute 레이어로 표시해 화면 너비와 무관하게 확인할 수 있고, 학습 저장소와 API는 호출하지 않습니다.
 

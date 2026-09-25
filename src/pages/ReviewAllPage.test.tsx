@@ -32,17 +32,58 @@ const session: TestSession = {
   ],
 };
 
-function renderReview(page: "all" | "wrong" | "result", example = session) {
+function renderReview(page: "all" | "wrong" | "result", example = session, initialEntry = "/") {
   const adapter: SessionPageAdapter = {
     session: example, dashboardPath: "/dashboard",
     solvePath: (id) => `/solve/${id}`, resultPath: (id) => `/result/${id}`,
     wrongPath: (id) => `/wrong/${id}`, reviewPath: (id) => `/review/${id}`,
     createRetry: vi.fn(),
   };
-  return render(<MemoryRouter><SessionPageProvider adapter={adapter}>
+  return render(<MemoryRouter initialEntries={[initialEntry]}><SessionPageProvider adapter={adapter}>
     {page === "all" ? <ReviewAllPage /> : page === "wrong" ? <WrongAnswersPage /> : <ResultPage />}
   </SessionPageProvider></MemoryRouter>);
 }
+
+describe("bookmarked review presentation", () => {
+  it("preserves original solve numbers and only shows bookmarked questions in both OMR views", () => {
+    renderReview("all", {
+      ...session,
+      questions: [
+        { ...session.questions[0]!, no: 90, bookmark: false },
+        { ...session.questions[1]!, no: 10, bookmark: true },
+      ],
+    }, "/review/example?onlyBookmarks=true");
+    expect(screen.getByText(/원본 2번/)).toBeTruthy();
+    expect(screen.getByText("다른 답을 선택한 문제")).toBeTruthy();
+    expect(screen.queryByText("허용된 답을 선택한 문제")).toBeNull();
+    const desktop = within(screen.getByRole("complementary"));
+    expect(desktop.getAllByRole("button")).toHaveLength(1);
+    expect(desktop.getByRole("button", { name: "2 3 1,2" })).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: "OMR" }));
+    const mobile = within(screen.getByRole("region", { name: "문항 이동" }));
+    expect(mobile.getByRole("button", { name: "2 3 1,2" })).toBeTruthy();
+    fireEvent.click(mobile.getByRole("button", { name: "닫기" }));
+    expect(screen.queryByRole("region", { name: "문항 이동" })).toBeNull();
+  });
+
+  it.each(["all", "wrong"] as const)("preserves short-answer feedback, passages and detail order in %s review", (page) => {
+    renderReview(page, {
+      ...session, type: "short", total_questions: 1,
+      questions: [{
+        id: "short-answer", no: 1, question: "요건을 기재하시오", my_answer: "작성한 답", answer: "실제 답",
+        boxes: ["ㄱ. <strong>보기 하나</strong>", "ㄴ. 보기 둘"], explanation: "정답에 관한 해설", source: "출처 자료", originalRow: {},
+      }],
+    });
+    const main = screen.getByRole("main");
+    expect(within(main).getByText("보기 하나").tagName).toBe("STRONG");
+    expect(within(main).getByText("ㄱ.")).toBeTruthy();
+    expect(within(main).getByText("ㄴ.")).toBeTruthy();
+    expect(within(main).getByText("작성한 답")).toBeTruthy();
+    expect(within(main).getByText("실제 답")).toBeTruthy();
+    const detailLabels = Array.from(main.querySelectorAll("article")).map((article) => article.firstElementChild?.textContent);
+    expect(detailLabels).toEqual(["내가 고른 답", "실제 정답", "해설", "출처", ...(page === "wrong" ? ["오답 노트"] : [])]);
+  });
+});
 
 describe("explanation and source case links in review screens", () => {
   it.each(["all", "wrong"] as const)("links explanation and source citations in %s review without linking questions or choices", (page) => {
