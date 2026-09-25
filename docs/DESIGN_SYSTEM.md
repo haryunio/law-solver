@@ -158,6 +158,7 @@ const titleId = useId();
 | `BrandMark` | 브랜드 이미지. 화면마다 로고를 다시 만들지 않음 |
 | `DashboardHeaderTitle` | 과목, 문제 대시보드와 결과 화면 GNB |
 | `LandingHeader`, `LandingFooter` | 랜딩과 `/apps`의 공통 내비게이션 |
+| `MiniAppHeader`, `MiniAppHeaderView` | 개별 미니 앱의 sticky GNB와 설정을 변경하지 않는 갤러리 예시 |
 | `AppFooter` | 앱 내부 화면 푸터 |
 | `ThemeSelect` | 앱의 모든 드롭다운. 네이티브 select로 교체하지 않음 |
 | `ProfileAvatar` | 이름 이니셜과 이름 해시 기반의 안정적인 팔레트 |
@@ -261,3 +262,5 @@ npm run dev
 7. 변경한 공개 경로의 직접 접속과 새로고침
 
 공통 토큰을 바꾸면 그 토큰을 사용하는 랜딩뿐 아니라 대시보드, 문제 카드, 결과, 대화상자도 함께 봅니다. 테스트와 브라우저 확인 결과는 해당 변경의 PR에 기록합니다.
+
+개별 미니 앱은 `MiniAppHeader`로 본문 흐름에 헤더 자리를 유지합니다. 랜딩 전용 `landing-nav-*` 클래스는 직접 재사용하지 않습니다. 640px 미만은 제목과 액션 두 줄, 그 이상은 한 줄이며 앱 제목만 말줄임표로 처리합니다. 본문 앵커에는 `mini-app-anchor`를 사용합니다. 전체 화면 iframe은 자체 헤더를 유지합니다. 자세한 기준은 [미니 앱 가이드](../src/mini-apps/README.md#헤더와-화면-배치)를 따릅니다.

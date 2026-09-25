@@ -154,6 +154,7 @@ GitHub Pages용 정적 파일입니다. `404.html`은 SPA 새로고침 대응용
 - 기획 단계에는 `status: "coming-soon"`과 route 없는 manifest를 사용합니다. 출시 시 `App.tsx`에 `/apps/<app-id>`를 등록하고 manifest의 `route` 및 상태를 함께 변경하세요.
 - 새 앱 화면도 `app-page`, `app-card`, `app-topbar`, `BrandMark`, `AppFooter`, `ThemeSelect` 등 공통 디자인 시스템과 모바일·다크 모드·키보드 접근성 규칙을 유지하세요.
 - `/apps` 미니 앱 목록은 랜딩과 동일한 `LandingHeader`, `LandingFooter`, `landing-page`, `landing-container` 구조를 사용합니다. 별도 GNB를 다시 만들거나 랜딩과 다른 브랜드 내비게이션을 사용하지 마세요.
+- 개별 일반 미니 앱은 `MiniAppHeader`를 사용하고 랜딩 내부 `landing-nav-*` 클래스를 직접 조합하지 마세요. 헤더는 문서 흐름에 자리를 유지하는 sticky 방식이며, 640px 미만에서는 제목과 액션을 두 줄로 표시합니다. 상위 overflow로 sticky를 막거나 수동 본문 top 여백을 추가하지 않습니다. 앵커는 `mini-app-anchor`, 전체 화면 iframe은 자체 헤더를 사용합니다. 상세 구현과 검증 기준은 `src/mini-apps/README.md`를 따릅니다.
 - 첫 번째 미니 앱은 `src/mini-apps/lbti/`의 `LBTI: 로스쿨생 MBTI 테스트`입니다. 지표·유형은 `data/lbti-framework.json`, 28개 기본 채점 문항·1개 가점 문항·1개 보조 문항은 `data/questions.ko.json`, 제품 범위는 `docs/PRODUCT_PLAN.md`, 작성 기준은 `docs/CONTENT_GUIDE.md`를 단일 원본으로 사용합니다.
 - LBTI 소개·테스트·결과·전체 유형 화면과 채점 로직은 모두 `src/mini-apps/lbti/` 안에 둡니다. 결과 공유 URL에는 유형 코드만 사용하고 답변, 축 점수, 진행률이나 내부 ID를 넣지 마세요.
 - `src/mini-apps/legal-ethics-17/`은 제17회 법조윤리시험 가답안·해설·40문항 자동채점을 제공하는 단일 페이지 앱입니다. 문항 번호·가답안·쟁점·해설은 `data.ts`를 단일 원본으로 사용하고, 공식 정답 발표 뒤 수정할 때에는 `data.test.ts`의 정답 배열도 함께 갱신하세요. 사용자가 입력한 답안은 저장하거나 분석으로 전송하지 않습니다.

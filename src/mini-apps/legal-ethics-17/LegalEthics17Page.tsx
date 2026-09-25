@@ -1,9 +1,6 @@
 import { useMemo, useState } from "react";
-import { Link } from "react-router-dom";
-import { BrandMark } from "../../components/ui/BrandMark";
+import { MiniAppHeader } from "../../components/ui/MiniAppHeader";
 import { LandingFooter } from "../../components/ui/LandingFooter";
-import { ReturnLinkLabel } from "../../components/ui/ReturnLinkLabel";
-import { useSettingsStore } from "../../store/useSettingsStore";
 import { legalEthicsAnswers } from "./data";
 import { gradeLegalEthicsAnswers, parseLegalEthicsAnswers } from "./grading";
 
@@ -12,7 +9,6 @@ const answerGroups = Array.from({ length: 4 }, (_, index) =>
 );
 
 export function LegalEthics17Page() {
-  const { darkMode, toggleDarkMode } = useSettingsStore();
   const [answerInput, setAnswerInput] = useState("");
   const parsedAnswers = useMemo(() => parseLegalEthicsAnswers(answerInput), [answerInput]);
   const grade = useMemo(
@@ -25,31 +21,7 @@ export function LegalEthics17Page() {
 
   return (
     <div className="app-page flex min-h-screen flex-col">
-      <header className="landing-nav-wrap">
-        <nav className="landing-container flex h-[72px] items-center gap-3" aria-label="제17회 법조윤리시험 가답안 메뉴">
-          <div className="flex min-w-0 items-center gap-2.5">
-            <Link to="/" className="flex min-w-0 items-center gap-2.5" aria-label="Law Solver 홈">
-              <BrandMark className="landing-logo-mark" />
-              <span className="truncate text-[17px] font-semibold tracking-[-0.015em]">Law Solver</span>
-            </Link>
-            <span className="h-5 w-px shrink-0 bg-stone-300 dark:bg-stone-700" aria-hidden="true" />
-            <span className="truncate text-sm font-bold tracking-tight sm:text-base">법조윤리 가답안</span>
-          </div>
-          <div className="ml-auto flex shrink-0 items-center gap-1">
-            <button
-              type="button"
-              onClick={toggleDarkMode}
-              className="landing-theme-button"
-              aria-label={darkMode ? "라이트 모드로 전환" : "다크 모드로 전환"}
-            >
-              <span aria-hidden="true">{darkMode ? "☀" : "☾"}</span>
-            </button>
-            <Link to="/apps" className="app-button-secondary ml-1 rounded-lg px-3 py-2 text-xs font-bold sm:px-4 sm:text-sm">
-              <ReturnLinkLabel>나가기</ReturnLinkLabel>
-            </Link>
-          </div>
-        </nav>
-      </header>
+      <MiniAppHeader title="법조윤리 가답안" label="제17회 법조윤리시험 가답안 메뉴" />
 
       <main className="flex-1">
         <section className="border-b border-stone-200/70 dark:border-stone-800/70">
@@ -186,7 +158,7 @@ export function LegalEthics17Page() {
             <h2 id="explanations-title" className="mt-2 text-2xl font-black tracking-tight">문항별 해설</h2>
             <div className="mt-6 grid gap-4">
               {legalEthicsAnswers.map((item) => (
-                <article id={`explanation-${item.number}`} key={item.number} className="app-card scroll-mt-24 rounded-2xl border p-5 sm:p-6">
+                <article id={`explanation-${item.number}`} key={item.number} className="app-card mini-app-anchor rounded-2xl border p-5 sm:p-6">
                   <div className="flex items-center gap-3">
                     <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-red-50 text-sm font-black text-red-700 dark:bg-red-950/50 dark:text-red-300">
                       {item.number}

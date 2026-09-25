@@ -891,6 +891,12 @@ html {
 
 .landing-nav-placeholder { height: calc(72px + env(safe-area-inset-top, 0px)); }
 
+.mini-app-nav { padding-top: env(safe-area-inset-top, 0px); }
+.mini-app-anchor { scroll-margin-top: calc(144px + env(safe-area-inset-top, 0px)); }
+@media (min-width: 640px) {
+  .mini-app-anchor { scroll-margin-top: calc(96px + env(safe-area-inset-top, 0px)); }
+}
+
 .landing-nav-wrap {
   position: fixed;
   top: 0;
