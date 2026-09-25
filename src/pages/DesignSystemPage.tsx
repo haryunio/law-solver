@@ -166,6 +166,15 @@ export function DesignSystemPage() {
               <Button variant="primary" onClick={() => notify("새 문제 등록 버튼을 눌렀습니다.")}>새 문제 등록</Button>
               <Button onClick={() => notify("과목 목록 버튼을 눌렀습니다.", "info")}>과목 목록</Button>
             </DashboardHeaderTitle>
+            <p className="text-sm text-stone-500">랜딩은 스크롤하면 아래와 같은 플로팅 표면으로 전환됩니다.</p>
+            <div className="landing-nav-wrap" data-floating="true" style={{ position: "relative", zIndex: "auto", paddingTop: 0 }}>
+              <div className="landing-nav-surface">
+                <div className="landing-container landing-nav-inner flex items-center justify-between gap-3">
+                  <span className="landing-nav-brand flex items-center gap-2.5"><BrandMark className="landing-logo-mark" /><span className="text-[17px] font-semibold">Law Solver</span></span>
+                  <button className="landing-nav-cta" onClick={() => notify("시작하기 버튼을 눌렀습니다.")}>시작하기 →</button>
+                </div>
+              </div>
+            </div>
           </DemoSection>
 
           <DemoSection id="tokens" title="색상과 표면" description="페이지 배경, 콘텐츠 표면, 정보 박스를 구분합니다. 아래 색상은 실제 CSS 토큰을 사용합니다.">
