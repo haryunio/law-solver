@@ -11,6 +11,7 @@ import {
   type PurchaseModalProduct,
 } from "../components/premium/PurchaseMethodModal";
 import { ButtonLoadingContent } from "../components/ui/AsyncLoading";
+import { TabContentMotion } from "../components/ui/TabContentMotion";
 import { AppFooter } from "../components/ui/AppFooter";
 import { DashboardHeaderTitle } from "../components/ui/DashboardHeaderTitle";
 import { PremiumBadge } from "../components/ui/PremiumBadge";
@@ -180,7 +181,7 @@ export function AccountSubscriptionPage() {
           </Link>
         </DashboardHeaderTitle>
 
-        <div className="app-card mb-4 rounded-2xl border p-2">
+        <div className="app-content-enter app-card mb-4 rounded-2xl border p-2">
           <div className="grid grid-cols-2 gap-2 sm:grid-cols-4" role="tablist" aria-label="계정 및 구독 메뉴">
             {accountTabs.map((tab) => (
               <button
@@ -204,12 +205,13 @@ export function AccountSubscriptionPage() {
           </div>
         </div>
 
+        <TabContentMotion activeIndex={accountTabs.findIndex((tab) => tab.id === activeTab)}>
         {activeTab === "account" ? (
           <section
             id="account-panel"
             role="tabpanel"
             aria-labelledby="account-tab"
-            className="app-card mx-auto max-w-2xl rounded-2xl border p-5 sm:p-6"
+            className="app-content-enter app-card mx-auto max-w-2xl rounded-2xl border p-5 sm:p-6"
           >
             <p className="text-xs font-bold tracking-[0.14em] text-red-600 dark:text-red-400">ACCOUNT</p>
             {!initialized ? (
@@ -274,6 +276,7 @@ export function AccountSubscriptionPage() {
                     </button>
                   ))}
                 </div>
+                <TabContentMotion activeIndex={authMode === "login" ? 0 : 1}>
                 <form onSubmit={handleAuthSubmit} className="mt-5 space-y-4">
                   {authMode === "signup" ? (
                     <label className="block">
@@ -370,6 +373,7 @@ export function AccountSubscriptionPage() {
                       : authMode === "login" ? "로그인" : "회원가입"}
                   </button>
                 </form>
+                </TabContentMotion>
               </div>
             )}
           </section>
@@ -380,7 +384,7 @@ export function AccountSubscriptionPage() {
             id="premium-panel"
             role="tabpanel"
             aria-labelledby="premium-tab"
-            className="app-card app-premium-card mx-auto max-w-2xl rounded-2xl border p-5 sm:p-6"
+            className="app-content-enter app-card app-premium-card mx-auto max-w-2xl rounded-2xl border p-5 sm:p-6"
           >
             {!initialized ? (
               <PremiumMembershipSkeleton />
@@ -486,7 +490,7 @@ export function AccountSubscriptionPage() {
                 <div className="app-card rounded-2xl border p-8 text-center text-sm text-stone-500 dark:text-stone-400">
                   현재 구매 가능한 과목 이용권이 없습니다.
                 </div>
-              ) : <BookGrid>
+              ) : <BookGrid className="app-content-stagger">
                 {packageCatalog.map((item) => {
                   const isActive = packageIds.includes(item.code);
                   const actionLabel = !isSignedIn
@@ -520,7 +524,7 @@ export function AccountSubscriptionPage() {
             id="payments-panel"
             role="tabpanel"
             aria-labelledby="payments-tab"
-            className="app-card overflow-hidden rounded-2xl border"
+            className="app-content-enter app-card overflow-hidden rounded-2xl border"
           >
             <div className="border-b border-stone-200 px-5 py-4 dark:border-stone-800">
               <p className="text-xs font-bold tracking-[0.14em] text-red-600 dark:text-red-400">PAYMENTS</p>
@@ -569,6 +573,8 @@ export function AccountSubscriptionPage() {
             )}
           </section>
         ) : null}
+
+        </TabContentMotion>
 
         <AppFooter />
       </div>
