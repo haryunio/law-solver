@@ -60,10 +60,10 @@ export function MobileOmrSheet({ open, onClose, children, layerClassName = "cbt-
   return (
     <div ref={layerRef} aria-hidden={!open || undefined} className={`${layerClassName}${open ? "" : " pointer-events-none"}`}>
       <button ref={backdropRef} type="button" tabIndex={-1} onClick={onClose} className="app-modal-backdrop absolute inset-0" aria-label="OMR 닫기" />
-      <div ref={sheetRef} role="region" aria-labelledby={titleId} className="cbt-omr-sheet app-modal-surface absolute bottom-0 left-0 right-0 rounded-t-2xl border-t p-4 shadow-2xl">
+      <div ref={sheetRef} role="region" aria-labelledby={titleId} className="cbt-omr-sheet app-study-sheet app-modal-surface absolute bottom-0 left-0 right-0 rounded-t-2xl border-t p-4 shadow-2xl">
         <div className="mb-3 flex shrink-0 items-center justify-between">
           <h3 id={titleId} className="text-sm font-semibold dark:text-stone-100">OMR 빠른 이동</h3>
-          <button type="button" onClick={onClose} className="text-sm text-stone-500 dark:text-stone-400">닫기</button>
+          <button type="button" onClick={onClose} className="app-button-secondary app-study-control px-3 py-2 text-sm font-medium">닫기</button>
         </div>
         {children}
       </div>

@@ -3,8 +3,11 @@ import { useNavigate } from "react-router-dom";
 import { ConfirmDialog } from "../ui/ConfirmDialog";
 import { OverflowTooltipTitle } from "../ui/OverflowTooltipTitle";
 import { RichTextContent } from "../ui/RichTextContent";
+import { QuestionPassages } from "../study/QuestionPassages";
+import { StudyOmrTable } from "../study/StudyOmrTable";
+import { SolveChoiceList } from "./SolveChoiceList";
 import { LegalReferenceContent } from "../ui/LegalReferenceContent";
-import { getAnswerToken, getQuestionAnswerToken, hasNoCorrectChoice, isCorrectAnswer } from "../../lib/answer";
+import { getQuestionAnswerToken, hasNoCorrectChoice } from "../../lib/answer";
 import {
   QuestionNavigationMethod,
   SolveEntry,
@@ -158,20 +161,6 @@ export function CbtSolveScreen({
   }
   activeQuestionIdRef.current = current.id;
 
-  const CIRCLED_NUMBERS = ["①", "②", "③", "④", "⑤"];
-
-  const options =
-    session.type === "OX"
-      ? [
-          { key: "O", circle: null, text: "O" },
-          { key: "X", circle: null, text: "X" },
-        ]
-      : (current.choices ?? []).map((choice, idx) => ({
-          key: String(idx + 1),
-          circle: CIRCLED_NUMBERS[idx] ?? String(idx + 1),
-          text: choice,
-        }));
-
   const answeredCount = session.questions.filter((q) => q.my_answer !== "").length;
   const unansweredCount = session.questions.length - answeredCount;
   const subjectDashboardPath = sessionsPath;
@@ -258,11 +247,11 @@ export function CbtSolveScreen({
   };
 
   return (
-    <div ref={viewportRef} className="cbt-solve-page app-focus-page app-page text-stone-900 dark:text-stone-100">
+    <div ref={viewportRef} className="cbt-solve-page app-study-page app-focus-page app-page text-stone-900 dark:text-stone-100">
       <header className="cbt-header app-topbar sticky top-0 z-20 border-b">
         <div className="cbt-header-content mx-auto flex max-w-6xl items-center justify-between gap-2 px-4 py-2 md:px-6">
           <div className="min-w-0">
-            <p className="text-[10px] font-medium leading-none text-stone-500 dark:text-stone-500">타이머</p>
+            <p className="text-[10px] font-medium leading-none text-stone-500 dark:text-stone-400">타이머</p>
             <p className="mt-0.5 text-base font-semibold leading-tight tabular-nums text-red-600 dark:text-red-500">{formatElapsedTime(session.elapsed_time)}</p>
           </div>
           <div className="min-w-0 flex-1 px-2">
@@ -275,13 +264,13 @@ export function CbtSolveScreen({
           <div className="flex w-auto shrink-0 items-center justify-end gap-2">
             <button
               onClick={() => setIsPauseDialogOpen(true)}
-              className="app-button-secondary whitespace-nowrap rounded-lg px-2.5 py-1.5 text-xs font-semibold sm:px-3 sm:text-sm"
+              className="app-button-secondary app-study-control whitespace-nowrap rounded-xl px-2.5 py-1.5 text-xs font-semibold sm:px-3 sm:text-sm"
             >
               일시 중단
             </button>
             <button
               onClick={handleSubmit}
-              className="app-button-primary whitespace-nowrap rounded-lg px-2.5 py-1.5 text-xs font-semibold sm:px-3 sm:text-sm"
+              className="app-button-primary app-study-control whitespace-nowrap rounded-xl px-2.5 py-1.5 text-xs font-semibold sm:px-3 sm:text-sm"
             >
               제출 및 종료
             </button>
@@ -289,22 +278,22 @@ export function CbtSolveScreen({
         </div>
       </header>
 
-      <div className="cbt-workspace mx-auto grid max-w-6xl grid-cols-1 gap-4 px-4 py-3 md:grid-cols-[1fr_220px] md:items-start md:px-6">
+      <div className="cbt-workspace mx-auto grid max-w-6xl grid-cols-1 gap-4 px-4 py-3 md:grid-cols-[minmax(0,1fr)_220px] md:items-start md:px-6">
         <main
           ref={questionPanelRef}
           className={[
-            "cbt-question-card app-card flex w-full max-h-full flex-col overflow-hidden rounded-2xl border",
+            "cbt-question-card app-study-panel app-card flex min-w-0 w-full max-h-full flex-col overflow-hidden rounded-2xl border",
             questionPanelMinHeight,
           ].join(" ")}
         >
-          <div className="cbt-question-toolbar shrink-0 p-5 pb-4 md:px-8 md:pt-8">
+          <div className="cbt-question-toolbar shrink-0 p-5 pb-4 md:px-8 md:pt-6">
           <div className="flex items-start justify-between gap-3">
             <div className="flex min-w-0 flex-wrap items-center gap-2">
-              <span className="inline-flex rounded-full border border-stone-200 bg-stone-100 px-3 py-1 text-xs font-semibold text-stone-600 dark:border-stone-800 dark:bg-stone-800 dark:text-stone-400">
+              <span className="app-study-tag inline-flex rounded-lg border border-stone-200 bg-stone-100 px-3 py-1 text-xs font-semibold text-stone-600 dark:border-stone-800 dark:bg-stone-800 dark:text-stone-400">
                 {index + 1}번 / 총 {session.total_questions}문항
               </span>
               {current.chapter ? (
-                <span className="inline-flex max-w-full rounded-full border border-red-200 bg-red-50 px-3 py-1 text-xs font-semibold text-red-700 dark:border-red-900/50 dark:bg-red-950/30 dark:text-red-400">
+                <span className="app-study-tag inline-flex max-w-full rounded-lg border border-red-200 bg-red-50 px-3 py-1 text-xs font-semibold text-red-700 dark:border-red-900/50 dark:bg-red-950/30 dark:text-red-400">
                   <span className="truncate">챕터 · {current.chapter}</span>
                 </span>
               ) : null}
@@ -337,6 +326,7 @@ export function CbtSolveScreen({
                   }
                 }}
                 disabled={isAnswerRevealLoading}
+                aria-expanded={showAnswer}
                 aria-label={isAnswerRevealLoading ? "정답과 해설을 불러오는 중" : "?"}
                 title={showAnswer ? "정답 숨기기" : "정답/해설 보기"}
                 className={[
@@ -359,6 +349,7 @@ export function CbtSolveScreen({
                   }
                 }}
                 title={current.bookmark ? "책갈피 해제" : "책갈피 추가"}
+                aria-pressed={Boolean(current.bookmark)}
                 className={[
                   "flex h-8 w-8 items-center justify-center rounded-full border text-sm",
                   current.bookmark
@@ -383,37 +374,12 @@ export function CbtSolveScreen({
                 ].join(" ")}
               />
 
-              {current.boxes && current.boxes.length > 0 && (
-                <div className="mt-4 rounded-xl border-2 border-stone-200 bg-stone-50/50 p-4 dark:border-stone-800 dark:bg-stone-900/50">
-                  <div className="space-y-2">
-                    {current.boxes.map((box, idx) => {
-                      const symbols = ["ㄱ", "ㄴ", "ㄷ", "ㄹ", "ㅁ", "ㅂ", "ㅅ", "ㅇ", "ㅈ", "ㅊ", "ㅋ", "ㅌ", "ㅍ", "ㅎ"];
-                      // 기존에 포함된 "ㄱ.", "ㄴ. " 등의 접두어 제거
-                      const cleanBox = box.replace(/^[ㄱ-ㅎ]\.\s*/, "");
-                      return (
-                        <div
-                          key={idx}
-                          className={[
-                            "flex gap-2 leading-relaxed",
-                            session.type === "5-choice" ? "text-xs md:text-sm" : "text-sm md:text-base",
-                          ].join(" ")}
-                        >
-                          <span className="font-bold shrink-0">{symbols[idx] ?? idx + 1}.</span>
-                          <RichTextContent
-                            content={cleanBox}
-                            className="min-w-0 flex-1 text-stone-800 dark:text-stone-200"
-                          />
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
+              <QuestionPassages boxes={current.boxes} compact={session.type === "5-choice"} />
 
               <div className="mt-6 space-y-3">
                 {session.type === "short" ? (
                   <div className="space-y-2">
-                    <p className="text-xs font-medium text-stone-500 dark:text-stone-500">답안 입력</p>
+                    <p className="text-xs font-medium text-stone-500 dark:text-stone-400">답안 입력</p>
                     <input
                       key={`short-input-${index}`}
                       type="text"
@@ -421,67 +387,26 @@ export function CbtSolveScreen({
                       onChange={(e) => handleAnswer(e.target.value)}
                       onKeyDown={handleShortSubmit}
                       placeholder="정답을 입력하세요. (Enter를 누르면 다음 문항으로)"
-                      className="app-control w-full rounded-xl px-4 py-3 text-base"
+                      className="app-control app-study-control w-full rounded-xl px-4 py-3 text-base"
                       autoFocus
                     />
                   </div>
                 ) : (
-                  options.map((option) => {
-                    const selected = current.my_answer === option.key;
-                    const isCorrect = showAnswer && !hasNoCorrectChoice(current) && isCorrectAnswer(current, option.key);
-                    const isAcceptedSelection = showAnswer && selected && isCorrectAnswer(current, option.key);
-                    const showInlineNext =
-                      session.type === "OX" && selected && !showAnswer && index < session.total_questions - 1;
-
-                    return (
-                      <div key={option.key} className="relative">
-                        <button
-                          onClick={() => handleAnswer(option.key)}
-                          className={[
-                            "flex w-full items-start gap-2 rounded-xl border px-4 py-3 text-left",
-                            showInlineNext ? "pr-32 md:pr-36" : "",
-                            session.type === "5-choice" ? "text-sm md:text-sm" : "text-base",
-                            isAcceptedSelection
-                              ? "border-emerald-600 bg-emerald-50 text-emerald-700 dark:border-emerald-600 dark:bg-emerald-950/30 dark:text-emerald-400"
-                              : isCorrect
-                                ? "border-blue-600 bg-blue-50 text-blue-700 dark:border-blue-600 dark:bg-blue-950/30 dark:text-blue-400"
-                                : selected
-                                  ? "border-red-600 bg-red-50 text-red-700 dark:border-red-600 dark:bg-red-950/30 dark:text-red-400"
-                                  : "border-stone-300 bg-white text-stone-800 hover:border-red-300 hover:bg-red-50/40 dark:border-stone-700 dark:bg-stone-800 dark:text-stone-300 dark:hover:border-red-900/70 dark:hover:bg-red-950/15",
-                          ].join(" ")}
-                        >
-                          {option.circle && (
-                            <span className="shrink-0 font-bold">{option.circle}</span>
-                          )}
-                          <RichTextContent
-                            as="span"
-                            content={option.text}
-                            className="min-w-0 flex-1 font-medium"
-                          />
-                          {isCorrect && !showInlineNext && (
-                            <span className="ml-auto shrink-0 text-xs font-bold text-blue-600 dark:text-blue-400">정답</span>
-                          )}
-                        </button>
-                        {showInlineNext ? (
-                          <button
-                            type="button"
-                            onClick={() => goToNext("inline_next")}
-                            className="app-button-primary app-inline-next absolute bottom-2 right-2 top-2 inline-flex items-center rounded-lg px-3 text-xs font-bold"
-                          >
-                            다음 문제로
-                            <span className="ml-1 text-red-200">›</span>
-                          </button>
-                        ) : null}
-                      </div>
-                    );
-                  })
+                  <SolveChoiceList
+                    question={current}
+                    type={session.type}
+                    showAnswer={showAnswer}
+                    showNext={index < session.total_questions - 1}
+                    onAnswer={handleAnswer}
+                    onInlineNext={() => goToNext("inline_next")}
+                  />
                 )}
               </div>
 
               {showAnswer && (
-                <div className="mt-6 rounded-xl border border-blue-200 bg-blue-50/50 p-4 dark:border-blue-900/50 dark:bg-blue-950/20">
+                <div className="app-study-answer-panel mt-6 rounded-xl border border-blue-200 bg-blue-50/50 p-4 dark:border-blue-900/50 dark:bg-blue-950/20">
                   <div className="mb-2 flex items-center gap-2">
-                    <span className="rounded bg-blue-600 px-1.5 py-0.5 text-[10px] font-bold text-white uppercase">
+                    <span className="app-study-tag rounded-lg bg-blue-600 px-1.5 py-0.5 text-[10px] font-bold text-white uppercase">
                       정답
                     </span>
                     <span className="text-sm font-bold text-blue-700 dark:text-blue-400">{getQuestionAnswerToken(current)}</span>
@@ -494,7 +419,7 @@ export function CbtSolveScreen({
                     </div>
                   )}
                   {current.source && (
-                    <p className="mt-3 text-xs text-stone-500 italic dark:text-stone-500">
+                    <p className="mt-3 text-xs text-stone-500 italic dark:text-stone-400">
                       출처: <LegalReferenceContent content={current.source} as="span" plainText />
                     </p>
                   )}
@@ -503,13 +428,13 @@ export function CbtSolveScreen({
             </QuestionContentMotion>
           </div>
 
-          <div className="cbt-navigation grid shrink-0 grid-cols-2 overflow-hidden border-t border-stone-200 dark:border-stone-800">
+          <div className="cbt-navigation app-study-divider grid shrink-0 grid-cols-2 overflow-hidden border-t">
             <button
               onClick={() => goToQuestion(index - 1, "previous_button")}
               disabled={index === 0}
-              className="border-r border-stone-200 bg-stone-50 px-4 py-3 text-sm font-bold text-stone-800 shadow-[0_-1px_0_rgba(0,0,0,0.02)] hover:bg-stone-100 disabled:cursor-not-allowed disabled:opacity-40 dark:border-stone-800 dark:bg-stone-950/40 dark:text-stone-200 dark:hover:bg-stone-800"
+              className="app-study-navigation-secondary border-r px-4 py-3 text-sm font-bold text-stone-800 shadow-[0_-1px_0_rgba(0,0,0,0.02)] disabled:cursor-not-allowed disabled:opacity-40 dark:text-stone-200"
             >
-              <span className="mr-1 text-stone-400 dark:text-stone-500">‹</span>
+              <span className="mr-1 text-stone-400 dark:text-stone-400">‹</span>
               이전 문제
             </button>
             <button
@@ -525,52 +450,28 @@ export function CbtSolveScreen({
 
         <aside
           className={[
-            "cbt-omr-card app-card hidden min-h-0 flex-col rounded-2xl border p-4 md:flex",
+            "cbt-omr-card app-study-panel app-card hidden min-h-0 flex-col rounded-2xl border p-4 md:flex",
             omrPanelHeightClass,
           ].join(" ")}
         >
           <div className="mb-3 flex shrink-0 items-center justify-between">
             <h3 className="text-sm font-semibold dark:text-stone-100">OMR</h3>
-            <p className="text-xs text-stone-500 dark:text-stone-500">
+            <p className="text-xs text-stone-500 dark:text-stone-400">
               {answeredCount}/{session.total_questions}
             </p>
           </div>
-          <div className="cbt-omr-content min-h-0 flex-1 overflow-y-auto rounded-lg border border-stone-200 dark:border-stone-800">
-            <div className="sticky top-0 z-10 grid grid-cols-[32px_1fr_1fr_16px] border-b border-stone-200 bg-stone-50 px-2 py-1.5 text-[11px] font-semibold text-stone-600 dark:border-stone-800 dark:bg-stone-950 dark:text-stone-400">
-              <span>번호</span>
-              <span>내 답</span>
-              <span></span>
-            </div>
-            {session.questions.map((question, qIndex) => {
-              const isCurrent = qIndex === index;
-              const isAnswered = question.my_answer !== "";
-              return (
-                <button
-                  key={question.id}
-                  ref={(el) => omrRefs.set(qIndex, el)}
-                  onClick={() => goToQuestion(qIndex, "omr")}
-                  className={[
-                    "grid w-full grid-cols-[32px_1fr_1fr_16px] border-b border-stone-200 px-2 py-1.5 text-left text-xs font-semibold last:border-b-0 dark:border-stone-800",
-                    isCurrent
-                      ? "bg-red-600 text-white"
-                      : isAnswered
-                        ? "bg-red-50 text-red-700 dark:bg-red-950/30 dark:text-red-400"
-                        : "bg-white text-stone-700 dark:bg-stone-900 dark:text-stone-400",
-                  ].join(" ")}
-                >
-                  <span>{qIndex + 1}</span>
-                  <span className="truncate">{getAnswerToken(question.my_answer)}</span>
-                  <span className="flex items-center justify-center text-[10px] text-amber-500 dark:text-amber-500/80">
-                    {question.bookmark ? "★" : ""}
-                  </span>
-                </button>
-              );
-            })}
-          </div>
+          <StudyOmrTable
+            questions={session.questions}
+            currentIndex={index}
+            mode="solve"
+            onSelect={(nextIndex) => goToQuestion(nextIndex, "omr")}
+            rowRef={(rowIndex, node) => { omrRefs.set(rowIndex, node); }}
+            className="cbt-omr-content min-h-0 flex-1 overflow-y-auto"
+          />
           {allowCsvDownload ? (
             <button
               onClick={() => downloadSessionCsv(session)}
-              className="app-button-secondary mt-4 w-full shrink-0 rounded-lg px-3 py-2 text-xs font-semibold"
+              className="app-button-secondary app-study-control mt-4 w-full shrink-0 rounded-xl px-3 py-2 text-xs font-semibold"
             >
               CSV 다운로드
             </button>
@@ -579,40 +480,17 @@ export function CbtSolveScreen({
       </div>
 
       <MobileOmrSheet open={isOmrOpen} onClose={() => setIsOmrOpen(false)}>
-        <div className="max-h-[48vh] overflow-y-auto rounded-lg border border-stone-200 dark:border-stone-800">
-          <div className="grid grid-cols-[32px_1fr_1fr_16px] border-b border-stone-200 bg-stone-50 px-2 py-1.5 text-[11px] font-semibold text-stone-600 dark:border-stone-800 dark:bg-stone-950 dark:text-stone-400">
-            <span>번호</span>
-            <span>내 답</span>
-            <span></span>
-          </div>
-          {session.questions.map((question, qIndex) => {
-            const isCurrent = qIndex === index;
-            const isAnswered = question.my_answer !== "";
-            return (
-              <button
-                key={question.id}
-                onClick={() => {
-                  goToQuestion(qIndex, "omr");
-                  setIsOmrOpen(false);
-                }}
-                className={[
-                  "grid w-full grid-cols-[32px_1fr_1fr_16px] border-b border-stone-200 px-2 py-2 text-left text-xs font-semibold last:border-b-0 dark:border-stone-800",
-                  isCurrent
-                    ? "bg-red-600 text-white"
-                    : isAnswered
-                      ? "bg-red-50 text-red-700 dark:bg-red-950/30 dark:text-red-400"
-                      : "bg-white text-stone-700 dark:bg-stone-900 dark:text-stone-400",
-                ].join(" ")}
-              >
-                <span>{qIndex + 1}</span>
-                <span className="truncate">{getAnswerToken(question.my_answer)}</span>
-                <span className="flex items-center justify-center text-[10px] text-amber-500 dark:text-amber-500/80">
-                  {question.bookmark ? "★" : ""}
-                </span>
-              </button>
-            );
-          })}
-        </div>
+        <StudyOmrTable
+          questions={session.questions}
+          currentIndex={index}
+          mode="solve"
+          density="comfortable"
+          onSelect={(nextIndex) => {
+            goToQuestion(nextIndex, "omr");
+            setIsOmrOpen(false);
+          }}
+          className="max-h-[48vh] overflow-y-auto"
+        />
       </MobileOmrSheet>
 
       {isPauseDialogOpen ? (

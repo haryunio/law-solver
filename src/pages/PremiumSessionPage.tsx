@@ -79,6 +79,7 @@ export function PremiumSessionPage({ view }: { view: PremiumSessionView }) {
             cause,
             "오답 노트를 저장하지 못했습니다. 잠시 후 다시 시도해 주세요.",
           ));
+          throw cause;
         }
       },
     };
