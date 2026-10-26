@@ -40,7 +40,7 @@ export function SessionListItem({
   ].filter(Boolean).join(" / ");
 
   return (
-    <article className="app-card app-problem-card app-radius-card relative rounded-xl border px-3 py-4 sm:px-4 lg:flex lg:items-end lg:gap-2">
+    <article className="app-card app-problem-card app-radius-card relative rounded-xl border px-3 py-4 focus-within:z-20 sm:px-4 lg:flex lg:items-end lg:gap-2">
       <div className="min-w-0 flex-1 lg:flex lg:items-end lg:gap-4">
         <div className="grid min-h-14 min-w-0 flex-1 grid-cols-[56px_minmax(0,1fr)] grid-rows-[1fr_auto] items-center gap-x-3 gap-y-2">
           <span className="app-radius-inset row-span-2 inline-flex h-14 w-14 shrink-0 self-end items-center justify-center rounded-lg border border-red-100 bg-red-50 text-sm font-semibold tabular-nums text-red-700 dark:border-red-900/50 dark:bg-red-950/30 dark:text-red-400">
