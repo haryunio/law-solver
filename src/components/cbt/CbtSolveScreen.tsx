@@ -405,11 +405,11 @@ export function CbtSolveScreen({
 
               {showAnswer && (
                 <div className="app-study-answer-panel mt-6 rounded-xl border border-blue-200 bg-blue-50/50 p-4 dark:border-blue-900/50 dark:bg-blue-950/20">
-                  <div className="mb-2 flex items-center gap-2">
-                    <span className="app-study-tag rounded-lg bg-blue-600 px-1.5 py-0.5 text-[10px] font-bold text-white uppercase">
+                  <div className="mb-2 flex items-start gap-2">
+                    <span className="app-study-tag shrink-0 whitespace-nowrap rounded-lg bg-blue-600 px-1.5 py-0.5 text-[10px] font-bold leading-4 text-white uppercase">
                       정답
                     </span>
-                    <span className="text-sm font-bold text-blue-700 dark:text-blue-400">{getQuestionAnswerToken(current)}</span>
+                    <span className="min-w-0 break-words text-sm font-bold leading-5 text-blue-700 dark:text-blue-400">{getQuestionAnswerToken(current)}</span>
                   </div>
                   {hasNoCorrectChoice(current) ? <p className="mb-2 text-sm leading-6 text-blue-700 dark:text-blue-400">이 문항은 답을 고르지 않아도 정답으로 처리됩니다.</p> : null}
                   {current.explanation && (
